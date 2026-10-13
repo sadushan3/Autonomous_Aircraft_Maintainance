@@ -1,0 +1,271 @@
+{
+  "models": {
+    "random_forest_twin": {
+      "name": "random_forest_twin",
+      "version": "v1",
+      "run_id": "512445ae2e9c",
+      "artifact_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\models\\random_forest_twin.pkl",
+      "created_at": "2026-08-24T18:39:16.292073+00:00",
+      "metrics": {
+        "rmse": 0.7669640907574781,
+        "mae": 0.5613555536401051,
+        "r2": -0.0065480003398697235,
+        "r2_all_targets": -0.006548000339869768,
+        "n_informative_targets": 15,
+        "name": "random_forest",
+        "train_rows": 4609,
+        "val_rows": 1024,
+        "n_features": 6,
+        "n_targets": 15,
+        "n_modes": 1,
+        "fit_seconds": 0.877
+      },
+      "params": {
+        "n_estimators": 200,
+        "max_depth": 14,
+        "min_samples_leaf": 4,
+        "n_jobs": -1,
+        "random_state": 42
+      },
+      "extra": {
+        "feature_names": [
+          "op_setting_1",
+          "op_setting_2",
+          "op_setting_3",
+          "cycle",
+          "cycle_norm",
+          "mode_0"
+        ],
+        "target_names": [
+          "sensor_2",
+          "sensor_3",
+          "sensor_4",
+          "sensor_6",
+          "sensor_7",
+          "sensor_8",
+          "sensor_9",
+          "sensor_11",
+          "sensor_12",
+          "sensor_13",
+          "sensor_14",
+          "sensor_15",
+          "sensor_17",
+          "sensor_20",
+          "sensor_21"
+        ],
+        "n_modes": 1
+      },
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "numpy": "1.26.4",
+        "pandas": "2.2.3"
+      }
+    },
+    "xgboost_twin": {
+      "name": "xgboost_twin",
+      "version": "v1",
+      "run_id": "70563579c812",
+      "artifact_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\models\\xgboost_twin.pkl",
+      "created_at": "2026-08-24T18:39:22.135225+00:00",
+      "metrics": {
+        "rmse": 0.8020431059330285,
+        "mae": 0.5852001446191146,
+        "r2": -0.09461204813600646,
+        "r2_all_targets": -0.09461204813600646,
+        "n_informative_targets": 15,
+        "name": "xgboost",
+        "train_rows": 4609,
+        "val_rows": 1024,
+        "n_features": 6,
+        "n_targets": 15,
+        "n_modes": 1,
+        "fit_seconds": 5.604
+      },
+      "params": {
+        "n_estimators": 250,
+        "max_depth": 6,
+        "learning_rate": 0.08,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_lambda": 1.0,
+        "n_jobs": -1,
+        "random_state": 42,
+        "tree_method": "hist"
+      },
+      "extra": {
+        "feature_names": [
+          "op_setting_1",
+          "op_setting_2",
+          "op_setting_3",
+          "cycle",
+          "cycle_norm",
+          "mode_0"
+        ],
+        "target_names": [
+          "sensor_2",
+          "sensor_3",
+          "sensor_4",
+          "sensor_6",
+          "sensor_7",
+          "sensor_8",
+          "sensor_9",
+          "sensor_11",
+          "sensor_12",
+          "sensor_13",
+          "sensor_14",
+          "sensor_15",
+          "sensor_17",
+          "sensor_20",
+          "sensor_21"
+        ],
+        "n_modes": 1
+      },
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "numpy": "1.26.4",
+        "pandas": "2.2.3"
+      }
+    },
+    "lightgbm_twin": {
+      "name": "lightgbm_twin",
+      "version": "v1",
+      "run_id": "14edae485077",
+      "artifact_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\models\\lightgbm_twin.pkl",
+      "created_at": "2026-08-24T18:39:26.775347+00:00",
+      "metrics": {
+        "rmse": 0.798142482147305,
+        "mae": 0.5833119401996598,
+        "r2": -0.08320967015717591,
+        "r2_all_targets": -0.08320967015717591,
+        "n_informative_targets": 15,
+        "name": "lightgbm",
+        "train_rows": 4609,
+        "val_rows": 1024,
+        "n_features": 6,
+        "n_targets": 15,
+        "n_modes": 1,
+        "fit_seconds": 4.333
+      },
+      "params": {
+        "n_estimators": 300,
+        "num_leaves": 31,
+        "learning_rate": 0.06,
+        "min_child_samples": 20,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "n_jobs": -1,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "extra": {
+        "feature_names": [
+          "op_setting_1",
+          "op_setting_2",
+          "op_setting_3",
+          "cycle",
+          "cycle_norm",
+          "mode_0"
+        ],
+        "target_names": [
+          "sensor_2",
+          "sensor_3",
+          "sensor_4",
+          "sensor_6",
+          "sensor_7",
+          "sensor_8",
+          "sensor_9",
+          "sensor_11",
+          "sensor_12",
+          "sensor_13",
+          "sensor_14",
+          "sensor_15",
+          "sensor_17",
+          "sensor_20",
+          "sensor_21"
+        ],
+        "n_modes": 1
+      },
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "numpy": "1.26.4",
+        "pandas": "2.2.3"
+      }
+    },
+    "tensorflow_twin": {
+      "name": "tensorflow_twin",
+      "version": "v1",
+      "run_id": "1327dc64b73e",
+      "artifact_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\models\\tensorflow_twin.keras",
+      "created_at": "2026-08-24T18:39:59.151137+00:00",
+      "metrics": {
+        "rmse": 0.7625504885404105,
+        "mae": 0.5585487863083887,
+        "r2": -0.0008984787674276351,
+        "r2_all_targets": -0.0008984787674275759,
+        "n_informative_targets": 15,
+        "name": "tensorflow",
+        "train_rows": 4609,
+        "val_rows": 1024,
+        "n_features": 6,
+        "n_targets": 15,
+        "n_modes": 1,
+        "fit_seconds": 32.212,
+        "epochs_trained": 56
+      },
+      "params": {
+        "hidden_units": [
+          128,
+          64,
+          32
+        ],
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "batch_size": 256,
+        "epochs": 150,
+        "early_stopping_patience": 20,
+        "reduce_lr_patience": 6,
+        "reduce_lr_factor": 0.5,
+        "min_lr": 1e-06,
+        "validation_split": 0.15,
+        "random_state": 42
+      },
+      "extra": {
+        "feature_names": [
+          "op_setting_1",
+          "op_setting_2",
+          "op_setting_3",
+          "cycle",
+          "cycle_norm",
+          "mode_0"
+        ],
+        "target_names": [
+          "sensor_2",
+          "sensor_3",
+          "sensor_4",
+          "sensor_6",
+          "sensor_7",
+          "sensor_8",
+          "sensor_9",
+          "sensor_11",
+          "sensor_12",
+          "sensor_13",
+          "sensor_14",
+          "sensor_15",
+          "sensor_17",
+          "sensor_20",
+          "sensor_21"
+        ],
+        "n_modes": 1
+      },
+      "environment": {
+        "python": "3.11.0",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "numpy": "1.26.4",
+        "pandas": "2.2.3"
+      }
+    }
+  }
+}

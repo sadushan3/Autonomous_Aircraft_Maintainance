@@ -1,0 +1,15 @@
+# Local environments and installed dependencies
+.venv/
+venv/
+node_modules/
+
+# Generated build and Python files
+dist/
+__pycache__/
+*.py[cod]
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+.claude/settings.local.json

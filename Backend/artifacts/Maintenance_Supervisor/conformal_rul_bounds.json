@@ -1,0 +1,14 @@
+{
+    "calibrated_quantiles": {
+        "target_coverage": 0.95,
+        "q_alpha_margin_cycles": 5.2,
+        "empirical_test_coverage": 0.962
+    },
+    "sample_conformal_interval": {
+        "predicted_rul": 24.0,
+        "lower_bound_95": 18.8,
+        "upper_bound_95": 29.2,
+        "margin_q_alpha": 5.2,
+        "target_coverage": 0.95
+    }
+}

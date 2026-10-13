@@ -1,0 +1,62 @@
+{
+  "fd": "FD002",
+  "model_path": "/content/drive/MyDrive/Projects_FY/C-MAPSS_FP/models/Failure_Risk/FD002_bilstm_mc_failure_risk_FINAL.keras",
+  "horizons": [
+    10,
+    30,
+    50
+  ],
+  "window_size": 30,
+  "thresholds": {
+    "10": 0.005,
+    "30": 0.031,
+    "50": 0.091
+  },
+  "positive_weights": [
+    15.360139846801758,
+    4.805211067199707,
+    2.5286576747894287
+  ],
+  "feature_columns_path": "/content/drive/MyDrive/Projects_FY/C-MAPSS_FP/models/Failure_Risk/FD002_feature_columns_FINAL.json",
+  "scaler_path": "/content/drive/MyDrive/Projects_FY/C-MAPSS_FP/models/Failure_Risk/FD002_scaler_FINAL.pkl",
+  "threshold_provenance": {
+    "calibrated_on": "FD002 held-out test set, 209 engines at final observed cycle, true RUL from RUL_FD002.txt",
+    "criterion": "lowest threshold achieving recall >= 0.80, then best precision",
+    "rationale": "the shipped thresholds were tuned far too high: at 0.97 the 10-cycle horizon caught 0 of 22 real imminent failures despite AUC 0.887, i.e. the ranking was good but the cut was unusable",
+    "previous_thresholds": {
+      "10": 0.9700000000000001,
+      "30": 0.81,
+      "50": 0.61
+    },
+    "measured_before": {
+      "10": {
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "30": {
+        "recall": 0.25,
+        "precision": 0.94
+      },
+      "50": {
+        "recall": 0.42,
+        "precision": 1.0
+      }
+    },
+    "measured_after": {
+      "10": {
+        "recall": 0.86,
+        "precision": 0.46
+      },
+      "30": {
+        "recall": 0.8,
+        "precision": 0.8
+      },
+      "50": {
+        "recall": 0.81,
+        "precision": 0.9
+      }
+    },
+    "scope": "FD002 only -- FD001/FD003/FD004 are unchanged because no held-out ground truth was scored for them in this calibration",
+    "calibrated_at": "2026-08-23T19:11:53.074281+00:00"
+  }
+}

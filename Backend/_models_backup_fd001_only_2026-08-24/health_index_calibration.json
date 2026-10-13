@@ -1,0 +1,21 @@
+{
+  "informative_columns": [
+    "residual_sensor_2",
+    "residual_sensor_3",
+    "residual_sensor_4",
+    "residual_sensor_6",
+    "residual_sensor_7",
+    "residual_sensor_8",
+    "residual_sensor_9",
+    "residual_sensor_11",
+    "residual_sensor_12",
+    "residual_sensor_13",
+    "residual_sensor_14",
+    "residual_sensor_15",
+    "residual_sensor_17",
+    "residual_sensor_20",
+    "residual_sensor_21"
+  ],
+  "healthy_reference_deviation": 0.3206157666666667,
+  "n_rows_calibrated": 6144
+}

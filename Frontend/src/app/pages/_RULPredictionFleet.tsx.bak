@@ -1,0 +1,235 @@
+import { useState } from "react";
+import { Clock, Gauge, Timer, TrendingDown } from "lucide-react";
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ZAxis,
+} from "recharts";
+import { DataTable } from "../components/DataTable";
+import { GlassCard } from "../components/GlassCard";
+import { KPICard } from "../components/KPICard";
+import { MetricCard } from "../components/MetricCard";
+import {
+  AnimatedNumber,
+  Empty,
+  ErrorState,
+  LiveBadge,
+  Loading,
+  PageHeader,
+  Reveal,
+} from "../components/Live";
+import { useFleetSummary, useLeaderboard } from "../../lib/hooks";
+import { TrajectoryPanel } from "../components/TrajectoryPanel";
+
+export function RULPrediction() {
+  const { summary, latest, isLoading, error, data } = useFleetSummary();
+  const board = useLeaderboard("predicted_rul", 12);
+  const [selected, setSelected] = useState<string | null>(null);
+
+  if (isLoading) return <Loading label="Loading RUL predictions…" />;
+  if (error) return <ErrorState error={error} />;
+  if (!summary) return <Empty />;
+
+  const withRul = [...latest]
+    .filter((r) => r.predicted_rul !== null)
+    .sort((a, b) => (a.predicted_rul ?? 0) - (b.predicted_rul ?? 0));
+
+  const focusId = selected ?? String(withRul[0]?.engine_id ?? "");
+  const focusRow = withRul.find((r) => String(r.engine_id) === focusId);
+
+  // Conformal band: the backend emits a fixed-width split-conformal interval
+  // (upper - lower = 2*q_hat), so the band is constant by design.
+  const series = (data?.decisions ?? [])
+    .filter((r) => String(r.engine_id) === focusId && r.predicted_rul !== null)
+    .sort((a, b) => a.cycle - b.cycle)
+    .map((r) => ({
+      cycle: r.cycle,
+      rul: Number((r.predicted_rul ?? 0).toFixed(2)),
+      lower: Number((r.lower_bound ?? 0).toFixed(2)),
+      band: Number(((r.upper_bound ?? 0) - (r.lower_bound ?? 0)).toFixed(2)),
+      speed: r.degradation_speed !== null ? Number(r.degradation_speed.toFixed(3)) : null,
+    }));
+
+  const scatter = withRul.map((r) => ({
+    rul: Number((r.predicted_rul ?? 0).toFixed(1)),
+    health: Number((r.health_index ?? 0).toFixed(1)),
+    engine: `E${r.engine_id}`,
+    z: 60,
+  }));
+
+  const lifecycleCounts: Record<string, number> = {};
+  for (const r of latest) {
+    const k = r.lifecycle_state ?? "unknown";
+    lifecycleCounts[k] = (lifecycleCounts[k] ?? 0) + 1;
+  }
+
+  const critical = withRul.filter((r) => (r.predicted_rul ?? 999) <= 30).length;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="RUL Prediction"
+        subtitle={`Remaining useful life with conformal prediction intervals · ${withRul.length} engines scored`}
+        right={<LiveBadge />}
+      />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Reveal index={0}>
+          <KPICard title="Mean RUL (cycles)" value={<AnimatedNumber value={summary.avgRul} />} icon={Clock} status="info" />
+        </Reveal>
+        <Reveal index={1}>
+          <KPICard title="RUL ≤ 30 cycles" value={<AnimatedNumber value={critical} />} icon={Timer} status="danger" />
+        </Reveal>
+        <Reveal index={2}>
+          <KPICard
+            title="Lowest RUL"
+            value={<AnimatedNumber value={withRul[0]?.predicted_rul ?? 0} decimals={1} />}
+            icon={TrendingDown}
+            status="danger"
+            subtitle={withRul[0] ? `Engine E${withRul[0].engine_id}` : undefined}
+          />
+        </Reveal>
+        <Reveal index={3}>
+          <KPICard
+            title="Model"
+            value={<span className="text-lg">{focusRow?.model_used ?? "—"}</span>}
+            icon={Gauge}
+            status="neutral"
+          />
+        </Reveal>
+      </div>
+
+      <Reveal index={4}>
+        <MetricCard title={`Engine E${focusId} — RUL with Conformal Interval`}>
+          {series.length ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <ComposedChart data={series}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="cycle" stroke="#64748b" />
+                <YAxis stroke="#64748b" />
+                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }} />
+                <Legend />
+                {/* Stacked lower + band renders the interval as a floating ribbon. */}
+                <Area type="monotone" dataKey="lower" stackId="ci" stroke="none" fill="transparent" name=" " />
+                <Area
+                  type="monotone"
+                  dataKey="band"
+                  stackId="ci"
+                  stroke="none"
+                  fill="#3b82f6"
+                  fillOpacity={0.18}
+                  name="Conformal interval"
+                  animationDuration={900}
+                />
+                <Line type="monotone" dataKey="rul" name="Predicted RUL" stroke="#22d3ee" strokeWidth={2.5} dot={false} animationDuration={900} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <Empty />
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {withRul.slice(0, 14).map((r) => (
+              <button
+                key={String(r.engine_id)}
+                onClick={() => setSelected(String(r.engine_id))}
+                className={`rounded-lg border px-3 py-1 text-xs transition-all hover:scale-105 ${
+                  focusId === String(r.engine_id)
+                    ? "border-cyan-500/50 bg-cyan-500/20 text-cyan-300"
+                    : "border-slate-700/50 bg-slate-800/40 text-slate-400"
+                }`}
+              >
+                E{String(r.engine_id)}
+              </button>
+            ))}
+          </div>
+        </MetricCard>
+      </Reveal>
+
+      <Reveal index={5}>
+        <TrajectoryPanel engineId={focusId} />
+      </Reveal>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Reveal index={6}>
+          <MetricCard title="RUL vs Health Index — Fleet">
+            <ResponsiveContainer width="100%" height={280}>
+              <ScatterChart>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis type="number" dataKey="rul" name="RUL" stroke="#64748b" />
+                <YAxis type="number" dataKey="health" name="Health" stroke="#64748b" domain={[0, 100]} />
+                <ZAxis type="number" dataKey="z" range={[50, 90]} />
+                <Tooltip
+                  cursor={{ strokeDasharray: "3 3" }}
+                  contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }}
+                />
+                <Scatter data={scatter} fill="#22d3ee" fillOpacity={0.75} animationDuration={900} />
+              </ScatterChart>
+            </ResponsiveContainer>
+            <p className="mt-2 text-xs text-slate-500">
+              A tight positive relationship is expected — both track the same underlying degradation.
+            </p>
+          </MetricCard>
+        </Reveal>
+
+        <Reveal index={7}>
+          <MetricCard title="Lifecycle States">
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(lifecycleCounts).map(([k, v], i) => (
+                <Reveal key={k} index={i}>
+                  <GlassCard
+                    variant={
+                      k.toLowerCase() === "critical"
+                        ? "danger"
+                        : k.toLowerCase() === "accelerating"
+                        ? "warning"
+                        : k.toLowerCase() === "degrading"
+                        ? "primary"
+                        : "success"
+                    }
+                  >
+                    <div className="text-sm text-slate-400">{k}</div>
+                    <div className="mt-1 text-2xl font-bold text-slate-100">{v}</div>
+                  </GlassCard>
+                </Reveal>
+              ))}
+            </div>
+          </MetricCard>
+        </Reveal>
+      </div>
+
+      <Reveal index={8}>
+        <MetricCard title="Shortest Remaining Life">
+          <DataTable
+            columns={[
+              { header: "Engine", accessor: "id" },
+              { header: "Cycle", accessor: "cycle" },
+              { header: "Predicted RUL", accessor: "rul" },
+              { header: "Interval", accessor: "ci" },
+              { header: "Lifecycle", accessor: "state" },
+              { header: "Degradation Speed", accessor: "speed" },
+              { header: "Model", accessor: "model" },
+            ]}
+            data={(board.data?.engines ?? withRul).slice(0, 15).map((r) => ({
+              id: `E${r.engine_id}`,
+              cycle: r.cycle,
+              rul: (r.predicted_rul ?? 0).toFixed(2),
+              ci: `${(r.lower_bound ?? 0).toFixed(1)} – ${(r.upper_bound ?? 0).toFixed(1)}`,
+              state: r.lifecycle_state ?? "—",
+              speed: r.degradation_speed !== null ? r.degradation_speed.toFixed(3) : "—",
+              model: r.model_used ?? "—",
+            }))}
+          />
+        </MetricCard>
+      </Reveal>
+    </div>
+  );
+}

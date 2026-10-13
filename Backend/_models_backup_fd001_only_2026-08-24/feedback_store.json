@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "feedback_id": "fb_2c701c58",
+      "engine_id": 69,
+      "cycle": 362,
+      "verdict": "false_alarm",
+      "operator": "dashboard_operator",
+      "comment": "",
+      "confirmed_root_cause": null,
+      "system_root_cause": null,
+      "anomaly_id": null,
+      "severity": null,
+      "anomaly_score": null,
+      "recorded_at": "2026-08-24T12:12:17.958395+00:00"
+    }
+  ]
+}

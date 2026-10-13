@@ -1,0 +1,32 @@
+% Table 1: Sequential Policy Optimization
+\begin{table}[h]
+\centering
+\caption{Sequential Maintenance Policy Performance on Held-Out Test Trajectories (Proposal Section 3.6)}
+\begin{tabular}{lcccccc}
+\hline
+Policy & Fail Prev (\%) & Failures & Mean Cost (\$) & Downtime (h) & Cost Reduct (\%) & Downtime Reduct (\%) \\
+\hline
+\textbf{PPO Champion (Proposed)} & \textbf{100.0\%} & \textbf{0} & \textbf{\$500.00} & \textbf{12.0h} & \textbf{78.98\%} & \textbf{68.89\%} \\
+Rule-Cascade Baseline & 100.0\% & 0 & \$3,159.29 & 12.0h & — & — \\
+Reactive (TBO) Baseline & 67.9\% & 9 & \$2,378.57 & 38.6h & Base & Base \\
+\hline
+\end{tabular}
+\end{table}
+
+% Table 2: Benchmark Model Comparison
+\begin{table}[h]
+\centering
+\caption{Autonomous Maintenance Supervisor Benchmark Performance}
+\begin{tabular}{lccccc}
+\hline
+Model & Accuracy & Macro F1 & FCR & MCR & Cost Penalty (\$) \\
+\hline
+Majority Vote Baseline & 0.5959 & 0.1494 & 0.0000 | 1.0000 & 396,096.00 \\
+Rule-Based Baseline & 1.0000 & 1.0000 & 0.0000 | 0.0000 & 0.00 \\
+RUL-Only Baseline & 0.9985 & 0.9959 & 0.0000 | 0.0223 & 305.00 \\
+Risk-Only Baseline & 0.6971 & 0.4785 & 0.0000 | 0.3971 & 58,550.00 \\
+Anomaly-Only Baseline & 0.6100 & 0.2430 & 0.0000 | 0.7439 & 172,796.00 \\
+Champion Supervisor Agent & 0.7445 & 0.5378 & 0.0000 | 0.0000 & 49,835.00 \\
+\hline
+\end{tabular}
+\end{table}

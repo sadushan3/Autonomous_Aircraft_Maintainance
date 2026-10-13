@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "7b7d7e0e-4b27-4f89-b3cb-7c0cf48f2e90",
+    "name": "Predictive Maintenance Backend",
+    "description": "Postman collection for the FastAPI backend serving RUL lifecycle and failure-risk prediction agents for aircraft engine predictive maintenance.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "function round(value, digits) {",
+          "  return Number(value.toFixed(digits || 4));",
+          "}",
+          "",
+          "function buildSequence(length) {",
+          "  const sequence = [];",
+          "  for (let cycle = 1; cycle <= length; cycle += 1) {",
+          "    sequence.push({",
+          "      cycle: cycle,",
+          "      unit: 1,",
+          "      op_setting_1: round(-0.0045 + cycle * 0.00009, 6),",
+          "      op_setting_2: round(-0.0009 + cycle * 0.00002, 6),",
+          "      op_setting_3: 100.0,",
+          "      sensor_1: 518.67,",
+          "      sensor_2: round(640.8 + cycle * 0.028),",
+          "      sensor_3: round(1580.5 + cycle * 0.21),",
+          "      sensor_4: round(1392.0 + cycle * 0.32),",
+          "      sensor_5: 14.62,",
+          "      sensor_6: round(21.60 + cycle * 0.0005),",
+          "      sensor_7: round(552.4 - cycle * 0.035),",
+          "      sensor_8: round(2388.0 + cycle * 0.0008),",
+          "      sensor_9: round(9005.0 + cycle * 0.72),",
+          "      sensor_10: 1.30,",
+          "      sensor_11: round(46.9 + cycle * 0.012),",
+          "      sensor_12: round(521.8 - cycle * 0.026),",
+          "      sensor_13: round(2388.0 + cycle * 0.0007),",
+          "      sensor_14: round(8102.0 + cycle * 1.08),",
+          "      sensor_15: round(8.38 + cycle * 0.0009),",
+          "      sensor_16: 0.03,",
+          "      sensor_17: 390 + Math.floor(cycle / 18),",
+          "      sensor_18: 2388.0,",
+          "      sensor_19: 100.0,",
+          "      sensor_20: round(38.9 - cycle * 0.004),",
+          "      sensor_21: round(23.32 - cycle * 0.0022)",
+          "    });",
+          "  }",
+          "  return sequence;",
+          "}",
+          "",
+          "const sequence = buildSequence(70);",
+          "const common = {",
+          "  fd_subset: pm.collectionVariables.get('fdSubset') || 'FD001',",
+          "  engine_id: 'engine-001',",
+          "  sequence: sequence,",
+          "  include_debug: true",
+          "};",
+          "",
+          "pm.collectionVariables.set('sampleRulRequest', JSON.stringify({",
+          "  ...common,",
+          "  previous_rul_predictions: [60.0, 58.5, 55.2, 51.0]",
+          "}, null, 2));",
+          "",
+          "pm.collectionVariables.set('sampleFailureRiskRequest', JSON.stringify({",
+          "  ...common,",
+          "  previous_risk_scores: [0.12, 0.18, 0.25, 0.39],",
+          "  include_uncertainty: true",
+          "}, null, 2));",
+          "",
+          "pm.collectionVariables.set('sampleCombinedRequest', JSON.stringify({",
+          "  ...common,",
+          "  previous_rul_predictions: [60.0, 58.5, 55.2, 51.0],",
+          "  previous_risk_scores: [0.12, 0.18, 0.25, 0.39],",
+          "  include_uncertainty: true",
+          "}, null, 2));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "fdSubset",
+      "value": "FD001",
+      "type": "string"
+    },
+    {
+      "key": "sampleRulRequest",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sampleFailureRiskRequest",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sampleCombinedRequest",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Checks that the backend is running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('service is ok', function () { pm.expect(pm.response.json().status).to.eql('ok'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Artifacts",
+      "item": [
+        {
+          "name": "Artifact Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artifacts/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artifacts",
+                "status"
+              ]
+            },
+            "description": "Shows discovered and missing artifacts for each FD subset."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('contains artifact sections', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('rul_lifecycle');",
+                  "  pm.expect(body).to.have.property('failure_risk');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Artifact Config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artifacts/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artifacts",
+                "config"
+              ]
+            },
+            "description": "Returns configured FD subsets, model windows, uncertainty defaults, and artifact root."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('FD001 is supported', function () { pm.expect(pm.response.json().supported_fds).to.include('FD001'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Predictions",
+      "item": [
+        {
+          "name": "RUL Prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{sampleRulRequest}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rul/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rul",
+                "predict"
+              ]
+            },
+            "description": "Runs deterministic TCN RUL prediction with conformal uncertainty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('returns predicted RUL', function () { pm.expect(pm.response.json()).to.have.property('predicted_rul'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Failure Risk Prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{sampleFailureRiskRequest}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/failure-risk/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "failure-risk",
+                "predict"
+              ]
+            },
+            "description": "Runs BiLSTM failure-risk prediction for 10, 30, and 50 cycle horizons."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('returns risk_30', function () { pm.expect(pm.response.json()).to.have.property('risk_30'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Combined Prediction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{sampleCombinedRequest}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/predict/combined",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "predict",
+                "combined"
+              ]
+            },
+            "description": "Runs both RUL and failure-risk agents and returns rule-based supervisor pre-decision support."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('returns both agents', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('rul_agent');",
+                  "  pm.expect(body).to.have.property('failure_risk_agent');",
+                  "  pm.expect(body).to.have.property('supervisor_pre_decision');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Demo",
+      "item": [
+        {
+          "name": "Sample Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/sample-request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "demo",
+                "sample-request"
+              ]
+            },
+            "description": "Returns the backend sample combined prediction request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('sample has sequence', function () { pm.expect(pm.response.json().sequence.length).to.be.at.least(30); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Demo Predict",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "demo",
+                "predict"
+              ]
+            },
+            "description": "Runs combined prediction using the backend sample request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('returns combined response', function () { pm.expect(pm.response.json()).to.have.property('supervisor_pre_decision'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

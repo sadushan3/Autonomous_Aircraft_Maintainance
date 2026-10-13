@@ -1,0 +1,17 @@
+{
+  "mode_proportions": {
+    "0": 1.0
+  },
+  "n_rows": 20631,
+  "n_modes": 1,
+  "setting_means": {
+    "op_setting_1": -8.87014686636615e-06,
+    "op_setting_2": 2.3508312733265476e-06,
+    "op_setting_3": 100.0
+  },
+  "setting_stds": {
+    "op_setting_1": 0.002187313449015146,
+    "op_setting_2": 0.00029306212456614496,
+    "op_setting_3": 0.0
+  }
+}
