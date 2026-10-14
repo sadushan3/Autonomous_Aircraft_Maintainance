@@ -1,0 +1,15 @@
+{
+  "modes_found": 6,
+  "modes_expected": 6,
+  "matches_expectation": true,
+  "algorithm": "kmeans",
+  "silhouette_score": 0.9976720224645255,
+  "mean_mode_confidence": 0.9954954371595367,
+  "transition_row_fraction": 0.9892324438822041,
+  "drift_detected": true,
+  "drift_psi": 0.305729,
+  "acceptance": {
+    "regime_count_matches_documentation": true,
+    "context_stable": false
+  }
+}

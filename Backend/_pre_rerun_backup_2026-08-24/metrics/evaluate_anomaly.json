@@ -1,0 +1,18 @@
+{
+  "rul_alignment": {
+    "available": true,
+    "fleet_mean_rul": 80.22,
+    "fault_mean_rul": 18.56,
+    "faults_concentrate_at_low_rul": true
+  },
+  "gate_behaviour": {
+    "available": true,
+    "total_flagged": 3807,
+    "fault_anomalies": 1632,
+    "operational_anomalies": 2175,
+    "operational_suppression_rate": 0.5713
+  },
+  "acceptance": {
+    "faults_align_with_low_rul": true
+  }
+}
