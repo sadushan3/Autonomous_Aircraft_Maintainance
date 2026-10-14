@@ -1,0 +1,30 @@
+[
+  {
+    "cycle": 1,
+    "op_setting_1": -0.0007,
+    "op_setting_2": -0.0004,
+    "op_setting_3": 100.0,
+    "sensor_1": 518.67,
+    "sensor_2": 642.58,
+    "sensor_3": 1588.43,
+    "sensor_4": 1401.32,
+    "sensor_5": 14.62,
+    "sensor_6": 21.61,
+    "sensor_7": 553.90,
+    "sensor_8": 2388.04,
+    "sensor_9": 9050.17,
+    "sensor_10": 1.30,
+    "sensor_11": 47.20,
+    "sensor_12": 521.72,
+    "sensor_13": 2388.03,
+    "sensor_14": 8125.55,
+    "sensor_15": 8.4052,
+    "sensor_16": 0.03,
+    "sensor_17": 392.0,
+    "sensor_18": 2388.0,
+    "sensor_19": 100.0,
+    "sensor_20": 39.08,
+    "sensor_21": 23.3186
+  }
+]
+

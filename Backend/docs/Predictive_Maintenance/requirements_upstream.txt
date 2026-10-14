@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+numpy
+pandas
+scikit-learn
+joblib
+tensorflow
+python-multipart
+pytest
+httpx
+
