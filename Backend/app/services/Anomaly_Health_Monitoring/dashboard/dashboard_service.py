@@ -47,7 +47,7 @@ _OPTIONAL_COLUMNS = [
     # that a row was flagged but not which of the four detectors drove it, which
     # is the first question anyone asks of an anomaly.
     "isolation_forest_score", "mahalanobis_score", "lstm_ae_score",
-    "residual_rule_score", "threshold_used", "anomaly_persistence_cycles",
+    "residual_rule_score", "condition_consensus_score", "threshold_used", "anomaly_persistence_cycles",
     "is_anomalous", "early_warning_score",
     # Structured explainability. `subsystem_attribution` maps the deviation
     # onto physical engine sections with a contribution share each, which is a
@@ -215,7 +215,7 @@ class DashboardService:
                 "uncertainty_score", "model_agreement", "detector_agreement",
                 "evolution_pattern",
                 "isolation_forest_score", "mahalanobis_score", "lstm_ae_score",
-                "residual_rule_score", "threshold_used",
+                "residual_rule_score", "condition_consensus_score", "threshold_used",
                 "anomaly_persistence_cycles", "early_warning_score",
                 "subsystem_attribution", "why", "which_sensors",
                 "what_pattern", "how_severe", "shap_top_features",
