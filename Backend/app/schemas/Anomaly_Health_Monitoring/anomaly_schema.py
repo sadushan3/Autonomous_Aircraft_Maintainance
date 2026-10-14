@@ -99,6 +99,7 @@ class DetectorScores(StrictModel):
     mahalanobis_score: float = Field(default=0.0, ge=0.0, le=1.0)
     lstm_ae_score: float = Field(default=0.0, ge=0.0, le=1.0)
     residual_rule_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    condition_consensus_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 
 class AnomalyRecord(StrictModel):
