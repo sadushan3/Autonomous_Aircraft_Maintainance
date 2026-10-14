@@ -351,6 +351,15 @@ class AnomalyConfig:
             "score_normalization": "rational",
         }
     )
+    condition_consensus: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "n_estimators": 220,
+            "max_depth": 18,
+            "min_samples_leaf": 10,
+            "seeds": [42, 123, 2026],
+            "margin": 32.0,
+        }
+    )
     #: The validated temporal covariance model uses once-scaled raw residuals.
     feature_space: str = "raw"
     #: RUL proxy defining healthy rows for held-out threshold calibration.
@@ -374,16 +383,18 @@ class AnomalyConfig:
     lstm_ae_threshold_percentile: float = 99.0
     residual_threshold_percentile: float = 99.0
 
-    #: Selected on separate engines, then confirmed on official FD001-4 test
-    #: data (2026-10-10). Five-cycle covariance over commissioning-centred raw
-    #: residuals improved AUC 0.9728 -> 0.9970 and healthy false alarms
-    #: 5.53% -> 0.51%. Archived detector artifacts remain available for rollback.
+    #: Residual-history consensus passed engine-held-out confirmation and the
+    #: reused official benchmark on 2026-10-14: F1 0.8526 -> 0.9052, critical
+    #: recall 0.7832 -> 0.8438, healthy false alerts 139 -> 53. Every FD001-4
+    #: subset passed the non-regression checks. Labels are RUL condition proxies.
+    #: The frozen covariance remains the consensus feature reference.
     fusion_weights: Dict[str, float] = field(
         default_factory=lambda: {
             "isolation_forest": 0.0,
-            "mahalanobis": 1.0,
+            "mahalanobis": 0.0,
             "lstm_autoencoder": 0.0,
             "residual_rule": 0.0,
+            "condition_consensus": 1.0,
         }
     )
     #: Fallback fusion threshold, used only when the fusion stage has no
