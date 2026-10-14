@@ -1,0 +1,224 @@
+{
+  "subsets": {
+    "FD001": {
+      "train_rows": 20631,
+      "train_engines": 100,
+      "test_rows": 13096,
+      "test_engines": 100,
+      "life_min": 128,
+      "life_med": 199.0,
+      "life_max": 362,
+      "life_std": 46.3427492067573,
+      "constant_sensors": 6,
+      "regimes": 1,
+      "rul_at_end_mean": 75.52,
+      "rul_at_end_min": 7,
+      "rul_at_end_max": 145
+    },
+    "FD002": {
+      "train_rows": 53759,
+      "train_engines": 260,
+      "test_rows": 33991,
+      "test_engines": 259,
+      "life_min": 128,
+      "life_med": 199.0,
+      "life_max": 378,
+      "life_std": 46.78219839558725,
+      "constant_sensors": 0,
+      "regimes": 6,
+      "rul_at_end_mean": 81.18532818532819,
+      "rul_at_end_min": 6,
+      "rul_at_end_max": 194
+    },
+    "FD003": {
+      "train_rows": 24720,
+      "train_engines": 100,
+      "test_rows": 16596,
+      "test_engines": 100,
+      "life_min": 145,
+      "life_med": 220.5,
+      "life_max": 525,
+      "life_std": 86.48383979365478,
+      "constant_sensors": 5,
+      "regimes": 1,
+      "rul_at_end_mean": 75.32,
+      "rul_at_end_min": 6,
+      "rul_at_end_max": 145
+    },
+    "FD004": {
+      "train_rows": 61249,
+      "train_engines": 249,
+      "test_rows": 41214,
+      "test_engines": 248,
+      "life_min": 128,
+      "life_med": 234.0,
+      "life_max": 543,
+      "life_std": 73.11080023692699,
+      "constant_sensors": 0,
+      "regimes": 6,
+      "rul_at_end_mean": 86.5524193548387,
+      "rul_at_end_min": 6,
+      "rul_at_end_max": 195
+    }
+  },
+  "quality": {
+    "total_rows": 265256,
+    "total_engines": 1416,
+    "missing_cells": 0,
+    "duplicate_keys": 0,
+    "non_finite": 0,
+    "test_rul_median": 83.0,
+    "test_rul_min": 6,
+    "test_rul_max": 195,
+    "test_rul_zero": 0
+  },
+  "sensors": {
+    "sensor_1": {
+      "std_fd001": 0.0,
+      "std_fd002": 26.389707310759178,
+      "std_pooled": 30.420388148059974,
+      "corr_rul_fd001": NaN,
+      "n_unique_fd001": 1
+    },
+    "sensor_2": {
+      "std_fd001": 0.5000532700606232,
+      "std_fd002": 37.289399020462405,
+      "std_pooled": 42.47851646855684,
+      "corr_rul_fd001": -0.6064839743783388,
+      "n_unique_fd001": 310
+    },
+    "sensor_3": {
+      "std_fd001": 6.131149519690819,
+      "std_fd002": 105.9463406139554,
+      "std_pooled": 118.1752605562114,
+      "corr_rul_fd001": -0.5845203909175868,
+      "n_unique_fd001": 3012
+    },
+    "sensor_4": {
+      "std_fd001": 9.000604780543714,
+      "std_fd002": 119.12342758532442,
+      "std_pooled": 136.30007277070513,
+      "corr_rul_fd001": -0.6789482333860456,
+      "n_unique_fd001": 4051
+    },
+    "sensor_5": {
+      "std_fd001": 1.776399891637612e-15,
+      "std_fd002": 3.61383881855097,
+      "std_pooled": 4.2655544813021855,
+      "corr_rul_fd001": -1.4400366868944534e-16,
+      "n_unique_fd001": 1
+    },
+    "sensor_6": {
+      "std_fd001": 0.0013889849127073112,
+      "std_fd002": 5.431801597465489,
+      "std_pooled": 6.443922376046995,
+      "corr_rul_fd001": -0.1283484484741393,
+      "n_unique_fd001": 2
+    },
+    "sensor_7": {
+      "std_fd001": 0.8850922576634073,
+      "std_fd002": 146.00530614005993,
+      "std_pooled": 174.13383501351015,
+      "corr_rul_fd001": 0.6572226620548834,
+      "n_unique_fd001": 513
+    },
+    "sensor_8": {
+      "std_fd001": 0.07098547889092417,
+      "std_fd002": 145.20981606834985,
+      "std_pooled": 142.4266132988057,
+      "corr_rul_fd001": -0.563968406577183,
+      "n_unique_fd001": 53
+    },
+    "sensor_9": {
+      "std_fd001": 22.082879525066232,
+      "std_fd002": 335.8120126761641,
+      "std_pooled": 374.65745361997284,
+      "corr_rul_fd001": -0.3901015749180711,
+      "n_unique_fd001": 6403
+    },
+    "sensor_10": {
+      "std_fd001": 0.0,
+      "std_fd002": 0.12746884775626657,
+      "std_pooled": 0.14210294658312955,
+      "corr_rul_fd001": NaN,
+      "n_unique_fd001": 1
+    },
+    "sensor_11": {
+      "std_fd001": 0.2670873986396848,
+      "std_fd002": 3.2323720587863733,
+      "std_pooled": 3.426342182684694,
+      "corr_rul_fd001": -0.696228101455419,
+      "n_unique_fd001": 159
+    },
+    "sensor_12": {
+      "std_fd001": 0.7375533922097114,
+      "std_fd002": 137.6595069498954,
+      "std_pooled": 164.1934804369242,
+      "corr_rul_fd001": 0.6719831036132893,
+      "n_unique_fd001": 427
+    },
+    "sensor_13": {
+      "std_fd001": 0.07191891569857813,
+      "std_fd002": 128.06827104323716,
+      "std_pooled": 111.16724230402522,
+      "corr_rul_fd001": -0.5625688251495546,
+      "n_unique_fd001": 56
+    },
+    "sensor_14": {
+      "std_fd001": 19.07617597595311,
+      "std_fd002": 84.83794969298572,
+      "std_pooled": 80.62325700936933,
+      "corr_rul_fd001": -0.30676887025758465,
+      "n_unique_fd001": 6078
+    },
+    "sensor_15": {
+      "std_fd001": 0.03750503795196652,
+      "std_fd002": 0.7493354922324892,
+      "std_pooled": 0.7515810268912886,
+      "corr_rul_fd001": -0.6426670441973749,
+      "n_unique_fd001": 1918
+    },
+    "sensor_16": {
+      "std_fd001": 1.3878124153418844e-17,
+      "std_fd002": 0.004711473795965339,
+      "std_pooled": 0.004996578367134171,
+      "corr_rul_fd001": -1.4400366868944534e-16,
+      "n_unique_fd001": 1
+    },
+    "sensor_17": {
+      "std_fd001": 1.5487630246142987,
+      "std_fd002": 27.754515422961234,
+      "std_pooled": 31.02143011815409,
+      "corr_rul_fd001": -0.6061535537829633,
+      "n_unique_fd001": 13
+    },
+    "sensor_18": {
+      "std_fd001": 0.0,
+      "std_fd002": 145.32798014258134,
+      "std_pooled": 142.51311437897868,
+      "corr_rul_fd001": NaN,
+      "n_unique_fd001": 1
+    },
+    "sensor_19": {
+      "std_fd001": 0.0,
+      "std_fd002": 5.364066520346077,
+      "std_pooled": 4.656269907646832,
+      "corr_rul_fd001": NaN,
+      "n_unique_fd001": 1
+    },
+    "sensor_20": {
+      "std_fd001": 0.18074642787366085,
+      "std_fd002": 9.869331200699564,
+      "std_pooled": 11.691421892713347,
+      "corr_rul_fd001": 0.6294284994377343,
+      "n_unique_fd001": 120
+    },
+    "sensor_21": {
+      "std_fd001": 0.10825087474491234,
+      "std_fd002": 5.921615208351726,
+      "std_pooled": 7.015066958654148,
+      "corr_rul_fd001": 0.6356620421802921,
+      "n_unique_fd001": 4745
+    }
+  }
+}

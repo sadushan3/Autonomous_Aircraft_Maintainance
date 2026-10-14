@@ -1,0 +1,12 @@
+{
+  "scale": 1.05,
+  "fusion_threshold": 0.956346,
+  "base_threshold": 0.954163167317708,
+  "effective_scale": 1.002288,
+  "clamped": false,
+  "tail_mass_base": 0.045837,
+  "tail_mass_adapted": 0.043654,
+  "reachable_ceiling": 0.990833,
+  "feedback_applied": 1,
+  "last_updated": "2026-08-24T18:44:57.277400+00:00"
+}

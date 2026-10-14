@@ -1,0 +1,22 @@
+{
+  "thresholds": {
+    "healthy": 80.0,
+    "degrading": 60.0,
+    "warning": 30.0,
+    "critical": 20.0
+  },
+  "state_order": [
+    "Healthy",
+    "Degrading",
+    "Warning",
+    "Critical",
+    "Failure Risk"
+  ],
+  "band_repair_note": "'warning' was driven from 40.0 to 22.752 by eleven consecutive x0.95 false-alarm nudges in learning_updater._maybe_adapt_state_thresholds, which only ever moved this boundary. Because Critical spans [critical, warning), that collapsed it to 2.75 points against Warning's 37.25, and engines skipped Warning -> Failure Risk directly (293 Critical rows vs 591 Failure Risk). Reset to critical + MIN_CRITICAL_BAND = 30.0, which keeps the feedback-driven lowering from 40.0 but restores a meaningful 10-point Critical band (1224 rows). The nudge rule now floors at this width so it cannot recur.",
+  "band_repair_previous": {
+    "healthy": 80.0,
+    "degrading": 60.0,
+    "warning": 22.75200369105839,
+    "critical": 20.0
+  }
+}

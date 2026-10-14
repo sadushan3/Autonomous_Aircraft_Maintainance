@@ -1,0 +1,91 @@
+{
+  "weighting_strategy": "inverse_rmse",
+  "weights": {
+    "random_forest": 0.2549077915346126,
+    "xgboost": 0.2437588717054141,
+    "lightgbm": 0.24495015230282977,
+    "tensorflow": 0.2563831844571435
+  },
+  "metrics": {
+    "random_forest": {
+      "rmse": 0.7669640907574781,
+      "mae": 0.5613555536401051,
+      "r2": -0.0065480003398697235,
+      "r2_all_targets": -0.006548000339869768,
+      "n_informative_targets": 15,
+      "name": "random_forest",
+      "train_rows": 4609,
+      "val_rows": 1024,
+      "n_features": 6,
+      "n_targets": 15,
+      "n_modes": 1,
+      "fit_seconds": 0.877
+    },
+    "xgboost": {
+      "rmse": 0.8020431059330285,
+      "mae": 0.5852001446191146,
+      "r2": -0.09461204813600646,
+      "r2_all_targets": -0.09461204813600646,
+      "n_informative_targets": 15,
+      "name": "xgboost",
+      "train_rows": 4609,
+      "val_rows": 1024,
+      "n_features": 6,
+      "n_targets": 15,
+      "n_modes": 1,
+      "fit_seconds": 5.604
+    },
+    "lightgbm": {
+      "rmse": 0.798142482147305,
+      "mae": 0.5833119401996598,
+      "r2": -0.08320967015717591,
+      "r2_all_targets": -0.08320967015717591,
+      "n_informative_targets": 15,
+      "name": "lightgbm",
+      "train_rows": 4609,
+      "val_rows": 1024,
+      "n_features": 6,
+      "n_targets": 15,
+      "n_modes": 1,
+      "fit_seconds": 4.333
+    },
+    "tensorflow": {
+      "rmse": 0.7625504885404105,
+      "mae": 0.5585487863083887,
+      "r2": -0.0008984787674276351,
+      "r2_all_targets": -0.0008984787674275759,
+      "n_informative_targets": 15,
+      "name": "tensorflow",
+      "train_rows": 4609,
+      "val_rows": 1024,
+      "n_features": 6,
+      "n_targets": 15,
+      "n_modes": 1,
+      "fit_seconds": 32.212,
+      "epochs_trained": 56
+    }
+  },
+  "target_names": [
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "twins": [
+    "random_forest",
+    "xgboost",
+    "lightgbm",
+    "tensorflow"
+  ]
+}

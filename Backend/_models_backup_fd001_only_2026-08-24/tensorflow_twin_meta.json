@@ -1,0 +1,44 @@
+{
+  "name": "tensorflow",
+  "feature_names": [
+    "op_setting_1",
+    "op_setting_2",
+    "op_setting_3",
+    "cycle",
+    "cycle_norm",
+    "mode_0"
+  ],
+  "target_names": [
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "n_modes": 1,
+  "metrics": {
+    "rmse": 0.7625504885404105,
+    "mae": 0.5585487863083887,
+    "r2": -0.0008984787674276351,
+    "r2_all_targets": -0.0008984787674275759,
+    "n_informative_targets": 15,
+    "name": "tensorflow",
+    "train_rows": 4609,
+    "val_rows": 1024,
+    "n_features": 6,
+    "n_targets": 15,
+    "n_modes": 1,
+    "fit_seconds": 32.212,
+    "epochs_trained": 56
+  }
+}

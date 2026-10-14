@@ -1,0 +1,38 @@
+{
+  "median": {
+    "residual_sensor_2": 0.43521008536585365,
+    "residual_sensor_3": 0.5146274468085106,
+    "residual_sensor_4": 0.411242,
+    "residual_sensor_6": 0.11156667241379309,
+    "residual_sensor_7": -0.45573110975609754,
+    "residual_sensor_8": 0.28495112987012994,
+    "residual_sensor_9": 0.053435553571428554,
+    "residual_sensor_11": 0.42728937037037035,
+    "residual_sensor_12": -0.41485989999999995,
+    "residual_sensor_13": 0.4435481718750001,
+    "residual_sensor_14": 0.02487048333333336,
+    "residual_sensor_15": 0.571655675,
+    "residual_sensor_17": 0.4105704025974025,
+    "residual_sensor_20": -0.5666000701754387,
+    "residual_sensor_21": -0.4611489787234042
+  },
+  "scale": {
+    "residual_sensor_2": 0.8520833253731709,
+    "residual_sensor_3": 0.9244233713332978,
+    "residual_sensor_4": 0.7372679331428572,
+    "residual_sensor_6": 0.35637018673245435,
+    "residual_sensor_7": 0.7833320535292682,
+    "residual_sensor_8": 0.6419899612454546,
+    "residual_sensor_9": 0.31816205546700005,
+    "residual_sensor_11": 0.7084596530111111,
+    "residual_sensor_12": 0.7191306822,
+    "residual_sensor_13": 0.7437736738008226,
+    "residual_sensor_14": 0.31038756852333327,
+    "residual_sensor_15": 0.8947538783592855,
+    "residual_sensor_17": 0.8122110108159877,
+    "residual_sensor_20": 0.9142949128821052,
+    "residual_sensor_21": 0.8246134860033011
+  },
+  "n_rows": 20631,
+  "n_engines": 100
+}

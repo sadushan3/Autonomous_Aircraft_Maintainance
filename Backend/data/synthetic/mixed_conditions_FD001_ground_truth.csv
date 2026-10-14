@@ -1,0 +1,31 @@
+unit,category,true_rul_at_final_cycle,cycles,expected_health_state,expect_anomaly_flag,injected_fault,injected_sensors,injection_onset_cycle,source_engine,source_total_cycles
+1,healthy,155,85,Healthy,False,,,,81,240
+2,healthy,149,80,Healthy,False,,,,75,229
+3,healthy,142,80,Healthy,False,,,,10,222
+4,healthy,136,80,Healthy,False,,,,41,216
+5,healthy,129,80,Healthy,False,,,,16,209
+6,healthy,123,84,Healthy,False,,,,15,207
+7,healthy,116,80,Healthy,False,,,,42,196
+8,healthy,110,81,Healthy,False,,,,32,191
+9,degrading,95,90,Degrading,False,,,,80,185
+10,degrading,89,90,Degrading,False,,,,3,179
+11,degrading,83,91,Degrading,False,,,,63,174
+12,degrading,78,90,Degrading,False,,,,23,168
+13,degrading,72,91,Degrading,False,,,,13,163
+14,degrading,66,90,Degrading,False,,,,98,156
+15,degrading,60,90,Degrading,False,,,,8,150
+16,warning,55,92,Warning,False,,,,24,147
+17,warning,50,97,Warning,False,,,,58,147
+18,warning,45,90,Warning,False,,,,91,135
+19,warning,40,97,Warning,False,,,,70,137
+20,warning,35,93,Warning,False,,,,39,128
+21,warning,30,107,Warning,False,,,,57,137
+22,critical,20,133,Critical,True,,,,65,153
+23,critical,16,138,Critical,True,,,,77,154
+24,critical,12,142,Critical,True,,,,90,154
+25,critical,9,146,Critical,True,,,,93,155
+26,critical,5,151,Critical,True,,,,27,156
+27,anomaly_injected,125,142,Healthy (but anomalous),True,hpt_drift,sensor_3 sensor_4 sensor_11,98,84,267
+28,anomaly_injected,117,139,Healthy (but anomalous),True,sensor_bias,sensor_2 sensor_17,100,46,256
+29,anomaly_injected,108,149,Healthy (but anomalous),True,transient_spikes,sensor_9 sensor_14,100,54,257
+30,anomaly_injected,100,140,Healthy (but anomalous),True,instability,sensor_7 sensor_12 sensor_21,101,11,240
