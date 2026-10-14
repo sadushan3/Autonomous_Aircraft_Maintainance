@@ -1,19 +1,4 @@
-"""
-Central configuration for the Explainable Health Monitoring & Anomaly Reasoning Agent.
 
-Every tunable value in the component lives here.  No module may hardcode a path,
-a hyper-parameter, or a threshold; they all read from the ``CONFIG`` singleton
-exported at the bottom of this file.
-
-The configuration is layered:
-
-1. Dataclass defaults (declared below).
-2. Optional JSON override file pointed at by ``AHM_CONFIG_FILE``.
-3. Environment variables prefixed with ``AHM_`` (highest precedence).
-
-This ordering lets the same code run unchanged in a laptop fast-path
-(``FD001`` only) and in a full pooled ``FD001..FD004`` research run.
-"""
 
 from __future__ import annotations
 
@@ -37,11 +22,7 @@ BACKEND_ROOT = _THIS_FILE.parents[3]
 
 @dataclass
 class PathConfig:
-    """Filesystem layout for the component.
-
-    All paths are absolute and derived from :data:`BACKEND_ROOT` so the
-    component behaves identically regardless of the current working directory.
-    """
+   
 
     backend_root: Path = BACKEND_ROOT
 
