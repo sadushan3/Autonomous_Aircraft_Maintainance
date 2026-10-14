@@ -1,0 +1,318 @@
+{
+    "input_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_engineered_dataset.csv",
+    "output_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_encoded_dataset.csv",
+    "rows": 40463,
+    "columns_before": 320,
+    "columns_after": 371,
+    "ordinal_columns_encoded": [
+        "anomaly_severity",
+        "lifecycle_state",
+        "risk_state"
+    ],
+    "onehot_columns_encoded": [
+        "action_hint_for_supervisor",
+        "top_sensor_1",
+        "top_sensor_2",
+        "top_sensor_3",
+        "rul_model_used",
+        "risk_model_used",
+        "anomaly_model_used",
+        "lifecycle_risk_context",
+        "risk_anomaly_context",
+        "health_anomaly_context"
+    ],
+    "columns_skipped": [],
+    "auto_detected_nominal": [
+        "rul_model_used",
+        "risk_model_used",
+        "anomaly_model_used",
+        "lifecycle_risk_context",
+        "risk_anomaly_context",
+        "health_anomaly_context"
+    ],
+    "encoding_stats": [
+        {
+            "original_column": "anomaly_severity",
+            "encoding_strategy": "ordinal",
+            "unique_values_found": [
+                "critical",
+                "high",
+                "low",
+                "medium",
+                "unknown"
+            ],
+            "output_columns": [
+                "anomaly_severity"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 33099
+        },
+        {
+            "original_column": "lifecycle_state",
+            "encoding_strategy": "ordinal",
+            "unique_values_found": [
+                "critical",
+                "degrading",
+                "early",
+                "nominal"
+            ],
+            "output_columns": [
+                "lifecycle_state"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "risk_state",
+            "encoding_strategy": "ordinal",
+            "unique_values_found": [
+                "critical",
+                "elevated",
+                "high",
+                "nominal"
+            ],
+            "output_columns": [
+                "risk_state"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "action_hint_for_supervisor",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "continue_operation",
+                "immediate_maintenance",
+                "schedule_inspection",
+                "schedule_maintenance"
+            ],
+            "output_columns": [
+                "action_hint_for_supervisor_continue_operation",
+                "action_hint_for_supervisor_immediate_maintenance",
+                "action_hint_for_supervisor_schedule_inspection",
+                "action_hint_for_supervisor_schedule_maintenance"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "top_sensor_1",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "s11_core_speed",
+                "s12_burner_fuel",
+                "s15_bleed_enthalpy",
+                "s20_hpc_outlet_temp",
+                "s2_inlet_temp",
+                "s3_inlet_press",
+                "s4_bypass_ratio",
+                "s7_fan_speed"
+            ],
+            "output_columns": [
+                "top_sensor_1_s11_core_speed",
+                "top_sensor_1_s12_burner_fuel",
+                "top_sensor_1_s15_bleed_enthalpy",
+                "top_sensor_1_s20_hpc_outlet_temp",
+                "top_sensor_1_s2_inlet_temp",
+                "top_sensor_1_s3_inlet_press",
+                "top_sensor_1_s4_bypass_ratio",
+                "top_sensor_1_s7_fan_speed"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "top_sensor_2",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "s11_core_speed",
+                "s12_burner_fuel",
+                "s15_bleed_enthalpy",
+                "s20_hpc_outlet_temp",
+                "s2_inlet_temp",
+                "s3_inlet_press",
+                "s4_bypass_ratio",
+                "s7_fan_speed"
+            ],
+            "output_columns": [
+                "top_sensor_2_s11_core_speed",
+                "top_sensor_2_s12_burner_fuel",
+                "top_sensor_2_s15_bleed_enthalpy",
+                "top_sensor_2_s20_hpc_outlet_temp",
+                "top_sensor_2_s2_inlet_temp",
+                "top_sensor_2_s3_inlet_press",
+                "top_sensor_2_s4_bypass_ratio",
+                "top_sensor_2_s7_fan_speed"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "top_sensor_3",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "s11_core_speed",
+                "s12_burner_fuel",
+                "s15_bleed_enthalpy",
+                "s20_hpc_outlet_temp",
+                "s2_inlet_temp",
+                "s3_inlet_press",
+                "s4_bypass_ratio",
+                "s7_fan_speed"
+            ],
+            "output_columns": [
+                "top_sensor_3_s11_core_speed",
+                "top_sensor_3_s12_burner_fuel",
+                "top_sensor_3_s15_bleed_enthalpy",
+                "top_sensor_3_s20_hpc_outlet_temp",
+                "top_sensor_3_s2_inlet_temp",
+                "top_sensor_3_s3_inlet_press",
+                "top_sensor_3_s4_bypass_ratio",
+                "top_sensor_3_s7_fan_speed"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "rul_model_used",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "lstm_rul_v2",
+                "transformer_rul_v1",
+                "xgboost_rul_v3"
+            ],
+            "output_columns": [
+                "rul_model_used_lstm_rul_v2",
+                "rul_model_used_transformer_rul_v1",
+                "rul_model_used_xgboost_rul_v3"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "risk_model_used",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "deepsurvival_v1",
+                "lightgbm_risk_v1",
+                "randomforest_risk_v2"
+            ],
+            "output_columns": [
+                "risk_model_used_deepsurvival_v1",
+                "risk_model_used_lightgbm_risk_v1",
+                "risk_model_used_randomforest_risk_v2"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "anomaly_model_used",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "autoencoder_v2",
+                "isolationforest_v1",
+                "mahalanobis_v1"
+            ],
+            "output_columns": [
+                "anomaly_model_used_autoencoder_v2",
+                "anomaly_model_used_isolationforest_v1",
+                "anomaly_model_used_mahalanobis_v1"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "lifecycle_risk_context",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "critical__critical",
+                "critical__high",
+                "degrading__elevated",
+                "degrading__high",
+                "early__nominal",
+                "nominal__elevated",
+                "nominal__nominal"
+            ],
+            "output_columns": [
+                "lifecycle_risk_context_critical__critical",
+                "lifecycle_risk_context_critical__high",
+                "lifecycle_risk_context_degrading__elevated",
+                "lifecycle_risk_context_degrading__high",
+                "lifecycle_risk_context_early__nominal",
+                "lifecycle_risk_context_nominal__elevated",
+                "lifecycle_risk_context_nominal__nominal"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "risk_anomaly_context",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "critical__critical",
+                "critical__high",
+                "elevated__low",
+                "elevated__unknown",
+                "high__high",
+                "high__low",
+                "high__medium",
+                "nominal__unknown"
+            ],
+            "output_columns": [
+                "risk_anomaly_context_critical__critical",
+                "risk_anomaly_context_critical__high",
+                "risk_anomaly_context_elevated__low",
+                "risk_anomaly_context_elevated__unknown",
+                "risk_anomaly_context_high__high",
+                "risk_anomaly_context_high__low",
+                "risk_anomaly_context_high__medium",
+                "risk_anomaly_context_nominal__unknown"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        },
+        {
+            "original_column": "health_anomaly_context",
+            "encoding_strategy": "onehot",
+            "unique_values_found": [
+                "critical__critical",
+                "critical__high",
+                "critical__low",
+                "critical__medium",
+                "degrading__low",
+                "degrading__medium",
+                "degrading__unknown",
+                "early__unknown",
+                "nominal__unknown"
+            ],
+            "output_columns": [
+                "health_anomaly_context_critical__critical",
+                "health_anomaly_context_critical__high",
+                "health_anomaly_context_critical__low",
+                "health_anomaly_context_critical__medium",
+                "health_anomaly_context_degrading__low",
+                "health_anomaly_context_degrading__medium",
+                "health_anomaly_context_degrading__unknown",
+                "health_anomaly_context_early__unknown",
+                "health_anomaly_context_nominal__unknown"
+            ],
+            "null_count_before": 0,
+            "null_count_after": 0,
+            "unknown_categories_found": 0
+        }
+    ],
+    "duration_seconds": 22.5938,
+    "status": "success"
+}

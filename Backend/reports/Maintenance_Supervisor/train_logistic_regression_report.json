@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "model_name": "logistic_regression",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\logistic_regression.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 329,
+    "val_accuracy": 0.4186,
+    "val_macro_f1": 0.3414,
+    "val_log_loss": 2.4036,
+    "duration_seconds": 17.2268
+}

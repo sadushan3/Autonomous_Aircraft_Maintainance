@@ -1,0 +1,9 @@
+{
+    "status": "success",
+    "target_coverage": 0.95,
+    "empirical_test_coverage": 0.962,
+    "calibrated_q_alpha_cycles": 5.2,
+    "total_test_samples": 5521,
+    "manifest_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\artifacts\\Maintenance_Supervisor\\conformal_rul_bounds.json",
+    "duration_seconds": 1.7609
+}

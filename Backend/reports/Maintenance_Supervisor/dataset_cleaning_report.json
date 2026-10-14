@@ -1,0 +1,394 @@
+{
+  "status": "success",
+  "component": "Maintenance_Supervisor",
+  "stage": "dataset_cleaning",
+  "started_at_utc": "2026-08-22T19:11:08.223878+00:00",
+  "finished_at_utc": "2026-08-22T19:11:12.810237+00:00",
+  "duration_seconds": 4.586556,
+  "input": {
+    "path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_labeled_dataset.csv",
+    "size_bytes": 17333773
+  },
+  "output": {
+    "path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_cleaned_dataset.csv",
+    "report_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\reports\\Maintenance_Supervisor\\dataset_cleaning_report.json",
+    "sha256": "8249b90fb49ee5bec1adf943e67dac9e7288ccca0e705e5a9ece1d2b178fa124",
+    "rows": 40463,
+    "columns": 53,
+    "memory_mb": 7.5887
+  },
+  "configuration": {
+    "remove_invalid_targets": true,
+    "preserve_supervisor_outputs": true,
+    "target_column": "final_decision",
+    "unique_key_columns": [
+      "engine_id",
+      "fd_subset",
+      "cycle"
+    ],
+    "decision_classes": [
+      "continue_operation",
+      "monitor_closely",
+      "schedule_inspection",
+      "schedule_maintenance",
+      "immediate_maintenance"
+    ]
+  },
+  "cleaning_counters": {
+    "original_rows": 40463,
+    "original_columns": 53,
+    "final_rows": 40463,
+    "final_columns": 53,
+    "duplicate_rows_removed": 0,
+    "duplicate_key_rows_removed": 0,
+    "rows_removed_missing_keys": 0,
+    "rows_removed_invalid_target": 0,
+    "accidental_index_columns_removed": [],
+    "renamed_columns": {},
+    "leakage_columns_removed": [],
+    "numeric_values_coerced_to_missing": {},
+    "numeric_values_imputed": {},
+    "boolean_values_imputed": {},
+    "categorical_values_imputed": {
+      "anomaly_severity": 33099,
+      "maintenance_urgency": 24110
+    },
+    "invalid_boolean_values": {},
+    "probability_values_clipped": {},
+    "non_negative_values_corrected": {},
+    "rul_bounds_swapped": 0,
+    "uncertainty_width_recalculated": 0,
+    "invalid_cycles_corrected": 0,
+    "categorical_values_normalized": {
+      "anomaly_severity": 7364
+    }
+  },
+  "remaining_missing_values": {},
+  "target_distribution": {
+    "continue_operation": 24110,
+    "immediate_maintenance": 2241,
+    "monitor_closely": 6083,
+    "schedule_inspection": 4052,
+    "schedule_maintenance": 3977
+  },
+  "columns": [
+    {
+      "name": "engine_id",
+      "dtype": "string",
+      "missing_count": 0,
+      "unique_count": 200
+    },
+    {
+      "name": "fd_subset",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "cycle",
+      "dtype": "int16",
+      "missing_count": 0,
+      "unique_count": 259
+    },
+    {
+      "name": "predicted_rul",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19159
+    },
+    {
+      "name": "lower_bound",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 18002
+    },
+    {
+      "name": "upper_bound",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 20107
+    },
+    {
+      "name": "uncertainty_width",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4494
+    },
+    {
+      "name": "degradation_speed",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11504
+    },
+    {
+      "name": "degradation_acceleration",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 758
+    },
+    {
+      "name": "lifecycle_state",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "confidence_collapse_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "sudden_health_drop_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "instability_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "risk_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2637
+    },
+    {
+      "name": "risk_30",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5942
+    },
+    {
+      "name": "risk_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7565
+    },
+    {
+      "name": "uncertainty_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1608
+    },
+    {
+      "name": "uncertainty_30",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2782
+    },
+    {
+      "name": "uncertainty_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2948
+    },
+    {
+      "name": "threshold_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "threshold_30",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "threshold_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "control_risk",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6079
+    },
+    {
+      "name": "risk_velocity",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 528
+    },
+    {
+      "name": "risk_acceleration",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 261
+    },
+    {
+      "name": "risk_state",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "action_hint_for_supervisor",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "predicted_fail_in_10",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "predicted_fail_in_30",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "predicted_fail_in_50",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "anomaly_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6742
+    },
+    {
+      "name": "anomaly_threshold",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "residual_anomaly_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6267
+    },
+    {
+      "name": "isolation_forest_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6557
+    },
+    {
+      "name": "mahalanobis_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6961
+    },
+    {
+      "name": "anomaly_severity",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "top_sensor_1",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_2",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_3",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_1_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6195
+    },
+    {
+      "name": "top_sensor_2_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5200
+    },
+    {
+      "name": "top_sensor_3_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3919
+    },
+    {
+      "name": "is_anomalous",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "context_drift_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "context_confidence",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4438
+    },
+    {
+      "name": "rul_model_used",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "risk_model_used",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "anomaly_model_used",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "final_decision",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "priority",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "maintenance_urgency",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "requires_human_review",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "supervisor_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5
+    }
+  ]
+}

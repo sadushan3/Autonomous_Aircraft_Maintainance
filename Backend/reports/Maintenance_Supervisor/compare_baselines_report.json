@@ -1,0 +1,56 @@
+{
+    "status": "success",
+    "input_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\processed\\Maintenance_Supervisor\\supervisor_encoded_dataset.csv",
+    "total_samples": 40463,
+    "comparison_table": [
+        {
+            "model": "Majority Vote Baseline",
+            "accuracy": 0.5959,
+            "macro_f1": 0.1494,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 1.0,
+            "cost_penalty": 396096.0
+        },
+        {
+            "model": "Rule-Based Baseline",
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 0.0,
+            "cost_penalty": 0.0
+        },
+        {
+            "model": "RUL-Only Baseline",
+            "accuracy": 0.9985,
+            "macro_f1": 0.9959,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 0.0223,
+            "cost_penalty": 305.0
+        },
+        {
+            "model": "Risk-Only Baseline",
+            "accuracy": 0.6971,
+            "macro_f1": 0.4785,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 0.3971,
+            "cost_penalty": 58550.0
+        },
+        {
+            "model": "Anomaly-Only Baseline",
+            "accuracy": 0.61,
+            "macro_f1": 0.243,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 0.7439,
+            "cost_penalty": 172796.0
+        },
+        {
+            "model": "Champion Supervisor Agent",
+            "accuracy": 0.7445,
+            "macro_f1": 0.5378,
+            "false_critical_rate": 0.0,
+            "missed_critical_rate": 0.0,
+            "cost_penalty": 49835.0
+        }
+    ],
+    "duration_seconds": 15.6508
+}

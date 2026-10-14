@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "model_name": "lightgbm",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\lightgbm.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 329,
+    "val_accuracy": 0.9994,
+    "val_macro_f1": 0.9984,
+    "val_log_loss": 5.1813,
+    "duration_seconds": 29.3649
+}

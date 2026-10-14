@@ -1,0 +1,9 @@
+{
+    "status": "success",
+    "input_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\data\\Maintenance_Supervisor\\Maintenance_Supervisor\\integrated\\supervisor_integrated_input.csv",
+    "output_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\artifacts\\Maintenance_Supervisor\\inference_pipeline_output.csv",
+    "total_samples_processed": 24720,
+    "mean_confidence": 0.4722,
+    "human_reviews_required": 23985,
+    "duration_seconds": 4.2784
+}
