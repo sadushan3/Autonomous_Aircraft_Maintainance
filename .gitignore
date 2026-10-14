@@ -1,0 +1,27 @@
+# Dependencies & Virtual Environments
+.venv/
+venv/
+node_modules/
+Frontend/node_modules/
+.claude/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Exclude large models & processed CSVs exceeding GitHub's 100MB limit
+Backend/models/random_forest_twin.pkl
+Backend/models/Predictive_Maintenance/RUL_Lifecycle/FD002_RandomForest_baseline_FINAL.pkl
+Backend/models/Predictive_Maintenance/RUL_Lifecycle/FD004_RandomForest_baseline_FINAL.pkl
+Backend/processed/Maintenance_Supervisor/supervisor_encoded_dataset.csv
+Backend/processed/Maintenance_Supervisor/supervisor_engineered_dataset.csv
+Backend/processed/Maintenance_Supervisor/supervisor_scaled_dataset.csv
+Backend/processed/Maintenance_Supervisor/splits/full_with_split_column.csv
+
