@@ -49,6 +49,10 @@ from app.services.Anomaly_Health_Monitoring.anomaly_detection.residual_anomaly_d
     SCORE_COLUMN as RULE_SCORE_COLUMN,
     ResidualAnomalyDetector,
 )
+from app.services.Anomaly_Health_Monitoring.anomaly_detection.condition_consensus import (
+    SCORE_COLUMN as CONSENSUS_SCORE_COLUMN,
+    ConditionConsensusDetector,
+)
 from app.services.Anomaly_Health_Monitoring.anomaly_detection.early_warning_score import (
     EarlyWarningScorer,
 )
@@ -99,6 +103,7 @@ _DETECTOR_REGISTRY: Dict[str, str] = {
     "mahalanobis": MAHAL_SCORE_COLUMN,
     "lstm_autoencoder": LSTM_SCORE_COLUMN,
     "residual_rule": RULE_SCORE_COLUMN,
+    "condition_consensus": CONSENSUS_SCORE_COLUMN,
 }
 
 
@@ -118,6 +123,7 @@ class AnomalyFusion:
             "mahalanobis": MahalanobisDetector(self.config),
             "lstm_autoencoder": LSTMAutoencoderDetector(self.config),
             "residual_rule": ResidualAnomalyDetector(self.config),
+            "condition_consensus": ConditionConsensusDetector(self.config),
         }
         self.detectors = {name: detector for name, detector in self.detectors.items()
                           if self.config.anomaly.fusion_weights.get(name, 0.0) > 0}
@@ -192,6 +198,11 @@ class AnomalyFusion:
         healthy = frame.loc[self._healthy_mask(frame)]
         if healthy.empty:
             raise AnomalyHealthError("No healthy calibration rows are available; a fusion cutoff cannot be fitted.")
+        if list(self.detectors) == ["condition_consensus"]:
+            # This score already owns a separate-engine healthy-tail cutoff
+            # and conservative safety margin. A fresh p99 would undo that
+            # margin and silently change the validated false-alert policy.
+            return float(self.detectors["condition_consensus"].validate_calibration(frame))
         try:
             # Score complete histories before applying the healthy label mask.
             healthy_scores = self.score(frame)
