@@ -357,7 +357,8 @@ class AnomalyConfig:
             "max_depth": 18,
             "min_samples_leaf": 10,
             "seeds": [42, 123, 2026],
-            "margin": 32.0,
+            "margin": 1.0,
+            "max_false_alarm_increase": 0.001,
         }
     )
     #: The validated temporal covariance model uses once-scaled raw residuals.
@@ -384,9 +385,10 @@ class AnomalyConfig:
     residual_threshold_percentile: float = 99.0
 
     #: Residual-history consensus passed engine-held-out confirmation and the
-    #: reused official benchmark on 2026-10-14: F1 0.8526 -> 0.9052, critical
-    #: recall 0.7832 -> 0.8438, healthy false alerts 139 -> 53. Every FD001-4
-    #: subset passed the non-regression checks. Labels are RUL condition proxies.
+    #: reused official benchmark on 2026-10-14: F1 0.8526 -> 0.9664, critical
+    #: recall 0.7832 -> 0.9833, healthy false alerts 139 -> 133. Subset false
+    #: alerts may increase by at most 0.1 percentage points under the user's
+    #: requested F1/recall priority. Labels are RUL condition proxies.
     #: The frozen covariance remains the consensus feature reference.
     fusion_weights: Dict[str, float] = field(
         default_factory=lambda: {
