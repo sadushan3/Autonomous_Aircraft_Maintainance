@@ -246,10 +246,18 @@ class AnomalyFusion:
             raise AnomalyHealthError("No residual z-score columns found; run the twin stage first.")
 
         names = detector_names or list(self.detectors.keys())
-        fit_frame, calibration_frame = engine_wise_split(
-            frame, validation_fraction=self.config.data.validation_engine_fraction,
-            random_state=self.config.data.random_state,
-        )
+        from app.utils.Anomaly_Health_Monitoring.training_split import load_training_split, training_scope
+        plan = load_training_split(self.config)
+        if plan:
+            fit_frame = training_scope(frame, self.config, required=True)
+            calibration_frame = training_scope(frame, self.config, ("calibration",), required=True)
+            selection_frame = training_scope(frame, self.config, ("selection",), required=True)
+        else:
+            fit_frame, calibration_frame = engine_wise_split(
+                frame, validation_fraction=self.config.data.validation_engine_fraction,
+                random_state=self.config.data.random_state,
+            )
+            selection_frame = calibration_frame
         if fit_frame.empty or calibration_frame.empty:
             raise AnomalyHealthError("Anomaly fitting and threshold calibration need separate engines.")
         summary: Dict[str, Any] = {}
@@ -261,7 +269,10 @@ class AnomalyFusion:
                 self.logger.warning("Unknown detector '%s' skipped", name)
                 continue
             try:
-                detector.fit(fit_frame, self.feature_columns)
+                if name == "condition_consensus" and plan:
+                    detector.fit(pd.concat([fit_frame, calibration_frame]), self.feature_columns)
+                else:
+                    detector.fit(fit_frame, self.feature_columns)
                 trained_any = True
                 summary[name] = {"threshold": float(detector.threshold)}
             except Exception as exc:  # noqa: BLE001 - one detector must not block the stage
@@ -271,14 +282,17 @@ class AnomalyFusion:
         if not trained_any:
             raise AnomalyHealthError("Every anomaly detector failed to train.")
 
-        self.calibrated_fusion_threshold = self._calibrate_fusion_threshold(calibration_frame)
+        cutoff_frame = selection_frame if list(self.detectors) == ["condition_consensus"] else calibration_frame
+        self.calibrated_fusion_threshold = self._calibrate_fusion_threshold(cutoff_frame)
         # Publish a fitted detector only after its cutoff has been established
         # on separate engines, preserving the previous artifact on failure.
         for name in names:
             if name in summary and "error" not in summary[name]:
                 self.detectors[name].save()
         atomic_write_json(
-            {"calibrated_fusion_threshold": self.calibrated_fusion_threshold},
+            {"calibrated_fusion_threshold": self.calibrated_fusion_threshold,
+             "training_plan_id": plan["plan_id"] if plan else None,
+             "evaluation_status": "retrospective_condition_proxy"},
             self.config.paths.model_path("anomaly_fusion_meta.json"),
         )
         # A feedback threshold belongs to its fitted score distribution. Reset
@@ -326,6 +340,9 @@ class AnomalyFusion:
             A frame of identity keys plus one score column per detector.
         """
         result = frame[get_identity_columns()].copy().reset_index(drop=True)
+        for metadata in ("split", "subset_id"):
+            if metadata in frame:
+                result[metadata] = frame[metadata].to_numpy()
         if "calibration_ready" in frame:
             result["calibration_ready"] = frame["calibration_ready"].to_numpy(bool)
         for name, detector in self.detectors.items():
