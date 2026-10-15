@@ -38,6 +38,7 @@ _DETECTOR_SCORE_COLUMNS = [
     "mahalanobis_score",
     "lstm_ae_score",
     "residual_rule_score",
+    "condition_consensus_score",
 ]
 
 

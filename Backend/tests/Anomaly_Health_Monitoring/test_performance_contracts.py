@@ -36,6 +36,8 @@ class PerformanceContracts(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.config = Config()
+        # Covariance contracts remain applicable when that detector is enabled.
+        self.config.anomaly.fusion_weights = {"mahalanobis": 1.0}
         for key, value in vars(self.config.paths).items():
             if isinstance(value, Path):
                 setattr(self.config.paths, key, Path(self.directory.name) / key)

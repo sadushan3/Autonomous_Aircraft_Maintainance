@@ -92,11 +92,28 @@ class MahalanobisDetector:
             # Restart the temporal window after a missing observation.
             gap = ordered.groupby("unit", sort=False)["cycle"].diff().ne(1)
             segment = gap.cumsum()
-            groups = values.groupby([ordered["unit"], segment], sort=False)
-            if self.temporal_method == "ewm":
-                values = groups.transform(lambda s: s.ewm(span=self.temporal_window, adjust=False).mean())
+            if self.temporal_method == "rolling" and self.temporal_window <= 20 and not values.empty:
+                # Short window views avoid a Python/pandas callback for every
+                # sensor in every engine. Each block still starts at an engine
+                # boundary or cycle gap; no other history enters its means.
+                matrix = values.to_numpy()
+                smoothed = np.empty_like(matrix)
+                starts = np.flatnonzero(gap.to_numpy())
+                ends = np.r_[starts[1:], len(matrix)]
+                for start, end in zip(starts, ends):
+                    block = matrix[start:end]
+                    width = min(self.temporal_window, len(block))
+                    for count in range(1, width):
+                        smoothed[start + count - 1] = block[:count].mean(axis=0)
+                    windows = np.lib.stride_tricks.sliding_window_view(block, width, axis=0)
+                    smoothed[start + width - 1:end] = windows.mean(axis=-1)
+                values = pd.DataFrame(smoothed, index=values.index, columns=values.columns)
             else:
-                values = groups.transform(lambda s: s.rolling(self.temporal_window, min_periods=1).mean())
+                groups = values.groupby([ordered["unit"], segment], sort=False)
+                if self.temporal_method == "ewm":
+                    values = groups.transform(lambda s: s.ewm(span=self.temporal_window, adjust=False).mean())
+                else:
+                    values = groups.transform(lambda s: s.rolling(self.temporal_window, min_periods=1).mean())
         result = np.zeros((len(frame), len(self.feature_columns)), dtype=float)
         result[ordered.index.to_numpy()] = values.to_numpy()
         return result

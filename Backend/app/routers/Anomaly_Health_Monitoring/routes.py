@@ -1474,7 +1474,7 @@ def twin_trace(
 def detector_config() -> Any:
     """Return the fusion contract the detector actually runs with.
 
-    The four detector weights and the calibration percentile were duplicated as
+    The detector weights and the calibration percentile were duplicated as
     literals in the dashboard, where nothing tied them to the config that the
     fusion stage reads -- a weight retuned in the backend would have left the UI
     quietly describing the old ensemble. Serving them makes the screen a view of
@@ -1486,6 +1486,7 @@ def detector_config() -> Any:
     try:
         weights = dict(config.anomaly.fusion_weights)
         total = sum(weights.values()) or 1.0
+        fusion_meta = _load_first_json([config.paths.model_path("anomaly_fusion_meta.json")]) or {}
 
         #: What each detector keys on. Stated here because it describes the
         #: algorithm, not a tunable, so it cannot drift from a config value.
@@ -1494,6 +1495,7 @@ def detector_config() -> Any:
             "mahalanobis": "Ledoit-Wolf covariance distance",
             "lstm_autoencoder": "sequence reconstruction error",
             "residual_rule": "direct residual thresholding",
+            "condition_consensus": "ExtraTrees consensus over causal residual histories; trained on RUL condition proxies",
         }
 
         return _json_safe(
@@ -1512,10 +1514,12 @@ def detector_config() -> Any:
                     "threshold_percentile": config.anomaly.fusion_threshold_percentile,
                     "fallback_threshold": config.anomaly.fusion_threshold,
                     "normalisation": (
-                        "each detector's raw score is ranked into an empirical "
-                        "percentile against its own healthy-population reference "
-                        "before weighting, so the four are comparable"
+                        "each detector uses its persisted healthy-reference calibration "
+                        "before weighting; condition consensus scales critical-condition "
+                        "odds by separate-engine healthy maxima"
                     ),
+                    "condition_consensus_margin": fusion_meta.get("margin", config.anomaly.condition_consensus["margin"]),
+                    "max_subset_false_alarm_increase": config.anomaly.condition_consensus["max_false_alarm_increase"],
                 },
             }
         )
