@@ -1,0 +1,14 @@
+{
+  "rows_reasoned": 1632,
+  "total_fault_rows": 1632,
+  "coverage": 1.0,
+  "n_distinct_causes": 7,
+  "n_distinct_subsystems": 7,
+  "hard_causal_claims": 0,
+  "memory_match_rate": 1.0,
+  "acceptance": {
+    "no_hard_causal_claims": true,
+    "reasoned_something": true,
+    "full_coverage": true
+  }
+}

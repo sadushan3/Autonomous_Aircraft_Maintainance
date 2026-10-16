@@ -1,0 +1,49 @@
+{
+  "status": "success",
+  "corpus": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\data\\Maintenance_Supervisor\\Maintenance_Supervisor\\integrated\\supervisor_integrated_input.csv",
+  "split": {
+    "train_engines": 181,
+    "val_engines": 39,
+    "test_engines": 39
+  },
+  "test_episode_metrics": {
+    "episodes_evaluated": 39,
+    "mean_episode_return": -17.573,
+    "std_episode_return": 35.89,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.0
+  },
+  "val_episode_metrics": {
+    "episodes_evaluated": 39,
+    "mean_episode_return": -35.146,
+    "std_episode_return": 89.778,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.0513
+  },
+  "best_checkpoint_epoch": 32,
+  "best_checkpoint_val_metrics": {
+    "episodes_evaluated": 39,
+    "mean_episode_return": -35.146,
+    "std_episode_return": 89.778,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.0513
+  },
+  "full_batch_raw_decision_distribution": {
+    "continue_operation": 33958,
+    "monitor_closely": 19,
+    "schedule_maintenance": 14
+  },
+  "critical_failure_risk_rows_total": 147,
+  "critical_rows_raw_decision_distribution": {
+    "continue_operation": 130,
+    "monitor_closely": 12,
+    "schedule_maintenance": 5
+  },
+  "critical_rows_with_real_signal": 147,
+  "critical_rows_with_real_signal_raw_decision_distribution": {
+    "continue_operation": 130,
+    "monitor_closely": 12,
+    "schedule_maintenance": 5
+  },
+  "duration_seconds": 3648.4262
+}

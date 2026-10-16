@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "model_name": "dqn",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\dqn.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 329,
+    "val_accuracy": 0.2173,
+    "val_macro_f1": 0.205,
+    "val_log_loss": 2.643,
+    "duration_seconds": 99.2887
+}

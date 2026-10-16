@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "model_name": "random_forest",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\random_forest.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 329,
+    "val_accuracy": 0.9998,
+    "val_macro_f1": 0.9996,
+    "val_log_loss": 9.7091,
+    "duration_seconds": 7.6697
+}

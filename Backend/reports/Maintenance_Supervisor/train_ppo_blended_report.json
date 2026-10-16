@@ -1,0 +1,59 @@
+{
+  "status": "success",
+  "offline_engines": 200,
+  "live_engines": 259,
+  "split": {
+    "train_engines": 321,
+    "val_engines": 69,
+    "test_engines": 69
+  },
+  "test_episode_metrics_combined": {
+    "episodes_evaluated": 69,
+    "mean_episode_return": -400.34,
+    "std_episode_return": 444.426,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.4058
+  },
+  "test_episode_metrics_offline_only": {
+    "episodes_evaluated": 28,
+    "mean_episode_return": -912.86,
+    "std_episode_return": 132.419,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 1.0
+  },
+  "test_episode_metrics_live_only": {
+    "episodes_evaluated": 41,
+    "mean_episode_return": -50.327,
+    "std_episode_return": 136.121,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.0
+  },
+  "val_episode_metrics": {
+    "episodes_evaluated": 69,
+    "mean_episode_return": -375.254,
+    "std_episode_return": 448.015,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.3478
+  },
+  "best_checkpoint_epoch": 40,
+  "best_checkpoint_val_metrics": {
+    "episodes_evaluated": 69,
+    "mean_episode_return": -375.254,
+    "std_episode_return": 448.015,
+    "catastrophic_failure_rate": 0.0,
+    "successful_maintenance_rate": 0.3478
+  },
+  "live_corpus_full_batch_raw_decision_distribution": {
+    "continue_operation": 33921,
+    "schedule_inspection": 31,
+    "schedule_maintenance": 35,
+    "monitor_closely": 4
+  },
+  "live_corpus_critical_failure_risk_rows": 147,
+  "live_corpus_critical_rows_raw_decision_distribution": {
+    "continue_operation": 127,
+    "schedule_inspection": 17,
+    "monitor_closely": 3
+  },
+  "duration_seconds": 6548.9665
+}

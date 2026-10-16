@@ -1,0 +1,2634 @@
+{
+  "status": "success",
+  "component": "Maintenance_Supervisor",
+  "stage": "feature_engineering",
+  "started_at_utc": "2026-08-22T19:11:12.864231+00:00",
+  "finished_at_utc": "2026-08-22T19:11:28.069040+00:00",
+  "duration_seconds": 15.205138,
+  "input": {
+    "path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_cleaned_dataset.csv",
+    "rows": 40463,
+    "columns": 53
+  },
+  "output": {
+    "path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_engineered_dataset.csv",
+    "report_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\reports\\Maintenance_Supervisor\\feature_engineering_report.json",
+    "rows": 40463,
+    "columns": 324,
+    "memory_mb": 87.6148,
+    "sha256": "f34be07400f2106689bc464bc42f1bf54b5c4ef67863d0076ee1c0cabc4865c7"
+  },
+  "configuration": {
+    "rolling_windows": [
+      3,
+      5,
+      10
+    ],
+    "lag_periods": [
+      1,
+      3,
+      5
+    ],
+    "grouping_columns": [
+      "fd_subset",
+      "engine_id"
+    ],
+    "target_column": "final_decision"
+  },
+  "summary": {
+    "rows_before": 40463,
+    "columns_before": 53,
+    "rows_after": 40463,
+    "columns_after": 324,
+    "total_features_created": 271,
+    "numeric_features_created": [
+      "rul_inverse",
+      "rul_log",
+      "rul_normalized_100",
+      "rul_urgency_score",
+      "rul_interval_width",
+      "rul_interval_midpoint",
+      "rul_relative_uncertainty",
+      "rul_confidence_proxy",
+      "degradation_intensity",
+      "accelerating_degradation",
+      "risk_mean",
+      "risk_max",
+      "risk_min",
+      "risk_range",
+      "risk_std",
+      "risk_growth_10_to_30",
+      "risk_growth_30_to_50",
+      "risk_growth_10_to_50",
+      "risk_monotonic",
+      "risk_weighted_horizon",
+      "risk_uncertainty_mean",
+      "risk_uncertainty_max",
+      "risk_threshold_mean",
+      "risk_margin_10",
+      "risk_threshold_breach_10",
+      "risk_margin_30",
+      "risk_threshold_breach_30",
+      "risk_margin_50",
+      "risk_threshold_breach_50",
+      "anomaly_score_mean",
+      "anomaly_score_max",
+      "anomaly_score_min",
+      "anomaly_score_range",
+      "anomaly_model_disagreement",
+      "anomaly_threshold_margin",
+      "anomaly_threshold_ratio",
+      "root_cause_score_sum",
+      "root_cause_score_max",
+      "root_cause_concentration",
+      "rul_risk_interaction",
+      "risk_anomaly_interaction",
+      "risk_anomaly_gap",
+      "risk_anomaly_agreement",
+      "combined_condition_score",
+      "critical_condition_count",
+      "combined_confidence",
+      "decision_uncertainty",
+      "confidence_adjusted_condition"
+    ],
+    "temporal_features_created": [
+      "predicted_rul_diff_1",
+      "predicted_rul_pct_change_1",
+      "predicted_rul_lag_1",
+      "predicted_rul_lag_3",
+      "predicted_rul_lag_5",
+      "predicted_rul_roll_mean_3",
+      "predicted_rul_roll_std_3",
+      "predicted_rul_roll_min_3",
+      "predicted_rul_roll_max_3",
+      "predicted_rul_trend_3",
+      "predicted_rul_roll_mean_5",
+      "predicted_rul_roll_std_5",
+      "predicted_rul_roll_min_5",
+      "predicted_rul_roll_max_5",
+      "predicted_rul_trend_5",
+      "predicted_rul_roll_mean_10",
+      "predicted_rul_roll_std_10",
+      "predicted_rul_roll_min_10",
+      "predicted_rul_roll_max_10",
+      "predicted_rul_trend_10",
+      "uncertainty_width_diff_1",
+      "uncertainty_width_pct_change_1",
+      "uncertainty_width_lag_1",
+      "uncertainty_width_lag_3",
+      "uncertainty_width_lag_5",
+      "uncertainty_width_roll_mean_3",
+      "uncertainty_width_roll_std_3",
+      "uncertainty_width_roll_min_3",
+      "uncertainty_width_roll_max_3",
+      "uncertainty_width_trend_3",
+      "uncertainty_width_roll_mean_5",
+      "uncertainty_width_roll_std_5",
+      "uncertainty_width_roll_min_5",
+      "uncertainty_width_roll_max_5",
+      "uncertainty_width_trend_5",
+      "uncertainty_width_roll_mean_10",
+      "uncertainty_width_roll_std_10",
+      "uncertainty_width_roll_min_10",
+      "uncertainty_width_roll_max_10",
+      "uncertainty_width_trend_10",
+      "risk_10_diff_1",
+      "risk_10_pct_change_1",
+      "risk_10_lag_1",
+      "risk_10_lag_3",
+      "risk_10_lag_5",
+      "risk_10_roll_mean_3",
+      "risk_10_roll_std_3",
+      "risk_10_roll_min_3",
+      "risk_10_roll_max_3",
+      "risk_10_trend_3",
+      "risk_10_roll_mean_5",
+      "risk_10_roll_std_5",
+      "risk_10_roll_min_5",
+      "risk_10_roll_max_5",
+      "risk_10_trend_5",
+      "risk_10_roll_mean_10",
+      "risk_10_roll_std_10",
+      "risk_10_roll_min_10",
+      "risk_10_roll_max_10",
+      "risk_10_trend_10",
+      "risk_30_diff_1",
+      "risk_30_pct_change_1",
+      "risk_30_lag_1",
+      "risk_30_lag_3",
+      "risk_30_lag_5",
+      "risk_30_roll_mean_3",
+      "risk_30_roll_std_3",
+      "risk_30_roll_min_3",
+      "risk_30_roll_max_3",
+      "risk_30_trend_3",
+      "risk_30_roll_mean_5",
+      "risk_30_roll_std_5",
+      "risk_30_roll_min_5",
+      "risk_30_roll_max_5",
+      "risk_30_trend_5",
+      "risk_30_roll_mean_10",
+      "risk_30_roll_std_10",
+      "risk_30_roll_min_10",
+      "risk_30_roll_max_10",
+      "risk_30_trend_10",
+      "risk_50_diff_1",
+      "risk_50_pct_change_1",
+      "risk_50_lag_1",
+      "risk_50_lag_3",
+      "risk_50_lag_5",
+      "risk_50_roll_mean_3",
+      "risk_50_roll_std_3",
+      "risk_50_roll_min_3",
+      "risk_50_roll_max_3",
+      "risk_50_trend_3",
+      "risk_50_roll_mean_5",
+      "risk_50_roll_std_5",
+      "risk_50_roll_min_5",
+      "risk_50_roll_max_5",
+      "risk_50_trend_5",
+      "risk_50_roll_mean_10",
+      "risk_50_roll_std_10",
+      "risk_50_roll_min_10",
+      "risk_50_roll_max_10",
+      "risk_50_trend_10",
+      "control_risk_diff_1",
+      "control_risk_pct_change_1",
+      "control_risk_lag_1",
+      "control_risk_lag_3",
+      "control_risk_lag_5",
+      "control_risk_roll_mean_3",
+      "control_risk_roll_std_3",
+      "control_risk_roll_min_3",
+      "control_risk_roll_max_3",
+      "control_risk_trend_3",
+      "control_risk_roll_mean_5",
+      "control_risk_roll_std_5",
+      "control_risk_roll_min_5",
+      "control_risk_roll_max_5",
+      "control_risk_trend_5",
+      "control_risk_roll_mean_10",
+      "control_risk_roll_std_10",
+      "control_risk_roll_min_10",
+      "control_risk_roll_max_10",
+      "control_risk_trend_10",
+      "anomaly_score_diff_1",
+      "anomaly_score_pct_change_1",
+      "anomaly_score_lag_1",
+      "anomaly_score_lag_3",
+      "anomaly_score_lag_5",
+      "anomaly_score_roll_mean_3",
+      "anomaly_score_roll_std_3",
+      "anomaly_score_roll_min_3",
+      "anomaly_score_roll_max_3",
+      "anomaly_score_trend_3",
+      "anomaly_score_roll_mean_5",
+      "anomaly_score_roll_std_5",
+      "anomaly_score_roll_min_5",
+      "anomaly_score_roll_max_5",
+      "anomaly_score_trend_5",
+      "anomaly_score_roll_mean_10",
+      "anomaly_score_roll_std_10",
+      "anomaly_score_roll_min_10",
+      "anomaly_score_roll_max_10",
+      "anomaly_score_trend_10",
+      "residual_anomaly_score_diff_1",
+      "residual_anomaly_score_pct_change_1",
+      "residual_anomaly_score_lag_1",
+      "residual_anomaly_score_lag_3",
+      "residual_anomaly_score_lag_5",
+      "residual_anomaly_score_roll_mean_3",
+      "residual_anomaly_score_roll_std_3",
+      "residual_anomaly_score_roll_min_3",
+      "residual_anomaly_score_roll_max_3",
+      "residual_anomaly_score_trend_3",
+      "residual_anomaly_score_roll_mean_5",
+      "residual_anomaly_score_roll_std_5",
+      "residual_anomaly_score_roll_min_5",
+      "residual_anomaly_score_roll_max_5",
+      "residual_anomaly_score_trend_5",
+      "residual_anomaly_score_roll_mean_10",
+      "residual_anomaly_score_roll_std_10",
+      "residual_anomaly_score_roll_min_10",
+      "residual_anomaly_score_roll_max_10",
+      "residual_anomaly_score_trend_10",
+      "isolation_forest_score_diff_1",
+      "isolation_forest_score_pct_change_1",
+      "isolation_forest_score_lag_1",
+      "isolation_forest_score_lag_3",
+      "isolation_forest_score_lag_5",
+      "isolation_forest_score_roll_mean_3",
+      "isolation_forest_score_roll_std_3",
+      "isolation_forest_score_roll_min_3",
+      "isolation_forest_score_roll_max_3",
+      "isolation_forest_score_trend_3",
+      "isolation_forest_score_roll_mean_5",
+      "isolation_forest_score_roll_std_5",
+      "isolation_forest_score_roll_min_5",
+      "isolation_forest_score_roll_max_5",
+      "isolation_forest_score_trend_5",
+      "isolation_forest_score_roll_mean_10",
+      "isolation_forest_score_roll_std_10",
+      "isolation_forest_score_roll_min_10",
+      "isolation_forest_score_roll_max_10",
+      "isolation_forest_score_trend_10",
+      "mahalanobis_score_diff_1",
+      "mahalanobis_score_pct_change_1",
+      "mahalanobis_score_lag_1",
+      "mahalanobis_score_lag_3",
+      "mahalanobis_score_lag_5",
+      "mahalanobis_score_roll_mean_3",
+      "mahalanobis_score_roll_std_3",
+      "mahalanobis_score_roll_min_3",
+      "mahalanobis_score_roll_max_3",
+      "mahalanobis_score_trend_3",
+      "mahalanobis_score_roll_mean_5",
+      "mahalanobis_score_roll_std_5",
+      "mahalanobis_score_roll_min_5",
+      "mahalanobis_score_roll_max_5",
+      "mahalanobis_score_trend_5",
+      "mahalanobis_score_roll_mean_10",
+      "mahalanobis_score_roll_std_10",
+      "mahalanobis_score_roll_min_10",
+      "mahalanobis_score_roll_max_10",
+      "mahalanobis_score_trend_10",
+      "context_confidence_diff_1",
+      "context_confidence_pct_change_1",
+      "context_confidence_lag_1",
+      "context_confidence_lag_3",
+      "context_confidence_lag_5",
+      "context_confidence_roll_mean_3",
+      "context_confidence_roll_std_3",
+      "context_confidence_roll_min_3",
+      "context_confidence_roll_max_3",
+      "context_confidence_trend_3",
+      "context_confidence_roll_mean_5",
+      "context_confidence_roll_std_5",
+      "context_confidence_roll_min_5",
+      "context_confidence_roll_max_5",
+      "context_confidence_trend_5",
+      "context_confidence_roll_mean_10",
+      "context_confidence_roll_std_10",
+      "context_confidence_roll_min_10",
+      "context_confidence_roll_max_10",
+      "context_confidence_trend_10"
+    ],
+    "categorical_features_created": [
+      "lifecycle_risk_context",
+      "risk_anomaly_context",
+      "health_anomaly_context"
+    ],
+    "missing_source_columns": [],
+    "invalid_numeric_values_replaced": {},
+    "remaining_missing_values_imputed": {
+      "predicted_rul_diff_1": 200,
+      "predicted_rul_pct_change_1": 200,
+      "predicted_rul_lag_1": 200,
+      "predicted_rul_lag_3": 600,
+      "predicted_rul_lag_5": 1000,
+      "predicted_rul_roll_std_3": 200,
+      "predicted_rul_roll_std_5": 200,
+      "predicted_rul_roll_std_10": 200,
+      "uncertainty_width_diff_1": 200,
+      "uncertainty_width_pct_change_1": 200,
+      "uncertainty_width_lag_1": 200,
+      "uncertainty_width_lag_3": 600,
+      "uncertainty_width_lag_5": 1000,
+      "uncertainty_width_roll_std_3": 200,
+      "uncertainty_width_roll_std_5": 200,
+      "uncertainty_width_roll_std_10": 200,
+      "risk_10_diff_1": 200,
+      "risk_10_pct_change_1": 200,
+      "risk_10_lag_1": 200,
+      "risk_10_lag_3": 600,
+      "risk_10_lag_5": 1000,
+      "risk_10_roll_std_3": 200,
+      "risk_10_roll_std_5": 200,
+      "risk_10_roll_std_10": 200,
+      "risk_30_diff_1": 200,
+      "risk_30_pct_change_1": 200,
+      "risk_30_lag_1": 200,
+      "risk_30_lag_3": 600,
+      "risk_30_lag_5": 1000,
+      "risk_30_roll_std_3": 200,
+      "risk_30_roll_std_5": 200,
+      "risk_30_roll_std_10": 200,
+      "risk_50_diff_1": 200,
+      "risk_50_pct_change_1": 200,
+      "risk_50_lag_1": 200,
+      "risk_50_lag_3": 600,
+      "risk_50_lag_5": 1000,
+      "risk_50_roll_std_3": 200,
+      "risk_50_roll_std_5": 200,
+      "risk_50_roll_std_10": 200,
+      "control_risk_diff_1": 200,
+      "control_risk_pct_change_1": 200,
+      "control_risk_lag_1": 200,
+      "control_risk_lag_3": 600,
+      "control_risk_lag_5": 1000,
+      "control_risk_roll_std_3": 200,
+      "control_risk_roll_std_5": 200,
+      "control_risk_roll_std_10": 200,
+      "anomaly_score_diff_1": 200,
+      "anomaly_score_pct_change_1": 200,
+      "anomaly_score_lag_1": 200,
+      "anomaly_score_lag_3": 600,
+      "anomaly_score_lag_5": 1000,
+      "anomaly_score_roll_std_3": 200,
+      "anomaly_score_roll_std_5": 200,
+      "anomaly_score_roll_std_10": 200,
+      "residual_anomaly_score_diff_1": 200,
+      "residual_anomaly_score_pct_change_1": 200,
+      "residual_anomaly_score_lag_1": 200,
+      "residual_anomaly_score_lag_3": 600,
+      "residual_anomaly_score_lag_5": 1000,
+      "residual_anomaly_score_roll_std_3": 200,
+      "residual_anomaly_score_roll_std_5": 200,
+      "residual_anomaly_score_roll_std_10": 200,
+      "isolation_forest_score_diff_1": 200,
+      "isolation_forest_score_pct_change_1": 200,
+      "isolation_forest_score_lag_1": 200,
+      "isolation_forest_score_lag_3": 600,
+      "isolation_forest_score_lag_5": 1000,
+      "isolation_forest_score_roll_std_3": 200,
+      "isolation_forest_score_roll_std_5": 200,
+      "isolation_forest_score_roll_std_10": 200,
+      "mahalanobis_score_diff_1": 200,
+      "mahalanobis_score_pct_change_1": 200,
+      "mahalanobis_score_lag_1": 200,
+      "mahalanobis_score_lag_3": 600,
+      "mahalanobis_score_lag_5": 1000,
+      "mahalanobis_score_roll_std_3": 200,
+      "mahalanobis_score_roll_std_5": 200,
+      "mahalanobis_score_roll_std_10": 200,
+      "context_confidence_diff_1": 200,
+      "context_confidence_pct_change_1": 200,
+      "context_confidence_lag_1": 200,
+      "context_confidence_lag_3": 600,
+      "context_confidence_lag_5": 1000,
+      "context_confidence_roll_std_3": 200,
+      "context_confidence_roll_std_5": 200,
+      "context_confidence_roll_std_10": 200
+    }
+  },
+  "created_features": [
+    "rul_inverse",
+    "rul_log",
+    "rul_normalized_100",
+    "rul_urgency_score",
+    "rul_interval_width",
+    "rul_interval_midpoint",
+    "rul_relative_uncertainty",
+    "rul_confidence_proxy",
+    "degradation_intensity",
+    "accelerating_degradation",
+    "risk_mean",
+    "risk_max",
+    "risk_min",
+    "risk_range",
+    "risk_std",
+    "risk_growth_10_to_30",
+    "risk_growth_30_to_50",
+    "risk_growth_10_to_50",
+    "risk_monotonic",
+    "risk_weighted_horizon",
+    "risk_uncertainty_mean",
+    "risk_uncertainty_max",
+    "risk_threshold_mean",
+    "risk_margin_10",
+    "risk_threshold_breach_10",
+    "risk_margin_30",
+    "risk_threshold_breach_30",
+    "risk_margin_50",
+    "risk_threshold_breach_50",
+    "anomaly_score_mean",
+    "anomaly_score_max",
+    "anomaly_score_min",
+    "anomaly_score_range",
+    "anomaly_model_disagreement",
+    "anomaly_threshold_margin",
+    "anomaly_threshold_ratio",
+    "root_cause_score_sum",
+    "root_cause_score_max",
+    "root_cause_concentration",
+    "rul_risk_interaction",
+    "risk_anomaly_interaction",
+    "risk_anomaly_gap",
+    "risk_anomaly_agreement",
+    "combined_condition_score",
+    "critical_condition_count",
+    "combined_confidence",
+    "decision_uncertainty",
+    "confidence_adjusted_condition",
+    "predicted_rul_diff_1",
+    "predicted_rul_pct_change_1",
+    "predicted_rul_lag_1",
+    "predicted_rul_lag_3",
+    "predicted_rul_lag_5",
+    "predicted_rul_roll_mean_3",
+    "predicted_rul_roll_std_3",
+    "predicted_rul_roll_min_3",
+    "predicted_rul_roll_max_3",
+    "predicted_rul_trend_3",
+    "predicted_rul_roll_mean_5",
+    "predicted_rul_roll_std_5",
+    "predicted_rul_roll_min_5",
+    "predicted_rul_roll_max_5",
+    "predicted_rul_trend_5",
+    "predicted_rul_roll_mean_10",
+    "predicted_rul_roll_std_10",
+    "predicted_rul_roll_min_10",
+    "predicted_rul_roll_max_10",
+    "predicted_rul_trend_10",
+    "uncertainty_width_diff_1",
+    "uncertainty_width_pct_change_1",
+    "uncertainty_width_lag_1",
+    "uncertainty_width_lag_3",
+    "uncertainty_width_lag_5",
+    "uncertainty_width_roll_mean_3",
+    "uncertainty_width_roll_std_3",
+    "uncertainty_width_roll_min_3",
+    "uncertainty_width_roll_max_3",
+    "uncertainty_width_trend_3",
+    "uncertainty_width_roll_mean_5",
+    "uncertainty_width_roll_std_5",
+    "uncertainty_width_roll_min_5",
+    "uncertainty_width_roll_max_5",
+    "uncertainty_width_trend_5",
+    "uncertainty_width_roll_mean_10",
+    "uncertainty_width_roll_std_10",
+    "uncertainty_width_roll_min_10",
+    "uncertainty_width_roll_max_10",
+    "uncertainty_width_trend_10",
+    "risk_10_diff_1",
+    "risk_10_pct_change_1",
+    "risk_10_lag_1",
+    "risk_10_lag_3",
+    "risk_10_lag_5",
+    "risk_10_roll_mean_3",
+    "risk_10_roll_std_3",
+    "risk_10_roll_min_3",
+    "risk_10_roll_max_3",
+    "risk_10_trend_3",
+    "risk_10_roll_mean_5",
+    "risk_10_roll_std_5",
+    "risk_10_roll_min_5",
+    "risk_10_roll_max_5",
+    "risk_10_trend_5",
+    "risk_10_roll_mean_10",
+    "risk_10_roll_std_10",
+    "risk_10_roll_min_10",
+    "risk_10_roll_max_10",
+    "risk_10_trend_10",
+    "risk_30_diff_1",
+    "risk_30_pct_change_1",
+    "risk_30_lag_1",
+    "risk_30_lag_3",
+    "risk_30_lag_5",
+    "risk_30_roll_mean_3",
+    "risk_30_roll_std_3",
+    "risk_30_roll_min_3",
+    "risk_30_roll_max_3",
+    "risk_30_trend_3",
+    "risk_30_roll_mean_5",
+    "risk_30_roll_std_5",
+    "risk_30_roll_min_5",
+    "risk_30_roll_max_5",
+    "risk_30_trend_5",
+    "risk_30_roll_mean_10",
+    "risk_30_roll_std_10",
+    "risk_30_roll_min_10",
+    "risk_30_roll_max_10",
+    "risk_30_trend_10",
+    "risk_50_diff_1",
+    "risk_50_pct_change_1",
+    "risk_50_lag_1",
+    "risk_50_lag_3",
+    "risk_50_lag_5",
+    "risk_50_roll_mean_3",
+    "risk_50_roll_std_3",
+    "risk_50_roll_min_3",
+    "risk_50_roll_max_3",
+    "risk_50_trend_3",
+    "risk_50_roll_mean_5",
+    "risk_50_roll_std_5",
+    "risk_50_roll_min_5",
+    "risk_50_roll_max_5",
+    "risk_50_trend_5",
+    "risk_50_roll_mean_10",
+    "risk_50_roll_std_10",
+    "risk_50_roll_min_10",
+    "risk_50_roll_max_10",
+    "risk_50_trend_10",
+    "control_risk_diff_1",
+    "control_risk_pct_change_1",
+    "control_risk_lag_1",
+    "control_risk_lag_3",
+    "control_risk_lag_5",
+    "control_risk_roll_mean_3",
+    "control_risk_roll_std_3",
+    "control_risk_roll_min_3",
+    "control_risk_roll_max_3",
+    "control_risk_trend_3",
+    "control_risk_roll_mean_5",
+    "control_risk_roll_std_5",
+    "control_risk_roll_min_5",
+    "control_risk_roll_max_5",
+    "control_risk_trend_5",
+    "control_risk_roll_mean_10",
+    "control_risk_roll_std_10",
+    "control_risk_roll_min_10",
+    "control_risk_roll_max_10",
+    "control_risk_trend_10",
+    "anomaly_score_diff_1",
+    "anomaly_score_pct_change_1",
+    "anomaly_score_lag_1",
+    "anomaly_score_lag_3",
+    "anomaly_score_lag_5",
+    "anomaly_score_roll_mean_3",
+    "anomaly_score_roll_std_3",
+    "anomaly_score_roll_min_3",
+    "anomaly_score_roll_max_3",
+    "anomaly_score_trend_3",
+    "anomaly_score_roll_mean_5",
+    "anomaly_score_roll_std_5",
+    "anomaly_score_roll_min_5",
+    "anomaly_score_roll_max_5",
+    "anomaly_score_trend_5",
+    "anomaly_score_roll_mean_10",
+    "anomaly_score_roll_std_10",
+    "anomaly_score_roll_min_10",
+    "anomaly_score_roll_max_10",
+    "anomaly_score_trend_10",
+    "residual_anomaly_score_diff_1",
+    "residual_anomaly_score_pct_change_1",
+    "residual_anomaly_score_lag_1",
+    "residual_anomaly_score_lag_3",
+    "residual_anomaly_score_lag_5",
+    "residual_anomaly_score_roll_mean_3",
+    "residual_anomaly_score_roll_std_3",
+    "residual_anomaly_score_roll_min_3",
+    "residual_anomaly_score_roll_max_3",
+    "residual_anomaly_score_trend_3",
+    "residual_anomaly_score_roll_mean_5",
+    "residual_anomaly_score_roll_std_5",
+    "residual_anomaly_score_roll_min_5",
+    "residual_anomaly_score_roll_max_5",
+    "residual_anomaly_score_trend_5",
+    "residual_anomaly_score_roll_mean_10",
+    "residual_anomaly_score_roll_std_10",
+    "residual_anomaly_score_roll_min_10",
+    "residual_anomaly_score_roll_max_10",
+    "residual_anomaly_score_trend_10",
+    "isolation_forest_score_diff_1",
+    "isolation_forest_score_pct_change_1",
+    "isolation_forest_score_lag_1",
+    "isolation_forest_score_lag_3",
+    "isolation_forest_score_lag_5",
+    "isolation_forest_score_roll_mean_3",
+    "isolation_forest_score_roll_std_3",
+    "isolation_forest_score_roll_min_3",
+    "isolation_forest_score_roll_max_3",
+    "isolation_forest_score_trend_3",
+    "isolation_forest_score_roll_mean_5",
+    "isolation_forest_score_roll_std_5",
+    "isolation_forest_score_roll_min_5",
+    "isolation_forest_score_roll_max_5",
+    "isolation_forest_score_trend_5",
+    "isolation_forest_score_roll_mean_10",
+    "isolation_forest_score_roll_std_10",
+    "isolation_forest_score_roll_min_10",
+    "isolation_forest_score_roll_max_10",
+    "isolation_forest_score_trend_10",
+    "mahalanobis_score_diff_1",
+    "mahalanobis_score_pct_change_1",
+    "mahalanobis_score_lag_1",
+    "mahalanobis_score_lag_3",
+    "mahalanobis_score_lag_5",
+    "mahalanobis_score_roll_mean_3",
+    "mahalanobis_score_roll_std_3",
+    "mahalanobis_score_roll_min_3",
+    "mahalanobis_score_roll_max_3",
+    "mahalanobis_score_trend_3",
+    "mahalanobis_score_roll_mean_5",
+    "mahalanobis_score_roll_std_5",
+    "mahalanobis_score_roll_min_5",
+    "mahalanobis_score_roll_max_5",
+    "mahalanobis_score_trend_5",
+    "mahalanobis_score_roll_mean_10",
+    "mahalanobis_score_roll_std_10",
+    "mahalanobis_score_roll_min_10",
+    "mahalanobis_score_roll_max_10",
+    "mahalanobis_score_trend_10",
+    "context_confidence_diff_1",
+    "context_confidence_pct_change_1",
+    "context_confidence_lag_1",
+    "context_confidence_lag_3",
+    "context_confidence_lag_5",
+    "context_confidence_roll_mean_3",
+    "context_confidence_roll_std_3",
+    "context_confidence_roll_min_3",
+    "context_confidence_roll_max_3",
+    "context_confidence_trend_3",
+    "context_confidence_roll_mean_5",
+    "context_confidence_roll_std_5",
+    "context_confidence_roll_min_5",
+    "context_confidence_roll_max_5",
+    "context_confidence_trend_5",
+    "context_confidence_roll_mean_10",
+    "context_confidence_roll_std_10",
+    "context_confidence_roll_min_10",
+    "context_confidence_roll_max_10",
+    "context_confidence_trend_10",
+    "lifecycle_risk_context",
+    "risk_anomaly_context",
+    "health_anomaly_context"
+  ],
+  "feature_count": 271,
+  "column_profiles": [
+    {
+      "name": "engine_id",
+      "dtype": "int64",
+      "missing_count": 0,
+      "unique_count": 200
+    },
+    {
+      "name": "fd_subset",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "cycle",
+      "dtype": "int16",
+      "missing_count": 0,
+      "unique_count": 259
+    },
+    {
+      "name": "predicted_rul",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 19159
+    },
+    {
+      "name": "lower_bound",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 18002
+    },
+    {
+      "name": "upper_bound",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 20107
+    },
+    {
+      "name": "uncertainty_width",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 4494
+    },
+    {
+      "name": "degradation_speed",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 11504
+    },
+    {
+      "name": "degradation_acceleration",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 758
+    },
+    {
+      "name": "lifecycle_state",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "confidence_collapse_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "sudden_health_drop_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "instability_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "risk_10",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 2637
+    },
+    {
+      "name": "risk_30",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 5942
+    },
+    {
+      "name": "risk_50",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 7565
+    },
+    {
+      "name": "uncertainty_10",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 1608
+    },
+    {
+      "name": "uncertainty_30",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 2782
+    },
+    {
+      "name": "uncertainty_50",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 2948
+    },
+    {
+      "name": "threshold_10",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "threshold_30",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "threshold_50",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "control_risk",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6079
+    },
+    {
+      "name": "risk_velocity",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 528
+    },
+    {
+      "name": "risk_acceleration",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 261
+    },
+    {
+      "name": "risk_state",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "action_hint_for_supervisor",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "predicted_fail_in_10",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "predicted_fail_in_30",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "predicted_fail_in_50",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "anomaly_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6742
+    },
+    {
+      "name": "anomaly_threshold",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "residual_anomaly_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6267
+    },
+    {
+      "name": "isolation_forest_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6557
+    },
+    {
+      "name": "mahalanobis_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6961
+    },
+    {
+      "name": "anomaly_severity",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "top_sensor_1",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_2",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_3",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "top_sensor_1_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 6195
+    },
+    {
+      "name": "top_sensor_2_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 5200
+    },
+    {
+      "name": "top_sensor_3_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 3919
+    },
+    {
+      "name": "is_anomalous",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "context_drift_flag",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "context_confidence",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 4438
+    },
+    {
+      "name": "rul_model_used",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "risk_model_used",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "anomaly_model_used",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 3
+    },
+    {
+      "name": "final_decision",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "priority",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "maintenance_urgency",
+      "dtype": "object",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "requires_human_review",
+      "dtype": "bool",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "supervisor_score",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 5
+    },
+    {
+      "name": "rul_inverse",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19159
+    },
+    {
+      "name": "rul_log",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19159
+    },
+    {
+      "name": "rul_normalized_100",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 8660
+    },
+    {
+      "name": "rul_urgency_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 8660
+    },
+    {
+      "name": "rul_interval_width",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4494
+    },
+    {
+      "name": "rul_interval_midpoint",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 26683
+    },
+    {
+      "name": "rul_relative_uncertainty",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40083
+    },
+    {
+      "name": "rul_confidence_proxy",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39783
+    },
+    {
+      "name": "degradation_intensity",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11650
+    },
+    {
+      "name": "accelerating_degradation",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "risk_mean",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11195
+    },
+    {
+      "name": "risk_max",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7565
+    },
+    {
+      "name": "risk_min",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2637
+    },
+    {
+      "name": "risk_range",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6668
+    },
+    {
+      "name": "risk_std",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 17878
+    },
+    {
+      "name": "risk_growth_10_to_30",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3917
+    },
+    {
+      "name": "risk_growth_30_to_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3905
+    },
+    {
+      "name": "risk_growth_10_to_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6668
+    },
+    {
+      "name": "risk_monotonic",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "risk_weighted_horizon",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13351
+    },
+    {
+      "name": "risk_uncertainty_mean",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3853
+    },
+    {
+      "name": "risk_uncertainty_max",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2974
+    },
+    {
+      "name": "risk_threshold_mean",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1
+    },
+    {
+      "name": "risk_margin_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2637
+    },
+    {
+      "name": "risk_threshold_breach_10",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "risk_margin_30",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5942
+    },
+    {
+      "name": "risk_threshold_breach_30",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "risk_margin_50",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7565
+    },
+    {
+      "name": "risk_threshold_breach_50",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 2
+    },
+    {
+      "name": "anomaly_score_mean",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13945
+    },
+    {
+      "name": "anomaly_score_max",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6958
+    },
+    {
+      "name": "anomaly_score_min",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6220
+    },
+    {
+      "name": "anomaly_score_range",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1740
+    },
+    {
+      "name": "anomaly_model_disagreement",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 38284
+    },
+    {
+      "name": "anomaly_threshold_margin",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6742
+    },
+    {
+      "name": "anomaly_threshold_ratio",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6742
+    },
+    {
+      "name": "root_cause_score_sum",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10130
+    },
+    {
+      "name": "root_cause_score_max",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5977
+    },
+    {
+      "name": "root_cause_concentration",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39347
+    },
+    {
+      "name": "rul_risk_interaction",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 20177
+    },
+    {
+      "name": "risk_anomaly_interaction",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 37426
+    },
+    {
+      "name": "risk_anomaly_gap",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4938
+    },
+    {
+      "name": "risk_anomaly_agreement",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4938
+    },
+    {
+      "name": "combined_condition_score",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 25103
+    },
+    {
+      "name": "critical_condition_count",
+      "dtype": "int8",
+      "missing_count": 0,
+      "unique_count": 4
+    },
+    {
+      "name": "combined_confidence",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39906
+    },
+    {
+      "name": "decision_uncertainty",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40387
+    },
+    {
+      "name": "confidence_adjusted_condition",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40435
+    },
+    {
+      "name": "predicted_rul_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 9487
+    },
+    {
+      "name": "predicted_rul_pct_change_1",
+      "dtype": "float64",
+      "missing_count": 0,
+      "unique_count": 40134
+    },
+    {
+      "name": "predicted_rul_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19142
+    },
+    {
+      "name": "predicted_rul_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19071
+    },
+    {
+      "name": "predicted_rul_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 18949
+    },
+    {
+      "name": "predicted_rul_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 30431
+    },
+    {
+      "name": "predicted_rul_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39509
+    },
+    {
+      "name": "predicted_rul_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13104
+    },
+    {
+      "name": "predicted_rul_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13814
+    },
+    {
+      "name": "predicted_rul_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13782
+    },
+    {
+      "name": "predicted_rul_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 34129
+    },
+    {
+      "name": "predicted_rul_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40173
+    },
+    {
+      "name": "predicted_rul_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10153
+    },
+    {
+      "name": "predicted_rul_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10686
+    },
+    {
+      "name": "predicted_rul_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19560
+    },
+    {
+      "name": "predicted_rul_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 37059
+    },
+    {
+      "name": "predicted_rul_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40212
+    },
+    {
+      "name": "predicted_rul_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7062
+    },
+    {
+      "name": "predicted_rul_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7391
+    },
+    {
+      "name": "predicted_rul_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 26922
+    },
+    {
+      "name": "uncertainty_width_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2406
+    },
+    {
+      "name": "uncertainty_width_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39190
+    },
+    {
+      "name": "uncertainty_width_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4463
+    },
+    {
+      "name": "uncertainty_width_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4395
+    },
+    {
+      "name": "uncertainty_width_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4317
+    },
+    {
+      "name": "uncertainty_width_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11305
+    },
+    {
+      "name": "uncertainty_width_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 30469
+    },
+    {
+      "name": "uncertainty_width_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3929
+    },
+    {
+      "name": "uncertainty_width_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4157
+    },
+    {
+      "name": "uncertainty_width_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3869
+    },
+    {
+      "name": "uncertainty_width_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 16664
+    },
+    {
+      "name": "uncertainty_width_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39094
+    },
+    {
+      "name": "uncertainty_width_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3681
+    },
+    {
+      "name": "uncertainty_width_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3910
+    },
+    {
+      "name": "uncertainty_width_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6512
+    },
+    {
+      "name": "uncertainty_width_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 24411
+    },
+    {
+      "name": "uncertainty_width_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39967
+    },
+    {
+      "name": "uncertainty_width_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3270
+    },
+    {
+      "name": "uncertainty_width_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3395
+    },
+    {
+      "name": "uncertainty_width_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11536
+    },
+    {
+      "name": "risk_10_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 799
+    },
+    {
+      "name": "risk_10_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 16745
+    },
+    {
+      "name": "risk_10_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2553
+    },
+    {
+      "name": "risk_10_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2382
+    },
+    {
+      "name": "risk_10_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2200
+    },
+    {
+      "name": "risk_10_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4105
+    },
+    {
+      "name": "risk_10_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7257
+    },
+    {
+      "name": "risk_10_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2463
+    },
+    {
+      "name": "risk_10_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2636
+    },
+    {
+      "name": "risk_10_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2131
+    },
+    {
+      "name": "risk_10_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4814
+    },
+    {
+      "name": "risk_10_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 15909
+    },
+    {
+      "name": "risk_10_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2290
+    },
+    {
+      "name": "risk_10_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2635
+    },
+    {
+      "name": "risk_10_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4417
+    },
+    {
+      "name": "risk_10_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5798
+    },
+    {
+      "name": "risk_10_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 25985
+    },
+    {
+      "name": "risk_10_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1858
+    },
+    {
+      "name": "risk_10_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2634
+    },
+    {
+      "name": "risk_10_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7048
+    },
+    {
+      "name": "risk_30_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 688
+    },
+    {
+      "name": "risk_30_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 32848
+    },
+    {
+      "name": "risk_30_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5908
+    },
+    {
+      "name": "risk_30_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5814
+    },
+    {
+      "name": "risk_30_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5699
+    },
+    {
+      "name": "risk_30_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 9237
+    },
+    {
+      "name": "risk_30_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13575
+    },
+    {
+      "name": "risk_30_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5765
+    },
+    {
+      "name": "risk_30_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5849
+    },
+    {
+      "name": "risk_30_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1651
+    },
+    {
+      "name": "risk_30_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10634
+    },
+    {
+      "name": "risk_30_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 30365
+    },
+    {
+      "name": "risk_30_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5666
+    },
+    {
+      "name": "risk_30_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5838
+    },
+    {
+      "name": "risk_30_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4328
+    },
+    {
+      "name": "risk_30_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 12324
+    },
+    {
+      "name": "risk_30_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 36609
+    },
+    {
+      "name": "risk_30_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5341
+    },
+    {
+      "name": "risk_30_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5824
+    },
+    {
+      "name": "risk_30_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10720
+    },
+    {
+      "name": "risk_50_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 770
+    },
+    {
+      "name": "risk_50_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 37738
+    },
+    {
+      "name": "risk_50_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7561
+    },
+    {
+      "name": "risk_50_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7543
+    },
+    {
+      "name": "risk_50_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7487
+    },
+    {
+      "name": "risk_50_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13073
+    },
+    {
+      "name": "risk_50_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 17331
+    },
+    {
+      "name": "risk_50_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7059
+    },
+    {
+      "name": "risk_50_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7102
+    },
+    {
+      "name": "risk_50_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1677
+    },
+    {
+      "name": "risk_50_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 15556
+    },
+    {
+      "name": "risk_50_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 35318
+    },
+    {
+      "name": "risk_50_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6958
+    },
+    {
+      "name": "risk_50_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7049
+    },
+    {
+      "name": "risk_50_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3931
+    },
+    {
+      "name": "risk_50_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 18324
+    },
+    {
+      "name": "risk_50_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 38964
+    },
+    {
+      "name": "risk_50_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6815
+    },
+    {
+      "name": "risk_50_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7009
+    },
+    {
+      "name": "risk_50_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11246
+    },
+    {
+      "name": "control_risk_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 668
+    },
+    {
+      "name": "control_risk_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 32920
+    },
+    {
+      "name": "control_risk_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6011
+    },
+    {
+      "name": "control_risk_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5847
+    },
+    {
+      "name": "control_risk_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5623
+    },
+    {
+      "name": "control_risk_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10008
+    },
+    {
+      "name": "control_risk_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 12530
+    },
+    {
+      "name": "control_risk_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5866
+    },
+    {
+      "name": "control_risk_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6017
+    },
+    {
+      "name": "control_risk_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1668
+    },
+    {
+      "name": "control_risk_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11775
+    },
+    {
+      "name": "control_risk_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 28778
+    },
+    {
+      "name": "control_risk_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5681
+    },
+    {
+      "name": "control_risk_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6003
+    },
+    {
+      "name": "control_risk_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4323
+    },
+    {
+      "name": "control_risk_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13910
+    },
+    {
+      "name": "control_risk_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 36112
+    },
+    {
+      "name": "control_risk_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5084
+    },
+    {
+      "name": "control_risk_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5995
+    },
+    {
+      "name": "control_risk_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 10714
+    },
+    {
+      "name": "anomaly_score_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1744
+    },
+    {
+      "name": "anomaly_score_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39063
+    },
+    {
+      "name": "anomaly_score_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6595
+    },
+    {
+      "name": "anomaly_score_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6289
+    },
+    {
+      "name": "anomaly_score_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5999
+    },
+    {
+      "name": "anomaly_score_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11671
+    },
+    {
+      "name": "anomaly_score_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 27781
+    },
+    {
+      "name": "anomaly_score_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5516
+    },
+    {
+      "name": "anomaly_score_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5678
+    },
+    {
+      "name": "anomaly_score_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3117
+    },
+    {
+      "name": "anomaly_score_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 14260
+    },
+    {
+      "name": "anomaly_score_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 38612
+    },
+    {
+      "name": "anomaly_score_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5052
+    },
+    {
+      "name": "anomaly_score_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5468
+    },
+    {
+      "name": "anomaly_score_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6081
+    },
+    {
+      "name": "anomaly_score_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 17998
+    },
+    {
+      "name": "anomaly_score_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39884
+    },
+    {
+      "name": "anomaly_score_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4302
+    },
+    {
+      "name": "anomaly_score_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5304
+    },
+    {
+      "name": "anomaly_score_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13416
+    },
+    {
+      "name": "residual_anomaly_score_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2180
+    },
+    {
+      "name": "residual_anomaly_score_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 38562
+    },
+    {
+      "name": "residual_anomaly_score_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6125
+    },
+    {
+      "name": "residual_anomaly_score_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5853
+    },
+    {
+      "name": "residual_anomaly_score_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5577
+    },
+    {
+      "name": "residual_anomaly_score_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11365
+    },
+    {
+      "name": "residual_anomaly_score_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 31367
+    },
+    {
+      "name": "residual_anomaly_score_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4844
+    },
+    {
+      "name": "residual_anomaly_score_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5178
+    },
+    {
+      "name": "residual_anomaly_score_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3700
+    },
+    {
+      "name": "residual_anomaly_score_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 14063
+    },
+    {
+      "name": "residual_anomaly_score_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39212
+    },
+    {
+      "name": "residual_anomaly_score_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4323
+    },
+    {
+      "name": "residual_anomaly_score_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4834
+    },
+    {
+      "name": "residual_anomaly_score_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6798
+    },
+    {
+      "name": "residual_anomaly_score_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 17896
+    },
+    {
+      "name": "residual_anomaly_score_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39983
+    },
+    {
+      "name": "residual_anomaly_score_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3622
+    },
+    {
+      "name": "residual_anomaly_score_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4597
+    },
+    {
+      "name": "residual_anomaly_score_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 14250
+    },
+    {
+      "name": "isolation_forest_score_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2267
+    },
+    {
+      "name": "isolation_forest_score_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 38660
+    },
+    {
+      "name": "isolation_forest_score_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6412
+    },
+    {
+      "name": "isolation_forest_score_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6113
+    },
+    {
+      "name": "isolation_forest_score_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5818
+    },
+    {
+      "name": "isolation_forest_score_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11622
+    },
+    {
+      "name": "isolation_forest_score_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 31852
+    },
+    {
+      "name": "isolation_forest_score_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5100
+    },
+    {
+      "name": "isolation_forest_score_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5449
+    },
+    {
+      "name": "isolation_forest_score_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3824
+    },
+    {
+      "name": "isolation_forest_score_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 14270
+    },
+    {
+      "name": "isolation_forest_score_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39256
+    },
+    {
+      "name": "isolation_forest_score_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4537
+    },
+    {
+      "name": "isolation_forest_score_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5062
+    },
+    {
+      "name": "isolation_forest_score_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 7019
+    },
+    {
+      "name": "isolation_forest_score_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 18160
+    },
+    {
+      "name": "isolation_forest_score_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39982
+    },
+    {
+      "name": "isolation_forest_score_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3780
+    },
+    {
+      "name": "isolation_forest_score_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4816
+    },
+    {
+      "name": "isolation_forest_score_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 14674
+    },
+    {
+      "name": "mahalanobis_score_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2836
+    },
+    {
+      "name": "mahalanobis_score_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 37974
+    },
+    {
+      "name": "mahalanobis_score_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6821
+    },
+    {
+      "name": "mahalanobis_score_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6509
+    },
+    {
+      "name": "mahalanobis_score_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6221
+    },
+    {
+      "name": "mahalanobis_score_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 12367
+    },
+    {
+      "name": "mahalanobis_score_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 34534
+    },
+    {
+      "name": "mahalanobis_score_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5201
+    },
+    {
+      "name": "mahalanobis_score_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5670
+    },
+    {
+      "name": "mahalanobis_score_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4706
+    },
+    {
+      "name": "mahalanobis_score_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 15149
+    },
+    {
+      "name": "mahalanobis_score_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39564
+    },
+    {
+      "name": "mahalanobis_score_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4517
+    },
+    {
+      "name": "mahalanobis_score_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 5196
+    },
+    {
+      "name": "mahalanobis_score_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 8377
+    },
+    {
+      "name": "mahalanobis_score_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 19152
+    },
+    {
+      "name": "mahalanobis_score_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 40039
+    },
+    {
+      "name": "mahalanobis_score_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3673
+    },
+    {
+      "name": "mahalanobis_score_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4806
+    },
+    {
+      "name": "mahalanobis_score_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 16765
+    },
+    {
+      "name": "context_confidence_diff_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 1674
+    },
+    {
+      "name": "context_confidence_pct_change_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 37153
+    },
+    {
+      "name": "context_confidence_lag_1",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4337
+    },
+    {
+      "name": "context_confidence_lag_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4130
+    },
+    {
+      "name": "context_confidence_lag_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3946
+    },
+    {
+      "name": "context_confidence_roll_mean_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 9007
+    },
+    {
+      "name": "context_confidence_roll_std_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 16216
+    },
+    {
+      "name": "context_confidence_roll_min_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 4059
+    },
+    {
+      "name": "context_confidence_roll_max_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3379
+    },
+    {
+      "name": "context_confidence_trend_3",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3167
+    },
+    {
+      "name": "context_confidence_roll_mean_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 11385
+    },
+    {
+      "name": "context_confidence_roll_std_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 34730
+    },
+    {
+      "name": "context_confidence_roll_min_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3983
+    },
+    {
+      "name": "context_confidence_roll_max_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3163
+    },
+    {
+      "name": "context_confidence_trend_5",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 6309
+    },
+    {
+      "name": "context_confidence_roll_mean_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 15205
+    },
+    {
+      "name": "context_confidence_roll_std_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 39212
+    },
+    {
+      "name": "context_confidence_roll_min_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 3906
+    },
+    {
+      "name": "context_confidence_roll_max_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 2726
+    },
+    {
+      "name": "context_confidence_trend_10",
+      "dtype": "float32",
+      "missing_count": 0,
+      "unique_count": 13518
+    },
+    {
+      "name": "lifecycle_risk_context",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 7
+    },
+    {
+      "name": "risk_anomaly_context",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 8
+    },
+    {
+      "name": "health_anomaly_context",
+      "dtype": "category",
+      "missing_count": 0,
+      "unique_count": 9
+    }
+  ]
+}

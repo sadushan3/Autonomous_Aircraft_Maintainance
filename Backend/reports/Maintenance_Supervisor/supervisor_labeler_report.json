@@ -1,0 +1,15 @@
+{
+    "status": "success",
+    "input_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_sanitized_input.csv",
+    "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_labeled_dataset.csv",
+    "rows_labeled": 40463,
+    "class_distribution": {
+        "continue_operation": 24110,
+        "monitor_closely": 6083,
+        "schedule_inspection": 4052,
+        "schedule_maintenance": 3977,
+        "immediate_maintenance": 2241
+    },
+    "human_review_required_count": 17136,
+    "duration_seconds": 0.7562
+}
