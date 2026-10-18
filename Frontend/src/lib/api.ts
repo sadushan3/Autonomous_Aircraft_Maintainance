@@ -163,7 +163,7 @@ export const api = {
     });
   },
 
-  // ---- Anomaly & Health component ----
+
   anomalyDashboard: (engineId?: number) =>
     request<AnomalyDashboardResponse>(
       `/anomaly-health/dashboard${qs({ engine_id: engineId })}`,
@@ -172,11 +172,7 @@ export const api = {
   sensorGraph: () =>
     request<SensorGraphResponse>("/anomaly-health/reasoning/sensor-graph"),
 
-  /**
-   * Full reasoning history for one engine: candidate causes with their
-   * evidence and firing rule, per-sensor contributions, onset/duration and any
-   * matching remembered case.
-   */
+
   engineReasoning: (engineId: number | string) =>
     request<EngineReasoningResponse>(`/anomaly-health/reasoning/${engineId}`),
 
@@ -189,7 +185,7 @@ export const api = {
   feedbackThresholds: () =>
     request<Record<string, unknown>>("/anomaly-health/feedback/thresholds"),
 
-  /** Record an operator verdict on a raised alert. */
+
   submitFeedback: (payload: {
     engine_id: number;
     cycle: number;
@@ -206,45 +202,24 @@ export const api = {
 
   schema: () => request<Record<string, unknown>>("/anomaly-health/schema"),
 
-  /** Offline held-out validation results for the Anomaly & Health component. */
+
   anomalyEvaluation: () =>
     request<AnomalyEvaluationResponse>("/anomaly-health/evaluation/metrics"),
 
-  /**
-   * The detector fusion contract as configured, not as remembered.
-   *
-   * Weights live in the backend config; reading them keeps the dashboard from
-   * describing an ensemble that has since been retuned.
-   */
+
   detectorConfig: () =>
     request<DetectorConfigResponse>("/anomaly-health/detector-config"),
 
-  /**
-   * One engine's health trajectory, for any engine in the fleet.
-   *
-   * `/dashboard` bundles timelines for only the first 50 unit ids, so the
-   * health screen could not chart the engines it ranks worst. This serves any
-   * of them and reads only trajectory columns, so it stays fast.
-   */
+
   engineHealthTimeline: (engineId: number | string, maxPoints = 600) =>
     request<EngineTimelineResponse>(
       `/anomaly-health/engine/${engineId}/timeline${qs({ max_points: maxPoints })}`,
     ),
 
-  /**
-   * The digital twin's own evidence: training error per ensemble member, the
-   * residual acceptance gates, and the per-engine fidelity table.
-   *
-   * Offline artefacts merged server-side -- the API recomputes none of it.
-   */
+
   twinMetrics: () => request<TwinMetricsResponse>("/anomaly-health/twin/metrics"),
 
-  /**
-   * One engine's actual-vs-expected trace for a single sensor.
-   *
-   * Server-side: the join spans a 66 MB prediction table and a 99 MB residual
-   * table, so the browser gets a strided series instead of the raw cycles.
-   */
+
   twinTrace: (
     engineId: number | string,
     sensor: string,
