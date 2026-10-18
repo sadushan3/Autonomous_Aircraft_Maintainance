@@ -1,17 +1,3 @@
-"""
-Schemas for the uncertainty layer and the operator-feedback learning loop.
-
-Every prediction this component emits carries three numbers:
-
-* **confidence** -- how much the system trusts this specific assessment;
-* **reliability** -- how consistently the independent detectors agreed;
-* **uncertainty** -- how widely the four digital twins disagreed about what
-  the sensor values *should* have been.
-
-The feedback models close the loop: operator verdicts adjust residual
-thresholds, which changes what gets flagged on the next run.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -25,12 +11,8 @@ from app.schemas.Anomaly_Health_Monitoring.common_schema import (
 )
 
 
-# --------------------------------------------------------------------------- #
-# Uncertainty
-# --------------------------------------------------------------------------- #
-
 class ConfidenceRecord(StrictModel):
-    """The uncertainty triple for one engine at one cycle."""
+
 
     engine_id: int = Field(...)
     cycle: int = Field(..., ge=1)
@@ -75,7 +57,7 @@ class ConfidenceRecord(StrictModel):
 
 
 class ConfidenceRequest(StrictModel):
-    """Parameters for the uncertainty stage."""
+
 
     weight_agreement: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Override the agreement weight."
@@ -89,7 +71,7 @@ class ConfidenceRequest(StrictModel):
 
 
 class ConfidenceResponse(BaseResponse):
-    """Result of the uncertainty stage."""
+
 
     rows: int = Field(default=0, ge=0)
     engines: int = Field(default=0, ge=0)
@@ -104,12 +86,8 @@ class ConfidenceResponse(BaseResponse):
     metrics: Dict[str, Any] = Field(default_factory=dict)
 
 
-# --------------------------------------------------------------------------- #
-# Feedback learning
-# --------------------------------------------------------------------------- #
-
 class FeedbackSubmission(StrictModel):
-    """An operator's verdict on a raised alert."""
+
 
     engine_id: int = Field(..., description="Engine the alert concerned.")
     cycle: int = Field(..., ge=1, description="Cycle the alert concerned.")
@@ -126,7 +104,7 @@ class FeedbackSubmission(StrictModel):
 
 
 class ThresholdChange(StrictModel):
-    """A single adaptive-threshold adjustment."""
+
 
     key: str = Field(..., description="Threshold identifier, e.g. a sensor name.")
     threshold_before: float = Field(default=0.0)
@@ -136,7 +114,7 @@ class ThresholdChange(StrictModel):
 
 
 class FeedbackResponse(BaseResponse):
-    """Result of recording feedback and adapting thresholds."""
+
 
     feedback_id: str = Field(default="", description="Identifier of the record stored.")
     total_feedback_records: int = Field(default=0, ge=0)
@@ -154,7 +132,7 @@ class FeedbackResponse(BaseResponse):
 
 
 class AlertMemoryRecord(StrictModel):
-    """One remembered anomaly, used for recurrence matching."""
+
 
     anomaly_id: str = Field(...)
     engine_id: int = Field(...)
@@ -172,7 +150,7 @@ class AlertMemoryRecord(StrictModel):
 
 
 class AlertMemoryResponse(BaseResponse):
-    """A view over the persisted anomaly memory."""
+
 
     total_memories: int = Field(default=0, ge=0)
     false_alarm_patterns: int = Field(
@@ -183,14 +161,14 @@ class AlertMemoryResponse(BaseResponse):
 
 
 class FeedbackVerdictSummary(StrictModel):
-    """Verdict counts from :meth:`FeedbackStore.summary`."""
+
 
     total: int = Field(default=0, ge=0)
     by_verdict: Dict[str, int] = Field(default_factory=dict)
 
 
 class MemorySummary(StrictModel):
-    """Memory-store rollup from :meth:`AlertMemory.summary`."""
+
 
     total_memories: int = Field(default=0, ge=0)
     false_alarm_patterns: int = Field(default=0, ge=0)
@@ -198,14 +176,14 @@ class MemorySummary(StrictModel):
 
 
 class FeedbackSummaryResponse(BaseResponse):
-    """Combined feedback-store and anomaly-memory summary."""
+
 
     feedback: FeedbackVerdictSummary = Field(default_factory=FeedbackVerdictSummary)
     memory: MemorySummary = Field(default_factory=MemorySummary)
 
 
 class ThresholdStateResponse(BaseResponse):
-    """Current adaptive-threshold state, from :meth:`ThresholdAdapter.load_state`."""
+
 
     scale: float = Field(
         default=1.0, description="Raw multiplicative scale from the verdict history."
