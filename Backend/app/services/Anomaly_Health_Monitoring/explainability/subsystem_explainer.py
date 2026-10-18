@@ -1,15 +1,3 @@
-"""
-Subsystem-level explanation: aggregating sensor deviations into engine subsystems.
-
-An operator reasons about the engine in terms of subsystems (the compressor,
-the turbine, the burner), not raw sensor names.  This module rolls the
-per-sensor residual ranking up to that level using
-:mod:`sensor_dependency_graph`'s fixed sensor-to-subsystem mapping, producing
-one deviation score per subsystem and a status label (``nominal`` /
-``elevated`` / ``degraded``) that the explanation generator turns into
-sentences.
-"""
-
 from __future__ import annotations
 
 from typing import Dict, List, Optional
@@ -29,39 +17,28 @@ from app.utils.Anomaly_Health_Monitoring.model_utils import (
 )
 from app.utils.Anomaly_Health_Monitoring.utils import get_logger
 
-#: |z| thresholds separating nominal / elevated / degraded subsystem status.
+
 _ELEVATED_THRESHOLD = 1.5
 _DEGRADED_THRESHOLD = 3.0
 
 
 class SubsystemExplainer:
-    """Aggregates per-sensor residual deviation into per-subsystem status."""
+
 
     def __init__(
         self,
         config: Optional[Config] = None,
         graph: Optional[SensorDependencyGraph] = None,
     ) -> None:
-        """Initialise the explainer.
 
-        Args:
-            config: Configuration (accepted for interface consistency).
-            graph: Optional injected dependency graph, for testing.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.graph = graph or SensorDependencyGraph(self.config)
 
     def _status(self, mean_abs_z: float) -> str:
-        """Bucket a subsystem's mean |z| into a status label.
 
-        Args:
-            mean_abs_z: Mean absolute robust z-score across the subsystem's
-                sensors.
 
-        Returns:
-            ``'nominal'``, ``'elevated'`` or ``'degraded'``.
-        """
         if mean_abs_z >= _DEGRADED_THRESHOLD:
             return "degraded"
         if mean_abs_z >= _ELEVATED_THRESHOLD:
@@ -69,16 +46,8 @@ class SubsystemExplainer:
         return "nominal"
 
     def explain_row(self, row: pd.Series, sensors: List[str]) -> List[Dict[str, object]]:
-        """Compute per-subsystem attribution for a single row.
 
-        Args:
-            row: A row carrying ``residual_z_sensor_*`` columns.
-            sensors: Active sensor names.
 
-        Returns:
-            A list of subsystem attribution dictionaries, sorted by
-            contribution, highest first.
-        """
         z_columns = get_residual_z_columns(sensors)
         by_subsystem: Dict[str, List[float]] = {}
         for col in z_columns:
@@ -110,7 +79,7 @@ class SubsystemExplainer:
 
 
 def main() -> None:
-    """Demonstrate subsystem explanation against ``residuals.csv``."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
     from app.utils.Anomaly_Health_Monitoring.model_utils import get_identity_columns
 
