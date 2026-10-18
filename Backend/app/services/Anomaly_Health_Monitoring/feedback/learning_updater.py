@@ -1,23 +1,3 @@
-"""
-Learning updater: the feedback-layer orchestrator.
-
-Applies one operator verdict end to end:
-
-1. Record it durably (:mod:`feedback_store`).
-2. Update the matching anomaly memory's verdict, if it can be matched
-   (:mod:`alert_memory` / :mod:`reasoning.root_cause_tracker`).
-3. Recompute the adapted anomaly threshold from the full feedback history
-   (:mod:`threshold_adapter`).
-4. When enough ``false_alarm``/``missed`` evidence exists for a specific
-   health-state boundary, nudge that boundary too
-   (:mod:`health_monitoring.health_state_classifier`), on the same
-   multiplicative philosophy as the anomaly threshold.
-
-This module is the only place feedback -> system-behaviour actually happens;
-every other module in the feedback package is either a store or a pure
-calculator that this orchestrator calls.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -41,21 +21,15 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 )
 
 
-#: Smallest width the Critical band may be squeezed to by threshold nudging.
-#: Critical spans ``[critical, warning)``; without a floor, repeated nudges to
-#: 'warning' collapse it and engines jump Warning -> Failure Risk directly.
 MIN_CRITICAL_BAND = 10.0
 
 
 class LearningUpdater:
-    """Applies operator feedback across the memory, threshold and state layers."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the updater and its collaborators.
 
-        Args:
-            config: Configuration passed through to every collaborator.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.feedback_store = FeedbackStore(self.config)
@@ -63,9 +37,7 @@ class LearningUpdater:
         self.threshold_adapter = ThresholdAdapter(self.config)
         self.state_classifier = HealthStateClassifier(self.config)
 
-    # ------------------------------------------------------------------ #
-    # Single-verdict application
-    # ------------------------------------------------------------------ #
+
     def apply_feedback(
         self,
         engine_id: int,
@@ -79,23 +51,8 @@ class LearningUpdater:
         severity: Optional[str] = None,
         anomaly_score: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """Record one verdict and propagate it through memory and thresholds.
 
-        Args:
-            engine_id: Engine the alert concerned.
-            cycle: Cycle the alert concerned.
-            verdict: ``'accepted'``, ``'false_alarm'`` or ``'missed'``.
-            operator: Identifier of the submitting operator.
-            comment: Free-text note.
-            confirmed_root_cause: The cause actually found, if different.
-            anomaly_id: The memory record id to update, if known.
-            system_root_cause: The cause the system had proposed.
-            severity: The severity the system had assigned.
-            anomaly_score: The fused anomaly score at the time of the alert.
 
-        Returns:
-            A summary of every effect this feedback had.
-        """
         feedback_record = self.feedback_store.add(
             engine_id=engine_id,
             cycle=cycle,
@@ -134,31 +91,8 @@ class LearningUpdater:
         return summary
 
     def _maybe_adapt_state_thresholds(self, verdict: str) -> Dict[str, float]:
-        """Nudge health-state thresholds after a run of consistent false-alarm feedback.
 
-        A conservative rule: only adjust once the false-alarm rate among all
-        recorded feedback exceeds 30%, and only nudge the 'warning' boundary,
-        which is the one most exposed to over-eager escalation. This keeps the
-        threshold classifier auditable -- it moves rarely and by a small,
-        explained amount.
 
-        The nudge is floored so it cannot collapse the band beneath it. Nudging
-        'warning' alone repeatedly squeezes the Critical band, because Critical
-        is defined as ``critical <= HI < warning`` and 'critical' never moves:
-        eleven nudges took 'warning' from 40.0 to 22.75, leaving Critical just
-        2.75 points wide against Warning's 37.25. Engines then skip straight
-        from Warning to Failure Risk -- observed as 432 Critical rows versus
-        701 Failure Risk on a run where Critical should be the wider band.
-        ``MIN_CRITICAL_BAND`` keeps that band meaningful; once the floor is
-        reached the nudge stops rather than degrading the taxonomy further.
-
-        Args:
-            verdict: The verdict just recorded (informational; the decision is
-                based on the full history, not this single verdict).
-
-        Returns:
-            The resulting health-state thresholds.
-        """
         summary = self.feedback_store.summary()
         total = summary["total"]
         false_alarms = summary["by_verdict"].get("false_alarm", 0)
@@ -202,25 +136,10 @@ class LearningUpdater:
             return nudged
         return self.state_classifier.thresholds
 
-    # ------------------------------------------------------------------ #
-    # Batch stage entry point
-    # ------------------------------------------------------------------ #
+
     def run(self, root_causes: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Execute the feedback-learning pipeline stage.
 
-        This does not require new feedback to be submitted in the same call;
-        it (a) ingests any freshly reasoned anomalies into memory so they are
-        matchable in future, and (b) reports the current adaptation state so
-        the pipeline's ``feedback_updates.csv`` reflects the latest picture.
 
-        Args:
-            root_causes: Optional in-memory root-cause analysis output to
-                ingest into memory; otherwise ``root_cause_analysis.csv`` is
-                read from disk when present.
-
-        Returns:
-            A report of the current feedback and adaptation state.
-        """
         self.config.ensure_directories()
         source = root_causes
         if source is None:
@@ -240,10 +159,8 @@ class LearningUpdater:
             [
                 {
                     "feedback_id": r.get("feedback_id"),
-                    # Carry-forward CSVs are keyed on 'unit'; 'engine_id' is
-                    # the alias used only at the API / exchange boundary. The
-                    # feedback *store* speaks the API's language because that
-                    # is where operator verdicts arrive, so translate here.
+
+
                     "unit": r.get("engine_id"),
                     "cycle": r.get("cycle"),
                     "verdict": r.get("verdict"),
@@ -282,7 +199,7 @@ class LearningUpdater:
 
 
 def main() -> None:
-    """Run the feedback-learning stage standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     updater = LearningUpdater(config)
