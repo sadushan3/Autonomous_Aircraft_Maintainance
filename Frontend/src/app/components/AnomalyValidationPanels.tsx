@@ -1,14 +1,3 @@
-/**
- * Anomaly & Health -- validation, drift, triage and feedback panels.
- *
- * Split out of `HealthMonitoring.tsx` to keep that page readable. Every figure
- * is read from a backend response; nothing is computed in the browser beyond
- * grouping and formatting, and nothing is hardcoded.
- *
- * All four panels belong to the Anomaly & Health component. None of them read
- * `risk_10/30/50`, `risk_state` or any other Failure Risk field -- the two
- * modules stay independent.
- */
 import { useMemo, useState } from "react";
 import {
   Bar,
@@ -46,9 +35,6 @@ const ALERT_COLOR: Record<string, string> = {
   low: "#10b981",
 };
 
-/* ------------------------------------------------------------------ */
-/* 1. Detection performance + lead time                                */
-/* ------------------------------------------------------------------ */
 
 export function DetectionPerformancePanel() {
   const ev = useAnomalyEvaluation();
@@ -92,7 +78,7 @@ export function DetectionPerformancePanel() {
         ))}
       </div>
 
-      {/* lead time -- the headline metric for predictive maintenance */}
+
       <div className="mt-4 rounded-lg border border-slate-800/70 bg-slate-950/40 p-4">
         <p className="text-xs uppercase tracking-widest text-slate-500">Early-warning lead time</p>
         <p className="mt-1 text-sm text-slate-400">
@@ -150,7 +136,7 @@ export function DetectionPerformancePanel() {
       <p className="mt-3 text-xs text-slate-500">
         {test.label_basis ?? "Healthy and critical conditions are defined using RUL bands, rather than independently confirmed fault labels."}
       </p>
-      {/* Compare only rates with the same critical-engine denominator. */}
+
       {train && criticalEngineDetection(train) != null && criticalEngineDetection(test) != null && (
         <p className="mt-3 border-t border-slate-800/70 pt-3 text-xs leading-relaxed text-slate-500">
           Critical-engine detection: {" "}
@@ -171,9 +157,6 @@ export function DetectionPerformancePanel() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* 2. Operating-context drift                                          */
-/* ------------------------------------------------------------------ */
 
 export function ContextDriftPanel() {
   const ctx = useContextStatus();
@@ -264,9 +247,6 @@ export function ContextDriftPanel() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* 3. Maintenance action queue                                         */
-/* ------------------------------------------------------------------ */
 
 const LEVEL_ORDER = ["critical", "high", "warning", "low"];
 
@@ -372,9 +352,6 @@ export function MaintenanceQueuePanel({ alerts }: { alerts: AnomalyAlert[] }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* 4. Human-in-the-loop feedback                                       */
-/* ------------------------------------------------------------------ */
 
 export function FeedbackLoopPanel({
   engineId,
@@ -391,10 +368,7 @@ export function FeedbackLoopPanel({
   const s = summary.data as { feedback?: { total?: number; by_verdict?: Record<string, number> }; memory?: Record<string, number> } | undefined;
   const t = thresholds.data as Record<string, unknown> | undefined;
 
-  // The backend's verdict vocabulary is accepted | false_alarm | missed |
-  // unknown -- "accepted" means the operator confirms the raised alert was a
-  // genuine fault. Both engine_id and cycle are required, so the panel is
-  // inert until a focus engine with a known latest cycle is selected.
+
   const numericId = Number(engineId);
   const canSubmit = Number.isFinite(numericId) && typeof cycle === "number";
 
