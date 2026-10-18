@@ -1,23 +1,3 @@
-"""
-Early-warning score: likelihood of reaching a critical state soon.
-
-Severity says how bad things are *right now*.  This module answers a
-forward-looking question instead: given the current anomaly score and how fast
-it and the health index are trending, how likely is this engine to cross into
-Critical / Failure Risk territory within the configured early-warning horizon?
-
-The estimate is a lightweight blend, not a trained forecaster (forecasting is
-out of scope for this component):
-
-    early_warning = clip(anomaly_score + trend_pressure, 0, 1)
-    trend_pressure = w * horizon * max(-health_trend, 0) / 100
-
-A flat or improving health trend contributes no pressure; a fast decline adds
-meaningfully to the current anomaly score, projecting it forward over the
-horizon.  This gives operators a single number to sort engines by for
-prioritising inspection queues, without pretending to be a survival model.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
@@ -29,27 +9,22 @@ from app.config.Anomaly_Health_Monitoring.config import Config, get_config
 from app.utils.Anomaly_Health_Monitoring.utils import get_logger, merge_on_keys
 from app.utils.Anomaly_Health_Monitoring.model_utils import get_identity_columns
 
-#: Fused anomaly score column, mirrored from anomaly_fusion.py.
-#: Kept as a local string constant (rather than imported) to avoid a circular
-#: import: anomaly_fusion.py is the orchestrator that calls this module.
+
 ANOMALY_SCORE_COLUMN = "anomaly_score"
 
-#: Column name added by this module.
+
 EARLY_WARNING_SCORE_COLUMN = "early_warning_score"
 
-#: Weight applied to the health-trend pressure term.
+
 _TREND_WEIGHT = 0.6
 
 
 class EarlyWarningScorer:
-    """Blends current anomaly score with health-trend pressure."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the scorer.
 
-        Args:
-            config: Configuration supplying the early-warning horizon.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.horizon = int(self.config.anomaly.early_warning_horizon)
@@ -59,17 +34,8 @@ class EarlyWarningScorer:
         fused: pd.DataFrame,
         health_trend: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
-        """Compute the early-warning score for every row.
 
-        Args:
-            fused: Frame carrying ``anomaly_score`` and identity keys.
-            health_trend: Optional frame carrying ``health_trend`` (health
-                points per cycle); when omitted, only the current anomaly
-                score is used.
 
-        Returns:
-            The frame with ``early_warning_score`` added.
-        """
         result = fused.copy()
 
         if health_trend is not None and "health_trend" in health_trend.columns:
@@ -100,20 +66,13 @@ class EarlyWarningScorer:
     def run(
         self, fused: pd.DataFrame, health_trend: Optional[pd.DataFrame] = None
     ) -> pd.DataFrame:
-        """Execute early-warning scoring as an in-memory transform.
 
-        Args:
-            fused: Fused-anomaly frame.
-            health_trend: Optional health-trend frame.
 
-        Returns:
-            The frame with the early-warning score added.
-        """
         return self.compute(fused, health_trend)
 
 
 def main() -> None:
-    """Run early-warning scoring standalone."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
 
     config = get_config()
