@@ -1,28 +1,3 @@
-"""
-Residual validation -- the Digital Twin's acceptance gate.
-
-A twin that has learned healthy behaviour correctly should produce residuals
-centred near zero, with small spread, *on the healthy region it was trained
-on*.  If that is not true, nothing downstream can be trusted: the health
-index will be miscalibrated, anomaly thresholds fitted against these residuals
-will be meaningless, and root-cause attribution will be explaining noise.
-
-This module checks four things against the healthy-region rows specifically:
-
-1. **Centring** -- the mean residual per sensor should be close to zero.
-2. **Spread** -- the residual z-scores should mostly stay within
-   ``max_acceptable_healthy_residual_z`` (config-driven, default 3.5).
-3. **Coverage** -- every active sensor must have a residual column; a silently
-   dropped sensor would leave a blind spot in every downstream layer.
-4. **Growth** -- residual magnitude should trend upward as an engine approaches
-   failure. This is checked qualitatively here and rigorously in
-   ``evaluate_digital_twin.py`` / ``evaluate_health.py``.
-
-Failing any check does not stop the pipeline (that decision belongs to the
-caller), but it is reported loudly and is the first thing to check if false
-alarms turn out to be common.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -50,31 +25,18 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 
 
 class ResidualValidator:
-    """Validates that healthy-region residuals behave as a well-fit twin implies."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the validator.
 
-        Args:
-            config: Configuration supplying the healthy-region definition and
-                the acceptable z-score ceiling.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
-    # ------------------------------------------------------------------ #
-    # Healthy-region re-selection
-    # ------------------------------------------------------------------ #
+
     def _healthy_mask(self, residuals: pd.DataFrame) -> pd.Series:
-        """Re-derive the healthy-region mask using the same rule as training.
 
-        Args:
-            residuals: Residuals frame, which carries RUL only if the caller
-                merged it in; otherwise cycle-fraction alone is used.
 
-        Returns:
-            A boolean mask selecting healthy rows.
-        """
         settings = self.config.healthy_region
         if RUL_COLUMN in residuals.columns:
             rul_ok = residuals[RUL_COLUMN].astype(float) >= float(settings.rul_threshold)
@@ -87,19 +49,10 @@ class ResidualValidator:
         )
         return rul_ok & cycle_ok
 
-    # ------------------------------------------------------------------ #
-    # Checks
-    # ------------------------------------------------------------------ #
+
     def check_centring(self, healthy: pd.DataFrame, sensors: List[str]) -> Dict[str, Any]:
-        """Check that healthy-region residuals are centred near zero.
 
-        Args:
-            healthy: Residuals restricted to the healthy region.
-            sensors: Active sensor names.
 
-        Returns:
-            A per-sensor and aggregate centring report.
-        """
         residual_columns = get_residual_columns(sensors)
         means = {
             sensor: float(healthy[col].mean())
@@ -110,16 +63,8 @@ class ResidualValidator:
         return {"per_sensor_mean": means, "mean_absolute_bias": mean_abs_bias}
 
     def check_spread(self, healthy: pd.DataFrame, sensors: List[str]) -> Dict[str, Any]:
-        """Check that healthy-region residual z-scores stay within bounds.
 
-        Args:
-            healthy: Residuals restricted to the healthy region.
-            sensors: Active sensor names.
 
-        Returns:
-            A report of the exceedance fraction and the per-sensor 99th
-            percentile |z|.
-        """
         z_columns = get_residual_z_columns(sensors)
         present = [c for c in z_columns if c in healthy.columns]
         ceiling = float(self.config.twin.max_acceptable_healthy_residual_z)
@@ -140,15 +85,8 @@ class ResidualValidator:
         }
 
     def check_coverage(self, residuals: pd.DataFrame, sensors: List[str]) -> Dict[str, Any]:
-        """Confirm every active sensor produced a residual column.
 
-        Args:
-            residuals: Full residuals frame.
-            sensors: Active sensor names expected to be present.
 
-        Returns:
-            A report naming any missing sensor.
-        """
         residual_columns = get_residual_columns(sensors)
         missing = [
             sensor
@@ -158,21 +96,8 @@ class ResidualValidator:
         return {"expected_sensors": len(sensors), "missing_sensors": missing}
 
     def check_growth(self, residuals: pd.DataFrame) -> Dict[str, Any]:
-        """Check that residual magnitude tends to rise as engines approach failure.
 
-        A crude but effective check: correlate mean absolute residual against
-        normalised cycle position within each engine, and report the fraction
-        of engines with a positive correlation.  The rigorous version of this
-        check (against true RUL, with a monotonicity score) lives in
-        ``evaluate_health.py``; this one runs cheaply as part of every twin
-        training pass.
 
-        Args:
-            residuals: Full residuals frame.
-
-        Returns:
-            A report of the fraction of engines whose residual trend is rising.
-        """
         rising = 0
         total = 0
         for _, group in residuals.groupby("unit", sort=False):
@@ -190,23 +115,12 @@ class ResidualValidator:
         fraction = float(rising / total) if total else 0.0
         return {"engines_checked": total, "engines_with_rising_residual": rising, "fraction_rising": fraction}
 
-    # ------------------------------------------------------------------ #
-    # Orchestration
-    # ------------------------------------------------------------------ #
+
     def validate(
         self, residuals: pd.DataFrame, sensors: Optional[List[str]] = None
     ) -> Dict[str, Any]:
-        """Run every check and produce a pass/fail verdict.
 
-        Args:
-            residuals: Full residuals frame.
-            sensors: Active sensor names; inferred from residual columns when
-                omitted.
 
-        Returns:
-            The combined validation report, including an overall ``passed``
-            boolean.
-        """
         active_sensors = sensors or sensors_from_residual_frame(residuals)
 
         healthy_mask = self._healthy_mask(residuals)
@@ -258,15 +172,8 @@ class ResidualValidator:
         return report
 
     def run(self, residuals: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Execute residual validation and persist the report.
 
-        Args:
-            residuals: Optional in-memory residuals; otherwise ``residuals.csv``
-                is read from disk.
 
-        Returns:
-            The validation report.
-        """
         self.config.ensure_directories()
         source = residuals
         if source is None:
@@ -281,7 +188,7 @@ class ResidualValidator:
 
 
 def main() -> None:
-    """Run residual validation standalone against ``residuals.csv``."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     validator = ResidualValidator(config)
