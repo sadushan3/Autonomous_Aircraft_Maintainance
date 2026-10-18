@@ -1,4 +1,3 @@
-"""Serving causality, calibration isolation, persistence and failure handling."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +21,7 @@ class ConditionConsensusContracts(unittest.TestCase):
         self.cfg.paths.models = Path(self.temp.name)
         self.cfg.mlops.log_to_file = False
         self.cfg.mlops.enable_mlflow = False
+        self.cfg.anomaly.fusion_weights = {"condition_consensus": 1.0}
         rng = np.random.default_rng(123)
         self.frame = pd.DataFrame({"unit": np.repeat(np.arange(4), 80), "cycle": np.tile(np.arange(1, 81), 4)})
         self.frame["RUL"] = np.where(self.frame.cycle <= 50, 200, 20)
@@ -74,10 +74,19 @@ class ConditionConsensusContracts(unittest.TestCase):
         self.model.save()
         self.cfg.anomaly.condition_consensus["margin"] = .01
         loaded = ConditionConsensusDetector(self.cfg).load()
-        self.assertEqual(loaded.margin, 32.)
+        self.assertEqual(loaded.margin, 1.)
         np.testing.assert_array_equal(loaded.score(self.frame), expected)
 
-    def test_default_fusion_requires_consensus_artifact(self):
+    def test_covariance_cutoff_and_normalization_survive_reload(self):
+        cutoff = self.model.reference.threshold
+        expected = self.model.reference.score(self.frame)
+        self.model.save()
+        loaded = ConditionConsensusDetector(self.cfg).load()
+        self.assertEqual(loaded.reference.threshold, cutoff)
+        self.assertEqual(loaded.reference.score_normalization, self.model.reference.score_normalization)
+        np.testing.assert_allclose(loaded.reference.score(self.frame), expected, rtol=0, atol=1e-14)
+
+    def test_consensus_profile_requires_consensus_artifact(self):
         fusion = AnomalyFusion(self.cfg)
         self.assertEqual(list(fusion.detectors), ["condition_consensus"])
         with self.assertRaises(AnomalyHealthError):
@@ -125,6 +134,12 @@ class ConditionConsensusContracts(unittest.TestCase):
             with self.assertRaises(AnomalyHealthError):
                 self.model.fit(self.frame.assign(split="test"), self.model.feature_columns)
             fit.assert_not_called()
+
+    def test_first_training_cannot_publish_an_all_normal_classifier(self):
+        with patch.object(self.model, "score", return_value=np.zeros(len(self.frame))):
+            with self.assertRaisesRegex(AnomalyHealthError, "no artifact published"):
+                self.model.validate_calibration(self.frame)
+        self.assertFalse((self.cfg.paths.models / self.model.ARTIFACT_NAME).exists())
 
 
 if __name__ == "__main__":
