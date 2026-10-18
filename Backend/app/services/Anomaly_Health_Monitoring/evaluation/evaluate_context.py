@@ -1,13 +1,3 @@
-"""
-Context-modelling evaluation: did operating-mode discovery find the right structure?
-
-Compares the discovered regime count against the documented C-MAPSS
-expectation for the loaded subsets (1 for FD001/FD003, 6 for FD002/FD004),
-reports the clustering quality (silhouette or BIC, whichever the configured
-algorithm produced), and reports the fleet's transition-row fraction --
-too high suggests the guard window is too wide; zero on a multi-regime subset
-would suggest the guard is not firing at all.
-"""
 from __future__ import annotations
 
 import sys
@@ -22,25 +12,18 @@ from app.config.Anomaly_Health_Monitoring.config import Config, get_config
 from app.utils.Anomaly_Health_Monitoring.utils import atomic_write_json, get_logger, read_json
 
 
-
 class ContextEvaluator:
-    """Produces the acceptance report for the context-modelling layer."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the evaluator.
 
-        Args:
-            config: Configuration supplying report output paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
     def evaluate(self) -> Dict[str, Any]:
-        """Assemble the context-modelling evaluation report.
 
-        Returns:
-            A report of regime discovery quality and drift status.
-        """
+
         context_report = read_json(self.config.paths.metrics / "context_modeling.json", default={})
         drift_report = read_json(self.config.paths.metrics / "context_drift.json", default={})
 
@@ -65,11 +48,8 @@ class ContextEvaluator:
         return report
 
     def run(self) -> Dict[str, Any]:
-        """Execute the evaluation and persist the report.
 
-        Returns:
-            The evaluation report.
-        """
+
         self.config.ensure_directories()
         report = self.evaluate()
         atomic_write_json(report, self.config.paths.reports / "context_evaluation.json")
@@ -78,7 +58,7 @@ class ContextEvaluator:
 
 
 def main() -> None:
-    """Run context evaluation standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     evaluator = ContextEvaluator(config)
