@@ -1,19 +1,3 @@
-"""
-FastAPI router for the Explainable Health Monitoring & Anomaly Reasoning Agent.
-
-Twelve endpoints, matching the specification:
-
-    /upload  /preprocess  /train-digital-twin  /generate-health-index
-    /generate-health-score  /detect-anomalies  /root-cause-analysis
-    /explain  /confidence  /feedback  /dashboard  /full-pipeline
-
-Every endpoint delegates to the same service classes the CLI pipeline stages
-use -- there is no logic duplicated between the API and the standalone
-scripts.  Errors from the service layer are caught and translated into
-:class:`ErrorResponse` bodies with an appropriate HTTP status rather than
-leaking raw tracebacks.
-"""
-
 from __future__ import annotations
 
 import ast
@@ -138,15 +122,8 @@ router = APIRouter(prefix=config.api.router_prefix, tags=list(config.api.tags))
 
 
 def _error_response(exc: Exception, status_code: int = 400) -> JSONResponse:
-    """Build a structured error response from a caught exception.
 
-    Args:
-        exc: The exception raised by a service call.
-        status_code: HTTP status to respond with.
 
-    Returns:
-        A JSON response body matching :class:`ErrorResponse`.
-    """
     stage = None
     hint = None
     if isinstance(exc, ArtifactNotFoundError):
@@ -162,33 +139,17 @@ def _error_response(exc: Exception, status_code: int = 400) -> JSONResponse:
     return JSONResponse(status_code=status_code, content=payload)
 
 
-# --------------------------------------------------------------------------- #
-# /upload
-# --------------------------------------------------------------------------- #
-
 @router.get("/schema", response_model=SchemaDescription)
 def get_schema() -> SchemaDescription:
-    """Return the canonical C-MAPSS schema this component expects.
 
-    Returns:
-        The 26-column schema description.
-    """
+
     return SchemaDescription(**describe_schema())
 
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_data(file: UploadFile = File(...)) -> Any:
-    """Accept a raw C-MAPSS ``.txt`` file or an already-parsed CSV.
 
-    Validates the 26-column schema, reporting missing required columns and
-    any foreign columns that were ignored (never a failure by themselves).
 
-    Args:
-        file: The uploaded file.
-
-    Returns:
-        An :class:`UploadResponse`, or a structured error on failure.
-    """
     try:
         config.ensure_directories()
         stored_path = config.paths.uploads / file.filename
@@ -206,15 +167,7 @@ async def upload_data(file: UploadFile = File(...)) -> Any:
                 f"subset, e.g. 'train_FD001.txt'."
             )
 
-        # Validate the file that was actually uploaded. The .txt branch
-        # previously called `read_subset(subset_id, split)`, which reads
-        # `data/raw/{split}_{subset}.txt` -- a different file that merely
-        # shares a naming convention. Every figure in the response (rows,
-        # columns, engines, cycle_range, schema verdict) therefore described
-        # the stock raw file rather than the upload, and an upload whose
-        # counterpart was absent from data/raw failed on a missing file while
-        # sitting right there in uploads/. `read_csv_source` routes on the
-        # same `detect_format` result, so both forms still parse correctly.
+
         frame = reader.read_csv_source(stored_path)
 
         loader = DataLoader(config)
@@ -238,24 +191,14 @@ async def upload_data(file: UploadFile = File(...)) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /preprocess
-# --------------------------------------------------------------------------- #
-
 @router.post("/preprocess", response_model=PreprocessResponse)
 def preprocess(request: PreprocessRequest) -> Any:
-    """Run data loading, cleaning and feature engineering.
 
-    Args:
-        request: Preprocessing parameters.
 
-    Returns:
-        A :class:`PreprocessResponse`, or a structured error on failure.
-    """
     try:
         loader = DataLoader(config)
         raw_frame, load_report = loader.run(
@@ -264,12 +207,8 @@ def preprocess(request: PreprocessRequest) -> Any:
             source_csv=request.source_csv,
             max_engines=request.max_engines,
         )
-        # fit_policy=False: this endpoint serves ad-hoc / uploaded data, not
-        # the authoritative training run. It must apply the persisted
-        # sensor/feature policy, never re-derive and overwrite it -- every
-        # twin, detector and calibration downstream was fit against a
-        # specific active-sensor set, and a single-engine or different-mix
-        # upload silently redefining that set would invalidate all of them.
+
+
         cleaner = DataCleaner(config)
         cleaned_frame, clean_report = cleaner.run(raw_frame, fit_policy=False)
         engineer = FeatureEngineer(config)
@@ -291,30 +230,17 @@ def preprocess(request: PreprocessRequest) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /train-digital-twin
-# --------------------------------------------------------------------------- #
-
 @router.post("/train-digital-twin", response_model=TwinTrainingResponse)
 def train_digital_twin(request: TwinTrainingRequest) -> Any:
-    """Train (or reload) the Digital Twin ensemble and compute residuals.
 
-    Args:
-        request: Twin training parameters.
 
-    Returns:
-        A :class:`TwinTrainingResponse`, or a structured error on failure.
-    """
     try:
-        # This endpoint is inference-only: it always reloads the persisted
-        # context model, per-mode scalers and twin ensemble rather than
-        # fitting fresh ones. Retraining is a deliberate offline action (the
-        # pipeline scripts under app/services/.../pipeline/), never something
-        # a request against this API can trigger.
+
+
         detector = OperatingModeDetector(config)
         labelled, _ = detector.run(refit=False)
         scaler = PerModeScaler(config)
@@ -361,28 +287,18 @@ def train_digital_twin(request: TwinTrainingRequest) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /generate-health-index, /generate-health-score
-# --------------------------------------------------------------------------- #
-
 @router.post("/generate-health-index", response_model=HealthIndexResponse)
 def generate_health_index() -> Any:
-    """Compute the health index from residuals.
 
-    Returns:
-        A :class:`HealthIndexResponse`, or a structured error on failure.
-    """
+
     try:
         calculator = HealthIndexCalculator(config)
-        # recalibrate=False: this API is inference-only. The default is True
-        # for the offline training stage, and leaving it to default here let a
-        # single request re-fit the healthy-behaviour reference from the
-        # current batch and overwrite the persisted calibration that every
-        # later health score, state and alert is judged against.
+
+
         health_index, report = calculator.run(recalibrate=False)
         return HealthIndexResponse(
             status=StageStatus.SUCCESS,
@@ -396,18 +312,14 @@ def generate_health_index() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 @router.post("/generate-health-score", response_model=HealthIndexResponse)
 def generate_health_score() -> Any:
-    """Compute health score, trend, state and alert level.
 
-    Returns:
-        A :class:`HealthIndexResponse` enriched with state distribution, or a
-        structured error on failure.
-    """
+
     try:
         score_engine = HealthScoreEngine(config)
         scores, score_report = score_engine.run()
@@ -433,27 +345,17 @@ def generate_health_score() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /detect-anomalies
-# --------------------------------------------------------------------------- #
-
 @router.post("/detect-anomalies", response_model=AnomalyDetectionResponse)
 def detect_anomalies(request: AnomalyDetectionRequest) -> Any:
-    """Train/apply all anomaly detectors, fuse scores and gate operational anomalies.
 
-    Args:
-        request: Anomaly detection parameters.
 
-    Returns:
-        An :class:`AnomalyDetectionResponse`, or a structured error on failure.
-    """
     try:
-        # Inference-only: always reload the persisted detectors rather than
-        # refitting them against whatever data this request happens to carry.
+
+
         fusion = AnomalyFusion(config)
         classified, report = fusion.run(
             retrain=False, fusion_threshold=request.fusion_threshold
@@ -475,24 +377,14 @@ def detect_anomalies(request: AnomalyDetectionRequest) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /root-cause-analysis
-# --------------------------------------------------------------------------- #
-
 @router.post("/root-cause-analysis", response_model=ReasoningResponse)
 def root_cause_analysis(only_anomalies: bool = Query(default=True)) -> Any:
-    """Run root-cause reasoning over fault-type anomalies.
 
-    Args:
-        only_anomalies: Reason only about fault-type rows.
 
-    Returns:
-        A :class:`ReasoningResponse`, or a structured error on failure.
-    """
     try:
         analyzer = RootCauseAnalyzer(config)
         analyzed, report = analyzer.run(only_anomalies=only_anomalies)
@@ -511,24 +403,14 @@ def root_cause_analysis(only_anomalies: bool = Query(default=True)) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /explain
-# --------------------------------------------------------------------------- #
-
 @router.post("/explain", response_model=ExplainResponse)
 def explain(request: ExplainRequest) -> Any:
-    """Generate human-readable explanations for reasoned anomalies.
 
-    Args:
-        request: Explainability parameters.
 
-    Returns:
-        An :class:`ExplainResponse`, or a structured error on failure.
-    """
     try:
         generator = ExplanationGenerator(config)
         explanations, report = generator.run(
@@ -557,21 +439,14 @@ def explain(request: ExplainRequest) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /confidence
-# --------------------------------------------------------------------------- #
-
 @router.post("/confidence", response_model=ConfidenceResponse)
 def confidence() -> Any:
-    """Compute the confidence/reliability/uncertainty triple.
 
-    Returns:
-        A :class:`ConfidenceResponse`, or a structured error on failure.
-    """
+
     try:
         estimator = ConfidenceEstimator(config)
         result, report = estimator.run()
@@ -589,24 +464,14 @@ def confidence() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /feedback
-# --------------------------------------------------------------------------- #
-
 @router.post("/feedback", response_model=FeedbackResponse)
 def submit_feedback(submission: FeedbackSubmission) -> Any:
-    """Record an operator verdict and propagate it through memory and thresholds.
 
-    Args:
-        submission: The operator's feedback.
 
-    Returns:
-        A :class:`FeedbackResponse`, or a structured error on failure.
-    """
     try:
         updater = LearningUpdater(config)
         summary = updater.apply_feedback(
@@ -631,15 +496,10 @@ def submit_feedback(submission: FeedbackSubmission) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /context-status
-# --------------------------------------------------------------------------- #
-
-#: Columns the context view and the drift detector actually read.
 _CONTEXT_COLUMNS = (
     "operating_mode",
     "mode_confidence",
@@ -653,22 +513,8 @@ _CONTEXT_COLUMNS = (
 
 @lru_cache(maxsize=2)
 def _context_frame(_stamp: float) -> pd.DataFrame:
-    """Load just the context columns of ``context_clusters.csv``.
 
-    That artefact carries every engineered feature and is ~640 MB, so reading
-    it whole cost about seven seconds on every request to a panel that needs
-    only the regime label and the three operating settings. Cached on its
-    mtime, so a pipeline re-run invalidates it.
 
-    Args:
-        _stamp: Modification time of ``context_clusters.csv``; cache key only.
-
-    Returns:
-        One row per (unit, cycle) with whichever context columns exist.
-
-    Raises:
-        ArtifactNotFoundError: If the context stage has not been run.
-    """
     path = config.paths.processed_path(config.paths.context_clusters_csv)
     if not path.exists():
         raise ArtifactNotFoundError(
@@ -681,11 +527,8 @@ def _context_frame(_stamp: float) -> pd.DataFrame:
 
 @router.get("/context-status", response_model=ContextStatusResponse)
 def context_status() -> Any:
-    """Return each engine's latest operating mode plus fleet-wide context drift.
 
-    Returns:
-        A :class:`ContextStatusResponse`, or a structured error on failure.
-    """
+
     try:
         frame = _context_frame(
             config.paths.processed_path(
@@ -725,21 +568,14 @@ def context_status() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /reasoning/sensor-graph, /reasoning/{engine_id}
-# --------------------------------------------------------------------------- #
-
 @router.get("/reasoning/sensor-graph", response_model=DependencyGraphResponse)
 def sensor_dependency_graph() -> Any:
-    """Return the fixed sensor/subsystem dependency graph.
 
-    Returns:
-        A :class:`DependencyGraphResponse`, or a structured error on failure.
-    """
+
     try:
         description = SensorDependencyGraph(config).describe()
         return DependencyGraphResponse(
@@ -750,19 +586,13 @@ def sensor_dependency_graph() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 def _parse_stringified_column(value: Any) -> Any:
-    """Parse a CSV column that stores a stringified Python list/dict.
 
-    Args:
-        value: Either an already-parsed object, a stringified literal, or NaN.
 
-    Returns:
-        The parsed value, or ``None`` when parsing fails or the value is NaN.
-    """
     if isinstance(value, (list, dict)):
         return value
     if isinstance(value, float) and pd.isna(value):
@@ -779,15 +609,8 @@ def _parse_stringified_column(value: Any) -> Any:
 def reasoning_for_engine(
     engine_id: int, limit: int = Query(default=50, ge=1, le=1000)
 ) -> Any:
-    """Return root-cause analysis history for one engine.
 
-    Args:
-        engine_id: Engine identifier.
-        limit: Maximum most-recent rows to return.
 
-    Returns:
-        An :class:`EngineRootCauseResponse`, or a structured error on failure.
-    """
     try:
         frame = read_csv(
             config.paths.processed_path(config.paths.root_cause_analysis_csv),
@@ -827,21 +650,14 @@ def reasoning_for_engine(
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=404)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /feedback/summary, /feedback/thresholds
-# --------------------------------------------------------------------------- #
-
 @router.get("/feedback/summary", response_model=FeedbackSummaryResponse)
 def feedback_summary() -> Any:
-    """Return operator-feedback and anomaly-memory rollups.
 
-    Returns:
-        A :class:`FeedbackSummaryResponse`, or a structured error on failure.
-    """
+
     try:
         feedback_store = FeedbackStore(config)
         alert_memory = AlertMemory(config)
@@ -854,17 +670,14 @@ def feedback_summary() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 @router.get("/feedback/thresholds", response_model=ThresholdStateResponse)
 def feedback_thresholds() -> Any:
-    """Return the current adaptive fusion-threshold state.
 
-    Returns:
-        A :class:`ThresholdStateResponse`, or a structured error on failure.
-    """
+
     try:
         state = ThresholdAdapter(config).load_state()
         return ThresholdStateResponse(
@@ -875,55 +688,25 @@ def feedback_thresholds() -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# /dashboard
-# --------------------------------------------------------------------------- #
-
 @lru_cache(maxsize=2)
 def _dashboard_payload_cached(_stamp: float) -> Dict[str, Any]:
-    """Build the unfiltered dashboard payload, cached on the artefact's mtime.
 
-    Assembling it parses a 216 MB CSV and reduces 160k rows, which costs about
-    five seconds -- fine once, wasteful on every poll of a screen whose data
-    only changes when the pipeline re-runs. Keying the cache on the CSV's mtime
-    means a pipeline run invalidates it automatically. The result is ~6 MB, so
-    caching the payload rather than the parsed frame keeps ~360 MB out of
-    memory.
 
-    Args:
-        _stamp: Modification time of ``dashboard_data.csv``; cache key only.
-
-    Returns:
-        A mapping with ``fleet``, ``engines``, ``alerts`` and ``timeline``.
-    """
     return DashboardApiService(config).dashboard_payload()
 
 
 @router.get("/dashboard", response_model=DashboardResponse)
 def dashboard(engine_id: Optional[int] = Query(default=None)) -> Any:
-    """Return the dashboard payload, optionally filtered to one engine.
 
-    Args:
-        engine_id: Optional engine filter.
 
-    Returns:
-        A :class:`DashboardResponse`, or a structured error on failure.
-    """
     try:
         api_service = DashboardApiService(config)
 
-        # Serve the artefact the pipeline already produced rather than
-        # rebuilding it. Regenerating on every GET re-joined all 160k rows and
-        # rewrote a 216 MB CSV, which cost ~12s per request on top of the ~3.6s
-        # the payload itself takes -- and because the page polls, a second
-        # request would arrive mid-write and collide with the first on the same
-        # fixed `.tmp` path, failing the replace with WinError 32 and 500ing the
-        # whole screen. The payload reads the CSV independently, so none of that
-        # work was needed to answer the request.
+
         dashboard_csv = config.paths.processed_path(config.paths.dashboard_data_csv)
         if not dashboard_csv.exists():
             logger.info("dashboard_data.csv absent; building it once for /dashboard.")
@@ -954,31 +737,16 @@ def dashboard(engine_id: Optional[int] = Query(default=None)) -> Any:
         )
     except AnomalyHealthError as exc:
         return _error_response(exc, status_code=400)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
-
-# --------------------------------------------------------------------------- #
-# /full-pipeline
-# --------------------------------------------------------------------------- #
 
 @router.post("/full-pipeline")
 def full_pipeline(
     include_shap: bool = Query(default=True),
 ) -> Any:
-    """Run every stage end to end and write the integration exchange file.
 
-    Inference-only: every stage reloads its persisted artifacts (context
-    model, per-mode scalers, twin ensemble, detectors, calibrations) rather
-    than fitting fresh ones. Retraining is a deliberate offline action run
-    via the pipeline scripts directly; this API can never trigger it.
 
-    Args:
-        include_shap: Whether the explainability stage computes global SHAP.
-
-    Returns:
-        A :class:`PipelineResponse`-shaped payload, or a structured error.
-    """
     try:
         import importlib.util
         import sys as _sys
@@ -993,24 +761,18 @@ def full_pipeline(
         spec = importlib.util.spec_from_file_location("ahm_full_pipeline_api", module_path)
         module = importlib.util.module_from_spec(spec)
         _sys.modules["ahm_full_pipeline_api"] = module
-        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        spec.loader.exec_module(module)
 
         report = module.run_full_pipeline(config, retrain=False, include_shap=include_shap)
         status_code = 200 if report["status"] == "success" else 500
         return JSONResponse(status_code=status_code, content=_json_safe(report))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 def _json_safe(payload: Any) -> Any:
-    """Recursively convert a report to JSON-safe primitives.
 
-    Args:
-        payload: Arbitrary nested structure possibly containing NumPy scalars.
 
-    Returns:
-        A structure safe to pass to ``JSONResponse``.
-    """
     import numpy as np
 
     if isinstance(payload, dict):
@@ -1028,32 +790,18 @@ def _json_safe(payload: Any) -> Any:
     return payload
 
 
-# --------------------------------------------------------------------------- #
-# Held-out validation metrics (read-only)
-#
-# Purely additive: serves JSON already produced by the offline evaluation
-# pipeline. It trains nothing, fits nothing and writes nothing, so it respects
-# the inference-only contract of this API. Added because the component's own
-# validation evidence -- held-out AUC, false-alarm rate and detection lead
-# time -- existed on disk but was reachable from no endpoint, so the dashboard
-# could show that the detector runs but not that it works.
-# --------------------------------------------------------------------------- #
-
 _EVAL_CANDIDATES = (
     "holdout_anomaly_evaluation.json",
     "holdout_test_evaluation.json",
-    # The anomaly stage's own acceptance report: where flagged faults sit in
-    # remaining-life terms, and how much of the raw flag volume the operational
-    # gate suppresses. Both were written by the pipeline and read by nothing.
+
+
     "evaluate_anomaly.json",
-    # The health stage's equivalents: its RUL-correlation/monotonicity gate, and
-    # the alert-level mix over every scored row rather than the latest cycle.
+
+
     "evaluate_health.json",
     "health_alerts.json",
-    # The reasoning and explainability stages: coverage, whether any hard causal
-    # claim was made, narrative completeness/consistency, and the full cause and
-    # subsystem distributions. `reasoning.json` carries all seven causes, where
-    # the dashboard's `top_root_causes` is deliberately a top-5 widget field.
+
+
     "reasoning.json",
     "evaluate_reasoning.json",
     "evaluate_explainability.json",
@@ -1062,18 +810,8 @@ _EVAL_CANDIDATES = (
 
 @router.get("/evaluation/metrics")
 def evaluation_metrics() -> Dict[str, Any]:
-    """Return the offline held-out evaluation results for this component.
 
-    Reads ``metrics/holdout_anomaly_evaluation.json`` (detector performance)
-    and ``metrics/holdout_test_evaluation.json`` (health-index quality) if the
-    offline evaluation has been run. Nothing is computed live -- these need
-    ground-truth labels the API never sees.
 
-    Returns:
-        ``available`` plus whichever metric documents were found. Missing files
-        are reported rather than raising, so a fresh checkout degrades to an
-        empty panel instead of a 500.
-    """
     metrics_dir = Path(__file__).resolve().parents[3] / "metrics"
     found: Dict[str, Any] = {}
     searched = []
@@ -1096,35 +834,12 @@ def evaluation_metrics() -> Dict[str, Any]:
     )
 
 
-# --------------------------------------------------------------------------- #
-# Digital twin evidence (read-only)
-#
-# Purely additive, like the held-out metrics above: the twin's training
-# summary, its residual-validation gates, its per-engine fidelity table and its
-# actual-vs-expected traces all already existed on disk, but no endpoint served
-# them, so the Digital Twin screen could only show operating-context statistics
-# that say nothing about whether the twin works.
-#
-# Nothing here trains, fits or writes -- both endpoints read artefacts the
-# offline pipeline produced, so the inference-only contract is preserved.
-# --------------------------------------------------------------------------- #
-
-#: The twin models one target per sensor, sensor_1 .. sensor_21.
 _TWIN_SENSOR_COUNT = 21
 
 
 def _load_first_json(candidates) -> Optional[Dict[str, Any]]:
-    """Return the first candidate path that parses as JSON, or ``None``.
 
-    The twin stage writes the same evaluation document to both ``metrics/``
-    and ``reports/``; whichever exists is equally authoritative.
 
-    Args:
-        candidates: Paths to try, in order of preference.
-
-    Returns:
-        The parsed document, or ``None`` when no candidate is readable.
-    """
     for path in candidates:
         if not path.exists():
             continue
@@ -1138,21 +853,8 @@ def _load_first_json(candidates) -> Optional[Dict[str, Any]]:
 
 @router.get("/twin/metrics")
 def twin_metrics() -> Any:
-    """Return the digital twin's training, validation and fidelity evidence.
 
-    Merges three offline artefacts into one payload:
 
-    * ``metrics/digital_twin.json`` -- per-model error and ensemble weights.
-    * ``metrics/evaluate_digital_twin.json`` -- the residual acceptance gates
-      (centring, spread, monotonic growth) that decide whether the residual
-      stream is fit for the downstream detectors to consume.
-    * ``metrics/twin_comparison.json`` -- deviation-pattern mix and the
-      per-engine fidelity table.
-
-    Returns:
-        Normalised ``summary`` / ``models`` / ``validation`` / ``engines``
-        blocks, or ``available: false`` when the twin stage has not been run.
-    """
     try:
         metrics_dir = config.paths.metrics
         reports_dir = config.paths.reports
@@ -1165,6 +867,7 @@ def twin_metrics() -> Any:
             )
         )
         comparison = _load_first_json((metrics_dir / "twin_comparison.json",))
+        recipe = _load_first_json((config.paths.models / "startup_profile_recipe.json",)) or {}
 
         if training is None and validation is None:
             return _json_safe(
@@ -1180,6 +883,8 @@ def twin_metrics() -> Any:
         training = training or {}
         validation = validation or {}
         comparison = comparison or {}
+        from app.services.Anomaly_Health_Monitoring.dashboard.forecast_metrics import active_forecast_metrics
+        forecast = active_forecast_metrics(training, validation, recipe)
 
         per_twin = (
             training.get("per_twin_metrics")
@@ -1188,8 +893,7 @@ def twin_metrics() -> Any:
         )
         weights = training.get("weights") or validation.get("ensemble_weights") or {}
 
-        # The ensemble fuses by inverse RMSE, so the "best member" is simply the
-        # lowest-RMSE twin. Reported so the UI can show what fusion had to beat.
+
         best_name = None
         if per_twin:
             best_name = min(
@@ -1223,9 +927,8 @@ def twin_metrics() -> Any:
         coverage = rv.get("coverage") or {}
 
         p99 = spread.get("per_sensor_p99_abs_z") or {}
-        # A sensor whose p99 |z| is exactly zero is constant across the whole
-        # fleet: the twin cannot model it and it carries no residual signal, so
-        # it must not be offered in a sensor picker.
+
+
         informative = [s for s, v in p99.items() if v not in (None, 0, 0.0)]
 
         summary = {
@@ -1247,10 +950,8 @@ def twin_metrics() -> Any:
             "best_member_rmse": (
                 per_twin.get(best_name, {}).get("rmse") if best_name else None
             ),
-            # Pooled runs offset unit ids per subset so they never collide, which
-            # leaves the UI showing opaque ids like 30249. Publishing the scheme
-            # lets it render that as "FD004 #249" without hardcoding the
-            # convention on the client, where it could drift from the config.
+
+
             "subsets": list(config.data.subsets),
             "unit_id_offset_step": config.data.unit_id_offset_step,
         }
@@ -1259,6 +960,7 @@ def twin_metrics() -> Any:
             {
                 "available": True,
                 "summary": summary,
+                "forecast": forecast,
                 "models": models,
                 "validation": {
                     "passed": rv.get("passed"),
@@ -1291,52 +993,48 @@ def twin_metrics() -> Any:
                 ),
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 @lru_cache(maxsize=6)
 def _twin_sensor_frame(sensor: str, _stamp: float) -> pd.DataFrame:
-    """Load the fleet-wide twin trace for one sensor.
 
-    Only four columns are pulled from each artefact, which keeps a cold read
-    of the 66 MB prediction table and the 99 MB residual table around a
-    second; the result is cached per sensor so repeated picks are instant.
-    ``_stamp`` is the prediction file's mtime, so re-running the pipeline
-    invalidates the cache instead of serving stale traces.
 
-    Args:
-        sensor: Sensor column name, e.g. ``"sensor_11"``.
-        _stamp: Modification time of ``twin_predictions.csv``; cache key only.
-
-    Returns:
-        One row per (unit, cycle) with the twin's expected value, its spread
-        across the four members, the baseline-centred residual and, when the
-        detector has run, the anomaly flag/score for that cycle.
-    """
     processed = config.paths.processed
     expected_col = f"expected_{sensor}"
     spread_col = f"twin_spread_{sensor}"
     residual_col = f"residual_{sensor}"
 
-    # pd.read_csv rather than the shared read_csv helper: only usecols keeps a
-    # cold read of these tables sub-second, and the helper does not expose it.
-    preds = pd.read_csv(
-        processed / "twin_predictions.csv",
-        usecols=["unit", "cycle", expected_col, spread_col],
-    )
-    frame = preds.rename(columns={expected_col: "expected", spread_col: "spread"})
+
+    prediction_path = processed / "twin_predictions.csv"
+    reference_col = f"reference_expected_{sensor}"
+    prediction_columns = pd.read_csv(prediction_path, nrows=0).columns
+    has_reference = reference_col in prediction_columns
+    columns = ["unit", "cycle", reference_col if has_reference else expected_col, spread_col]
+    if "startup_profile_ready" in prediction_columns:
+        columns.append("startup_profile_ready")
+    preds = pd.read_csv(prediction_path, usecols=columns)
+    frame = preds.rename(columns={reference_col if has_reference else expected_col: "expected", spread_col: "spread"})
+    frame["forecast"] = float("nan")
 
     residual_path = processed / "residuals.csv"
     if residual_path.exists():
-        residuals = pd.read_csv(
-            residual_path, usecols=["unit", "cycle", residual_col]
-        ).rename(columns={residual_col: "residual"})
+        prediction_residual_col = f"prediction_residual_{sensor}"
+        residual_columns = pd.read_csv(residual_path, nrows=0).columns
+        columns = ["unit", "cycle", residual_col]
+        if prediction_residual_col in residual_columns:
+            columns.append(prediction_residual_col)
+        residuals = pd.read_csv(residual_path, usecols=columns).rename(columns={residual_col: "residual"})
         frame = frame.merge(residuals, on=["unit", "cycle"], how="left")
+        if has_reference and prediction_residual_col in frame:
+            frame["forecast"] = frame["expected"] + frame["residual"] - frame[prediction_residual_col]
+            if "startup_profile_ready" in frame:
+                frame.loc[~frame["startup_profile_ready"].isin([True, 1, "True", "true", "1"]), "forecast"] = float("nan")
     else:
         frame["residual"] = float("nan")
 
-    # The detector is a later stage; a twin-only run must still return a trace.
+
     fusion_path = processed / "anomaly_fusion.csv"
     if fusion_path.exists():
         try:
@@ -1357,25 +1055,8 @@ def twin_trace(
     sensor: str = Query("sensor_11", description="Sensor column, e.g. sensor_11."),
     max_points: int = Query(400, ge=20, le=2000),
 ) -> Any:
-    """Return one engine's actual-vs-twin trace for a single sensor.
 
-    This is the twin made visible: the value the twin says a *healthy* engine
-    would read under the same operating conditions, the disagreement band
-    across its four members, and the actual reading. Both series are expressed
-    relative to the engine's own early-life baseline, so the vertical gap
-    between them is exactly the residual the downstream detectors consume --
-    a chart where the gap is the signal, rather than two lines whose offset is
-    per-unit manufacturing scatter.
 
-    Args:
-        engine_id: Unit number to trace.
-        sensor: Sensor column name; must be one the twin models.
-        max_points: Cap on returned points; longer histories are strided.
-
-    Returns:
-        ``points`` plus the healthy-training window, detected onset cycle and
-        the engine's fidelity summary.
-    """
     try:
         valid = {f"sensor_{i}" for i in range(1, _TWIN_SENSOR_COUNT + 1)}
         if sensor not in valid:
@@ -1401,10 +1082,7 @@ def twin_trace(
         engine = engine.sort_values("cycle")
         last_cycle = int(engine["cycle"].max())
 
-        # The twin trains on the healthy region only -- RUL above the cap and
-        # the first `cycle_fraction` of observed life -- so the chart shades
-        # that window to show the residual is flat where the model was fitted
-        # and grows outside it.
+
         healthy_until = int(round(last_cycle * config.healthy_region.cycle_fraction))
 
         onset_cycle = None
@@ -1415,8 +1093,8 @@ def twin_trace(
 
         stride = max(1, len(engine) // max_points)
         sampled = engine.iloc[::stride]
-        # Keep the final cycle: it is the engine's current state and dropping
-        # it to a stride boundary would understate the latest deviation.
+
+
         if sampled["cycle"].iloc[-1] != engine["cycle"].iloc[-1]:
             sampled = pd.concat([sampled, engine.iloc[[-1]]])
 
@@ -1428,11 +1106,13 @@ def twin_trace(
             residual = None if residual is None or pd.isna(residual) else float(residual)
             flag = getattr(row, "anomaly_flag", None)
             score = getattr(row, "anomaly_score", None)
+            forecast = getattr(row, "forecast", None)
             points.append(
                 {
                     "cycle": int(getattr(row, "cycle")),
                     "expected": round(expected, 5),
                     "actual": None if residual is None else round(expected + residual, 5),
+                    "forecast": None if forecast is None or pd.isna(forecast) else round(float(forecast), 5),
                     "band_low": round(expected - spread, 5),
                     "band_high": round(expected + spread, 5),
                     "spread": round(spread, 5),
@@ -1466,30 +1146,22 @@ def twin_trace(
         raise
     except ArtifactNotFoundError as exc:
         return _error_response(exc, status_code=404)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
 @router.get("/detector-config")
 def detector_config() -> Any:
-    """Return the fusion contract the detector actually runs with.
 
-    The detector weights and the calibration percentile were duplicated as
-    literals in the dashboard, where nothing tied them to the config that the
-    fusion stage reads -- a weight retuned in the backend would have left the UI
-    quietly describing the old ensemble. Serving them makes the screen a view of
-    the configuration rather than a second, drifting copy of it.
 
-    Returns:
-        Per-detector weight and principle, plus the fusion calibration rule.
-    """
     try:
-        weights = dict(config.anomaly.fusion_weights)
-        total = sum(weights.values()) or 1.0
         fusion_meta = _load_first_json([config.paths.model_path("anomaly_fusion_meta.json")]) or {}
+        weights = fusion_meta.get("fusion_weights") or dict(config.anomaly.fusion_weights)
+        total = sum(weights.values()) or 1.0
+        report = _load_first_json([config.paths.metrics / "anomaly_detection.json"]) or {}
+        trained = fusion_meta.get("detectors") or report.get("detector_summary") or {}
 
-        #: What each detector keys on. Stated here because it describes the
-        #: algorithm, not a tunable, so it cannot drift from a config value.
+
         principles = {
             "isolation_forest": "tree-partition isolation depth",
             "mahalanobis": "Ledoit-Wolf covariance distance",
@@ -1507,38 +1179,32 @@ def detector_config() -> Any:
                         "weight": weight,
                         "weight_share": weight / total,
                         "principle": principles.get(name),
+                        "enabled": weight > 0,
+                        "trained": name in trained and "error" not in trained[name],
+                        "threshold": trained.get(name, {}).get("threshold"),
                     }
                     for name, weight in weights.items()
                 ],
                 "fusion": {
+                    "active_detectors": sum(weight > 0 and name in trained and "error" not in trained[name]
+                                            for name, weight in weights.items()),
+                    "calibrated_threshold": fusion_meta.get("calibrated_fusion_threshold"),
                     "threshold_percentile": config.anomaly.fusion_threshold_percentile,
                     "fallback_threshold": config.anomaly.fusion_threshold,
                     "normalisation": (
-                        "each detector uses its persisted healthy-reference calibration "
-                        "before weighting; condition consensus scales critical-condition "
-                        "odds by separate-engine healthy maxima"
+                        "Isolation Forest, LSTM and Residual Rule use healthy-reference percentile ranks; "
+                        "Mahalanobis uses its saved rational distance calibration. Enabled scores are "
+                        "combined using the persisted weights and a cutoff fitted on separate training engines."
                     ),
                     "condition_consensus_margin": fusion_meta.get("margin", config.anomaly.condition_consensus["margin"]),
                     "max_subset_false_alarm_increase": config.anomaly.condition_consensus["max_false_alarm_increase"],
                 },
             }
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
 
 
-# --------------------------------------------------------------------------- #
-# Per-engine timeline (read-only)
-#
-# /dashboard caps its bundled timelines at the first 50 unit ids, which -- once
-# subsets are pooled and offset -- means FD001 engines 1..50 and nothing else.
-# The health screen defaults to the worst-health engine, which is essentially
-# never in that slice, so its main chart rendered empty. This serves any
-# engine's timeline on demand and reads only the columns a trajectory needs, so
-# it does not pay for the explanation text that dominates the wide table.
-# --------------------------------------------------------------------------- #
-
-#: Trajectory columns, in addition to the identity keys.
 _TIMELINE_COLUMNS = (
     "health_index",
     "health_index_target",
@@ -1556,19 +1222,8 @@ _TIMELINE_COLUMNS = (
 
 @lru_cache(maxsize=2)
 def _timeline_frame(_stamp: float) -> pd.DataFrame:
-    """Load just the trajectory columns of the dashboard table.
 
-    The wide table is 216 MB, most of it generated explanation text; the dozen
-    columns a chart needs are a small fraction of that. Cached on the artefact's
-    mtime so every engine after the first is served without touching disk, and
-    so a pipeline re-run invalidates it.
 
-    Args:
-        _stamp: Modification time of ``dashboard_data.csv``; cache key only.
-
-    Returns:
-        One row per (unit, cycle) with whichever trajectory columns exist.
-    """
     path = config.paths.processed_path(config.paths.dashboard_data_csv)
     header = pd.read_csv(path, nrows=0)
     wanted = ["unit", "cycle"] + [c for c in _TIMELINE_COLUMNS if c in header.columns]
@@ -1578,15 +1233,8 @@ def _timeline_frame(_stamp: float) -> pd.DataFrame:
 
 @router.get("/engine/{engine_id}/timeline")
 def engine_timeline(engine_id: int, max_points: int = Query(600, ge=20, le=5000)) -> Any:
-    """Return one engine's full health trajectory.
 
-    Args:
-        engine_id: Unit number to trace.
-        max_points: Cap on returned points; longer histories are strided.
 
-    Returns:
-        ``points`` ordered by cycle, plus the engine's cycle count.
-    """
     try:
         path = config.paths.processed_path(config.paths.dashboard_data_csv)
         if not path.exists():
@@ -1604,8 +1252,8 @@ def engine_timeline(engine_id: int, max_points: int = Query(600, ge=20, le=5000)
 
         stride = max(1, len(engine) // max_points)
         sampled = engine.iloc[::stride]
-        # Keep the final cycle: it is the engine's current state, and dropping
-        # it to a stride boundary would understate the latest deterioration.
+
+
         if sampled["cycle"].iloc[-1] != engine["cycle"].iloc[-1]:
             sampled = pd.concat([sampled, engine.iloc[[-1]]])
 
@@ -1632,5 +1280,5 @@ def engine_timeline(engine_id: int, max_points: int = Query(600, ge=20, le=5000)
         raise
     except ArtifactNotFoundError as exc:
         return _error_response(exc, status_code=404)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return _error_response(exc, status_code=500)
