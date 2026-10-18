@@ -1,24 +1,3 @@
-"""
-Pipeline stage 10: the full end-to-end orchestrator.
-
-Runs every stage in order, from raw C-MAPSS ingestion through to the
-dashboard data and the integration exchange file:
-
-    01 preprocessing -> 02 context -> 03 digital twin -> 04 health monitoring
-    -> 05 anomaly detection -> 06 reasoning -> 07 explainability
-    -> 08 uncertainty -> 09 feedback learning -> dashboard + exchange file
-
-Each stage is already independently crash-safe (see ``stage_guard`` in
-``utils.py``): a failure in any one stage logs the error, leaves every prior
-stage's output untouched, and this orchestrator stops and reports exactly
-which stage failed rather than silently continuing with stale data.
-
-Because stage filenames carry a leading digit (``01_preprocessing.py`` etc.)
-they are not importable as ordinary dotted modules; this script loads each one
-via :mod:`importlib.util` from its file path, which is the standard approach
-for numerically-prefixed script files.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -34,32 +13,32 @@ if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 _PIPELINE_DIR = Path(__file__).resolve().parent
 
-from app.config.Anomaly_Health_Monitoring.config import Config, get_config  # noqa: E402
-from app.services.Anomaly_Health_Monitoring.dashboard.dashboard_api import (  # noqa: E402
+from app.config.Anomaly_Health_Monitoring.config import Config, get_config
+from app.services.Anomaly_Health_Monitoring.dashboard.dashboard_api import (
     DashboardApiService,
 )
-from app.services.Anomaly_Health_Monitoring.dashboard.dashboard_data_generator import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.dashboard.dashboard_data_generator import (
     DashboardDataGenerator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_anomaly import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_anomaly import (
     AnomalyEvaluator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_context import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_context import (
     ContextEvaluator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_digital_twin import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_digital_twin import (
     DigitalTwinEvaluator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_explainability import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_explainability import (
     ExplainabilityEvaluator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_health import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_health import (
     HealthEvaluator,
 )
-from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_reasoning import (  # noqa: E402
+from app.services.Anomaly_Health_Monitoring.evaluation.evaluate_reasoning import (
     ReasoningEvaluator,
 )
-from app.utils.Anomaly_Health_Monitoring.utils import (  # noqa: E402
+from app.utils.Anomaly_Health_Monitoring.utils import (
     AnomalyHealthError,
     StageExecutionError,
     atomic_write_json,
@@ -68,7 +47,7 @@ from app.utils.Anomaly_Health_Monitoring.utils import (  # noqa: E402
 
 STAGE_NAME = "10_full_pipeline"
 
-#: Numbered stage modules in execution order.
+
 _STAGE_FILES: List[str] = [
     "01_preprocessing.py",
     "02_context_modeling.py",
@@ -83,17 +62,8 @@ _STAGE_FILES: List[str] = [
 
 
 def _load_stage_module(filename: str) -> ModuleType:
-    """Load a numerically-prefixed stage script as an importable module.
 
-    Args:
-        filename: The stage script's filename, e.g. ``'01_preprocessing.py'``.
 
-    Returns:
-        The loaded module, exposing its ``run_stage`` function.
-
-    Raises:
-        AnomalyHealthError: If the module cannot be loaded.
-    """
     path = _PIPELINE_DIR / filename
     module_name = f"ahm_pipeline_{path.stem}"
     spec = importlib.util.spec_from_file_location(module_name, path)
@@ -112,24 +82,8 @@ def run_full_pipeline(
     stop_on_failure: bool = True,
     source_csv: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Run every stage in order and assemble the combined pipeline report.
 
-    Args:
-        config: Configuration to run under; defaults to the active singleton.
-        retrain: Whether context/twin/detector stages retrain from scratch.
-        include_shap: Whether the explainability stage computes global SHAP.
-        stop_on_failure: Stop at the first failing stage (recommended). When
-            False, later stages still run against whatever earlier stages
-            managed to produce, useful for smoke-testing partial pipelines.
-        source_csv: Optional already-parsed CSV to ingest instead of the
-            configured raw subsets -- forwarded to stage 01 only, which
-            already supports it (see ``DataLoader.run``). Every other stage
-            operates on whatever stage 01 produced, unchanged.
 
-    Returns:
-        A report with per-stage results, in ``StageResponse``-like shape, plus
-        a top-level summary and the exchange-file path.
-    """
     cfg = config or get_config()
     logger = get_logger(__name__, cfg)
     cfg.ensure_directories()
@@ -150,20 +104,16 @@ def run_full_pipeline(
             elif stage_id == "03_digital_twin":
                 result = module.run_stage(cfg, retrain=retrain)
             elif stage_id == "04_health_monitoring":
-                # Stage 04 was previously called with no arguments, so its
-                # `recalibrate=True` default held even under retrain=False: an
-                # inference run re-fit the health index's healthy reference
-                # from whatever engines happened to be in the batch and
-                # overwrote `models/health_index_calibration.json`. That both
-                # broke the inference-only contract and made the index
-                # batch-relative -- a batch of only degraded engines
-                # recalibrates onto their degraded level and reports them as
-                # healthy.
+
+
                 result = module.run_stage(cfg, recalibrate=retrain)
             elif stage_id == "05_anomaly_detection":
                 result = module.run_stage(cfg, retrain=retrain)
             elif stage_id == "07_explainability":
                 result = module.run_stage(cfg, include_shap=include_shap)
+            elif stage_id == "09_feedback_learning":
+                result = {"stage": stage_id, "skipped": True,
+                          "reason": "Scoring and offline retraining keep the selected cutoff frozen; apply explicit feedback separately."}
             else:
                 result = module.run_stage(cfg)
             status = "success"
@@ -222,15 +172,8 @@ def run_full_pipeline(
 
 
 def _run_evaluations(config: Config, logger: Any) -> Dict[str, Any]:
-    """Run every evaluation module and collect a pass/fail summary.
 
-    Args:
-        config: Active configuration.
-        logger: Logger to report through.
 
-    Returns:
-        A mapping of evaluation name to its acceptance verdict.
-    """
     evaluators = {
         "digital_twin": DigitalTwinEvaluator(config),
         "context": ContextEvaluator(config),
@@ -243,21 +186,15 @@ def _run_evaluations(config: Config, logger: Any) -> Dict[str, Any]:
     for name, evaluator in evaluators.items():
         try:
             summary[name] = evaluator.run()
-        except Exception as exc:  # noqa: BLE001 - evaluation must not crash the pipeline
+        except Exception as exc:
             logger.warning("Evaluation '%s' failed to run: %s", name, exc)
             summary[name] = {"error": str(exc)}
     return summary
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
-    """Parse command-line arguments for standalone execution.
 
-    Args:
-        argv: Optional argument vector for testing.
 
-    Returns:
-        The parsed namespace.
-    """
     parser = argparse.ArgumentParser(description="Stage 10: full pipeline")
     parser.add_argument("--no-retrain", action="store_true")
     parser.add_argument("--no-shap", action="store_true")
@@ -266,7 +203,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def main() -> None:
-    """Entry point for standalone execution."""
+
     args = parse_args()
     config = get_config()
     report = run_full_pipeline(
