@@ -1,31 +1,3 @@
-"""
-Root-cause analysis: the reasoning-layer orchestrator.
-
-Ties together every piece of the reasoning pipeline for each fault-type
-anomaly:
-
-    Anomaly Detection -> Anomaly Reasoning -> Root Cause Attribution -> (Explanation Generation, next stage)
-
-For every row flagged ``anomaly_type == 'fault'`` (by default; see
-``ReasoningRequest.only_anomalies``), this module:
-
-1. Ranks contributing sensors from the residual z-scores
-   (:meth:`ResidualCalculator.top_contributors`).
-2. Asks :mod:`sensor_dependency_graph` / :mod:`rule_engine` which subsystem and
-   candidate causes that pattern implicates.
-3. Asks :mod:`temporal_reasoning` how the deviation evolved.
-4. Asks :mod:`root_cause_tracker` whether a similar pattern has been seen
-   before, and whether it was previously a false alarm.
-5. Combines all of that into one :class:`RootCauseRecord`-shaped row.
-
-Answers to all eight of the specification's reasoning questions are present in
-the output columns: why (rule evidence), sequence of events (temporal
-evolution), which sensors (top_sensors), operational-vs-fault
-(``anomaly_type``, already resolved upstream), seen before
-(``similar_past_anomaly_id``), how it evolved (``evolution_pattern``), most
-likely root cause (``root_cause``), and recommended action.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -68,14 +40,11 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 
 
 class RootCauseAnalyzer:
-    """Orchestrates rule matching, temporal reasoning and memory lookup."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the analyzer and its collaborators.
 
-        Args:
-            config: Configuration supplying the reasoning parameters.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.graph = SensorDependencyGraph(self.config)
@@ -84,21 +53,12 @@ class RootCauseAnalyzer:
         self.tracker = RootCauseTracker(self.config)
         self.top_k = int(self.config.reasoning.top_k_sensors)
 
-    # ------------------------------------------------------------------ #
-    # Per-row reasoning
-    # ------------------------------------------------------------------ #
+
     def _top_sensors_for_row(
         self, row: pd.Series, sensors: List[str]
     ) -> List[Tuple[str, float]]:
-        """Rank a row's sensors by absolute robust z-score.
 
-        Args:
-            row: A row of the residuals frame.
-            sensors: Active sensor names.
 
-        Returns:
-            A list of ``(sensor, residual_z)`` pairs, highest magnitude first.
-        """
         z_columns = get_residual_z_columns(sensors)
         pairs = [
             (sensor_from_residual(col), float(row.get(col, 0.0)))
@@ -116,20 +76,8 @@ class RootCauseAnalyzer:
         score_column: str = "anomaly_score",
         threshold: float = 0.5,
     ) -> Dict[str, Any]:
-        """Produce a full root-cause record for a single anomalous row.
 
-        Args:
-            row: The row being reasoned about (from the merged residual +
-                anomaly frame).
-            engine_history: All of this engine's rows up to and including this
-                cycle, used for temporal reasoning.
-            sensors: Active sensor names.
-            score_column: Column used for onset/evolution analysis.
-            threshold: Threshold used for onset detection.
 
-        Returns:
-            A flat dictionary matching the ``RootCauseRecord`` schema.
-        """
         ranked = self._top_sensors_for_row(row, sensors)
         top_sensor_names = [name for name, _ in ranked]
 
@@ -186,27 +134,15 @@ class RootCauseAnalyzer:
         }
         return record
 
-    # ------------------------------------------------------------------ #
-    # Batch orchestration
-    # ------------------------------------------------------------------ #
+
     def analyze(
         self,
         anomalies: pd.DataFrame,
         residuals: pd.DataFrame,
         only_anomalies: bool = True,
     ) -> pd.DataFrame:
-        """Reason about every qualifying row and return the results as a frame.
 
-        Args:
-            anomalies: Frame carrying ``anomaly_type``, ``anomaly_score``,
-                ``severity`` and identity keys (typically ``anomaly_fusion.csv``).
-            residuals: Residuals frame carrying ``residual_z_sensor_*`` columns.
-            only_anomalies: Reason only about ``anomaly_type == 'fault'`` rows.
-                When False, every row is reasoned about (much slower).
 
-        Returns:
-            A frame of root-cause records, one row per reasoned anomaly.
-        """
         merged = merge_on_keys(
             anomalies, residuals, keys=get_identity_columns(), how="left"
         )
@@ -239,8 +175,8 @@ class RootCauseAnalyzer:
             )
 
         result = pd.DataFrame(records)
-        # JSON-friendly columns are stringified for the flat CSV; full detail
-        # remains available through the API layer's structured response.
+
+
         for column in ("top_sensors", "sensor_contributions", "candidate_causes"):
             result[column] = result[column].apply(lambda value: str(value))
 
@@ -252,19 +188,10 @@ class RootCauseAnalyzer:
         )
         return result
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``root_cause_analysis.csv`` atomically.
 
-        Args:
-            frame: Root-cause records.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.root_cause_analysis_csv
         )
@@ -278,18 +205,8 @@ class RootCauseAnalyzer:
         residuals: Optional[pd.DataFrame] = None,
         only_anomalies: bool = True,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the reasoning stage.
 
-        Args:
-            anomalies: Optional in-memory fused-anomaly frame; otherwise
-                ``anomaly_fusion.csv`` is read from disk.
-            residuals: Optional in-memory residuals frame; otherwise
-                ``residuals.csv`` is read from disk.
-            only_anomalies: Reason only about fault-type anomalies.
 
-        Returns:
-            A ``(root_cause_frame, report)`` tuple.
-        """
         self.config.ensure_directories()
         anomaly_source = anomalies
         if anomaly_source is None:
@@ -339,7 +256,7 @@ class RootCauseAnalyzer:
 
 
 def main() -> None:
-    """Run root-cause analysis standalone against the anomaly fusion output."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     analyzer = RootCauseAnalyzer(config)
