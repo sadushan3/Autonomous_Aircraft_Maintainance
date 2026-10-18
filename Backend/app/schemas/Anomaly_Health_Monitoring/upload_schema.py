@@ -1,13 +1,3 @@
-"""
-Schemas for data upload, schema validation and the preprocessing stage.
-
-The ``/upload`` endpoint accepts either a raw C-MAPSS ``.txt`` file or an
-already-parsed CSV.  In both cases it validates the 26-column layout and
-reports exactly which required columns are missing and which foreign columns
-were ignored -- the presence of extra columns produced by sibling components is
-never itself an error.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -21,7 +11,7 @@ from app.schemas.Anomaly_Health_Monitoring.common_schema import (
 
 
 class SchemaDescription(StrictModel):
-    """Machine-readable description of the canonical C-MAPSS schema."""
+
 
     identity_columns: List[str] = Field(..., description="['unit', 'cycle'].")
     op_setting_columns: List[str] = Field(..., description="The 3 operating settings.")
@@ -37,7 +27,7 @@ class SchemaDescription(StrictModel):
 
 
 class UploadOptions(StrictModel):
-    """Optional controls accompanying an upload."""
+
 
     subset_id: Optional[str] = Field(
         default=None,
@@ -56,17 +46,8 @@ class UploadOptions(StrictModel):
     @field_validator("split")
     @classmethod
     def _validate_split(cls, value: str) -> str:
-        """Constrain the split label to the two C-MAPSS splits.
 
-        Args:
-            value: Candidate split label.
 
-        Returns:
-            The lower-cased label.
-
-        Raises:
-            ValueError: If the label is not 'train' or 'test'.
-        """
         lowered = value.lower().strip()
         if lowered not in {"train", "test"}:
             raise ValueError("split must be either 'train' or 'test'")
@@ -74,7 +55,7 @@ class UploadOptions(StrictModel):
 
 
 class UploadResponse(BaseResponse):
-    """Outcome of validating and storing an uploaded data file."""
+
 
     filename: str = Field(..., description="Original filename as uploaded.")
     stored_path: str = Field(..., description="Where the file was persisted.")
@@ -105,7 +86,7 @@ class UploadResponse(BaseResponse):
 
 
 class PreprocessRequest(StrictModel):
-    """Parameters for the preprocessing stage."""
+
 
     subsets: Optional[List[str]] = Field(
         default=None,
@@ -133,7 +114,7 @@ class PreprocessRequest(StrictModel):
 
 
 class DataQualitySummary(StrictModel):
-    """Data-quality facts produced by the cleaning stage."""
+
 
     rows_in: int = Field(default=0, ge=0)
     rows_out: int = Field(default=0, ge=0)
@@ -149,7 +130,7 @@ class DataQualitySummary(StrictModel):
 
 
 class PreprocessResponse(BaseResponse):
-    """Result of the preprocessing stage."""
+
 
     rows: int = Field(default=0, ge=0)
     engines: int = Field(default=0, ge=0)
@@ -165,7 +146,7 @@ class PreprocessResponse(BaseResponse):
 
 
 class ContextModelingResponse(BaseResponse):
-    """Result of the operating-mode discovery stage."""
+
 
     rows: int = Field(default=0, ge=0)
     algorithm: str = Field(default="", description="'kmeans' or 'gmm'.")
@@ -188,7 +169,7 @@ class ContextModelingResponse(BaseResponse):
 
 
 class EngineModeStatus(StrictModel):
-    """Latest operating-mode assignment for one engine."""
+
 
     engine_id: int = Field(...)
     cycle: int = Field(..., ge=1)
@@ -199,7 +180,7 @@ class EngineModeStatus(StrictModel):
 
 
 class ContextDriftStatus(StrictModel):
-    """Fleet-wide operating-context drift, from :class:`ContextDriftDetector`."""
+
 
     drift_detected: bool = Field(default=False)
     psi: float = Field(default=0.0, ge=0.0)
@@ -213,20 +194,14 @@ class ContextDriftStatus(StrictModel):
 
 
 class ContextStatusResponse(BaseResponse):
-    """Latest per-engine operating mode plus fleet-wide drift status."""
+
 
     engines: List[EngineModeStatus] = Field(default_factory=list)
     drift: ContextDriftStatus = Field(default_factory=ContextDriftStatus)
 
 
 class TwinTrainingRequest(StrictModel):
-    """Parameters for running the Digital Twin ensemble.
 
-    Inference-only by design: this endpoint always reloads the persisted
-    twins, context model and scalers rather than fitting fresh ones, so no
-    retrain flag is exposed here. Retraining is a deliberate offline action
-    via the pipeline scripts, never something an API request can trigger.
-    """
 
     twins: Optional[List[str]] = Field(
         default=None,
@@ -236,7 +211,7 @@ class TwinTrainingRequest(StrictModel):
 
 
 class TwinMetrics(StrictModel):
-    """Per-twin accuracy on the held-out validation engines."""
+
 
     name: str = Field(..., description="Twin variant name.")
     rmse: float = Field(default=0.0, ge=0.0)
@@ -251,7 +226,7 @@ class TwinMetrics(StrictModel):
 
 
 class TwinTrainingResponse(BaseResponse):
-    """Result of the Digital Twin stage."""
+
 
     twins: List[TwinMetrics] = Field(default_factory=list)
     ensemble_rmse: float = Field(default=0.0, ge=0.0)
