@@ -1,8 +1,3 @@
-"""Conservative consensus of residual-history RUL-condition classifiers.
-
-The target is the healthy/critical RUL proxy, not a verified fault label.
-Inference consumes only past/current residuals and a frozen covariance model.
-"""
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -13,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from app.config.Anomaly_Health_Monitoring.config import Config, get_config
 from app.services.Anomaly_Health_Monitoring.anomaly_detection.mahalanobis_detector import MahalanobisDetector
-from app.services.Anomaly_Health_Monitoring.evaluation.monitoring_metrics import condition_metrics
+from app.services.Anomaly_Health_Monitoring.evaluation.monitoring_metrics import condition_metrics, condition_candidate_improves
 from app.utils.Anomaly_Health_Monitoring.utils import AnomalyHealthError, load_model, save_model
 from app.utils.Anomaly_Health_Monitoring.training_split import load_training_split, training_scope, record_training_scope
 
@@ -77,7 +72,7 @@ class ConditionConsensusDetector:
                 raise AnomalyHealthError("Invalid consensus classifier output; monitoring unavailable.")
             p = np.clip(p, 1e-8, 1 - 1e-8)
             ratios.append(p / (1 - p) / member["scale"])
-        # Two complementary histories, each averaged over three seeded models.
+
         distance = np.median(np.row_stack(ratios), axis=0)
         result = np.empty(len(frame), dtype=float)
         result[positions] = distance / (distance + self.margin)
@@ -87,7 +82,7 @@ class ConditionConsensusDetector:
         return self.score(frame) > self.threshold
 
     def fit(self, frame: pd.DataFrame, feature_columns: list[str]):
-        """Refit the frozen recipe using engine-disjoint healthy calibration."""
+
         frame = frame.loc[frame.split.eq("train")] if "split" in frame else frame
         plan = load_training_split(self.config)
         if plan:
@@ -142,11 +137,8 @@ class ConditionConsensusDetector:
         return self
 
     def validate_calibration(self, frame: pd.DataFrame) -> float:
-        """Preserve the conservative cutoff; do not replace it by a low percentile.
 
-        If an artifact is already deployed, retraining must improve condition
-        performance on the outer held-out engines before it can replace it.
-        """
+
         if "RUL" not in frame:
             raise AnomalyHealthError("Consensus validation needs RUL condition proxies.")
         if load_training_split(self.config):
@@ -191,19 +183,62 @@ class ConditionConsensusDetector:
                 raise AnomalyHealthError("Consensus did not improve held-out covariance predictions; no artifact published.")
         return self.threshold
 
+    def calibrate_development_margin(self, frame: pd.DataFrame, classify=None) -> float:
+
+
+        frame = training_scope(frame, self.config, ("selection",), required=True).sort_values(["unit", "cycle"]).reset_index(drop=True)
+        if "RUL" not in frame:
+            raise AnomalyHealthError("Development calibration requires independent RUL proxy targets.")
+
+        def measure(values, cutoff):
+            data = frame.copy()
+            data["calibration_ready"] = data.cycle > self.config.twin.commissioning_cycles
+            data["anomaly_score"] = values
+            data["threshold_used"] = cutoff
+            data["anomaly_flag"] = (data.anomaly_score > cutoff) & data.calibration_ready
+            if classify is not None:
+                data = classify(data)
+            result = condition_metrics(data, bootstrap=False)
+            if "subset_id" in data:
+                result["per_subset"] = {str(name): condition_metrics(part, bootstrap=False) for name, part in data.groupby("subset_id")}
+            return result
+
+        baseline = measure(self.reference.score(frame), self.reference.threshold)
+        initial_score, initial_margin = self.score(frame), self.margin
+        attempts = []
+        for margin in (1., 1.25, 1.5, 2., 3., 4., 8., 16., 32.):
+            score = initial_score / (initial_score + (margin / initial_margin) * (1. - initial_score))
+            metrics = measure(score, self.threshold)
+            attempts.append({"margin": margin, "metrics": metrics,
+                "accepted": condition_candidate_improves(baseline, metrics, self.config.anomaly.condition_consensus["max_false_alarm_increase"])})
+        eligible = [attempt for attempt in attempts if attempt["accepted"]]
+        if not eligible:
+            raise AnomalyHealthError("No development margin improves condition performance within subset false-alert bounds.")
+        chosen = max(eligible, key=lambda attempt: (attempt["metrics"]["f1"], attempt["metrics"]["recall"],
+                                                   -attempt["metrics"]["false_positive"], attempt["margin"]))
+        self.margin = chosen["margin"]
+        record_training_scope("consensus_margin_selection", frame, self.config, ("selection",))
+        self.provenance["development_margin_calibration"] = {
+            "selection_unit_ids": sorted(map(int, frame.unit.unique())), "selected_margin": self.margin,
+            "baseline": baseline, "attempts": attempts, "confirmation_or_official_used": False}
+        return self.margin
+
     def save(self):
         if not self.members:
             raise AnomalyHealthError("No fitted consensus to save.")
         reference = {"covariance_estimator": self.reference.covariance_estimator,
                      "feature_columns": self.reference.feature_columns, "distance_p99": self.reference._distance_p99,
-                     "temporal_window": self.reference.temporal_window, "temporal_method": self.reference.temporal_method}
-        return save_model({"schema_version": 1, "members": self.members, "margin": self.margin,
+                     "temporal_window": self.reference.temporal_window, "temporal_method": self.reference.temporal_method,
+                     "threshold": self.reference.threshold, "score_normalization": self.reference.score_normalization,
+                     "healthy_distances_sorted": self.reference._healthy_distances_sorted,
+                     "chi2_threshold": self.reference.chi2_threshold}
+        return save_model({"schema_version": 2, "members": self.members, "margin": self.margin,
                            "threshold": self.threshold, "reference": reference, "provenance": self.provenance},
                           self.config.paths.model_path(self.ARTIFACT_NAME), config=self.config)
 
     def load(self):
         bundle = load_model(self.config.paths.model_path(self.ARTIFACT_NAME))
-        if bundle.get("schema_version") != 1:
+        if bundle.get("schema_version") not in (1, 2):
             raise AnomalyHealthError("Unsupported consensus artifact schema.")
         margin, threshold = float(bundle["margin"]), float(bundle["threshold"])
         members, ref = bundle["members"], bundle["reference"]
@@ -220,6 +255,15 @@ class ConditionConsensusDetector:
         self.reference._distance_p99 = float(ref["distance_p99"])
         self.reference.temporal_window = int(ref["temporal_window"])
         self.reference.temporal_method = ref["temporal_method"]
+        self.reference.threshold = float(ref.get("threshold", .5))
+        self.reference.score_normalization = str(ref.get("score_normalization", "rational"))
+        self.reference._healthy_distances_sorted = np.asarray(ref.get("healthy_distances_sorted", []), dtype=float)
+        self.reference.chi2_threshold = float(ref.get("chi2_threshold", 1.))
+        if (not np.isfinite(self.reference.threshold) or not 0 < self.reference.threshold < 1
+                or self.reference.score_normalization not in ("rational", "empirical")
+                or not np.isfinite(self.reference._healthy_distances_sorted).all()
+                or (self.reference.score_normalization == "empirical" and not len(self.reference._healthy_distances_sorted))):
+            raise AnomalyHealthError("Invalid consensus covariance reference calibration.")
         self.feature_columns = list(self.reference.feature_columns)
         self.provenance = bundle.get("provenance", {})
         plan = load_training_split(self.config)
