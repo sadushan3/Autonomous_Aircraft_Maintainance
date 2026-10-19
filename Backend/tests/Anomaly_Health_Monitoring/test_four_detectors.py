@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import patch
 
@@ -29,6 +30,28 @@ class FourDetectorContracts(unittest.TestCase):
         self.cfg.mlops.enable_mlflow = False
         self.cfg.mlops.log_to_file = False
         self.cfg.anomaly.fusion_weights = dict(WEIGHTS)
+
+    def test_default_configuration_enables_the_four_frontend_models(self):
+        cfg = Config()
+        self.assertEqual(cfg.anomaly.fusion_weights, WEIGHTS)
+        self.assertEqual(set(AnomalyFusion(cfg).detectors), set(WEIGHTS))
+
+    def test_failed_member_cannot_publish_a_partial_bundle(self):
+        fusion = AnomalyFusion(self.cfg)
+        frame = pd.DataFrame({"unit": np.repeat([1, 2, 3, 4], 4), "cycle": list(range(1, 5)) * 4,
+                              "residual_sensor_1": .1, "RUL": 200})
+        previous = self.cfg.paths.models / "anomaly_fusion_meta.json"
+        previous.write_text('{"previous_bundle":true}')
+        with ExitStack() as stack:
+            for name, detector in fusion.detectors.items():
+                stack.enter_context(patch.object(detector, "fit", side_effect=ValueError("broken model")
+                                                if name == "lstm_autoencoder" else None))
+                stack.enter_context(patch.object(detector, "save"))
+            calibrate = stack.enter_context(patch.object(fusion, "_calibrate_fusion_threshold"))
+            with self.assertRaisesRegex(AnomalyHealthError, "lstm_autoencoder"):
+                fusion.train(frame)
+            calibrate.assert_not_called()
+        self.assertEqual(json.loads(previous.read_text()), {"previous_bundle": True})
 
     def test_all_four_scores_contribute_to_fusion(self):
         fusion = AnomalyFusion(self.cfg)

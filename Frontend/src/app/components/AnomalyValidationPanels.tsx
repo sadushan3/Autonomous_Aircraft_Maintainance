@@ -4,6 +4,8 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -54,8 +56,8 @@ export function DetectionPerformancePanel() {
 
   const subsetChart = Object.entries(perSubset ?? {}).map(([fd, m]) => ({
     fd,
-    auc: Number((m.auc * 100).toFixed(2)),
-    falseAlarm: Number((m.false_alarm * 100).toFixed(2)),
+    auc: typeof m.auc === "number" && Number.isFinite(m.auc) ? Number((m.auc * 100).toFixed(2)) : null,
+    falseAlarm: typeof m.false_alarm === "number" && Number.isFinite(m.false_alarm) ? Number((m.false_alarm * 100).toFixed(2)) : null,
   }));
 
   return (
@@ -118,18 +120,27 @@ export function DetectionPerformancePanel() {
       {subsetChart.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-xs uppercase tracking-widest text-slate-500">Per subset</p>
-          <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={subsetChart}>
+          <div className="h-[200px] w-full min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <BarChart data={subsetChart} margin={{ top: 24, right: 8, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
               <XAxis dataKey="fd" stroke="#64748b" fontSize={11} />
               <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} unit="%" />
               <Tooltip
                 contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8, fontSize: 12 }}
               />
-              <Bar name="AUC %" dataKey="auc" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar name="False alarm %" dataKey="falseAlarm" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Legend iconType="square" wrapperStyle={{ fontSize: 11 }} />
+              <Bar name="AUC %" dataKey="auc" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                <LabelList dataKey="auc" position="top" fill="#6ee7b7" fontSize={10}
+                  formatter={(value: unknown) => typeof value === "number" ? `${value.toFixed(1)}%` : "—"} />
+              </Bar>
+              <Bar name="False alarm %" dataKey="falseAlarm" fill="#ef4444" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                <LabelList dataKey="falseAlarm" position="top" fill="#fca5a5" fontSize={10}
+                  formatter={(value: unknown) => typeof value === "number" ? `${value.toFixed(2)}%` : "—"} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       )}
 

@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Cell,
   Legend,
+  LabelList,
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
@@ -113,7 +114,7 @@ export function AnomalyDetection() {
 
   const focusRadar = focus
     ? DETECTORS.filter((d) => typeof focus[d.key] === "number" && Number.isFinite(focus[d.key])).map((d) => ({
-        detector: d.label.split(" ")[0],
+        detector: d.configKey === "mahalanobis" ? "Mahal." : d.configKey === "residual_rule" ? "Rule" : d.label.split(" ")[0],
         score: Number((((focus[d.key] as number) ?? 0) * 100).toFixed(1)),
       }))
     : [];
@@ -137,7 +138,7 @@ export function AnomalyDetection() {
   const rulAlign = evaluation.acceptance?.rul_alignment;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <PageHeader
         title="Anomaly Detection"
         subtitle={`${detectorCfg.data?.fusion.active_detectors ?? 0} active detector models, fused against a calibrated threshold`}
@@ -180,11 +181,11 @@ export function AnomalyDetection() {
 
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-        <Reveal index={5} className="xl:col-span-3">
+        <Reveal index={5} className="min-w-0 xl:col-span-3">
           <DetectionPerformancePanel />
         </Reveal>
 
-        <Reveal index={6} className="xl:col-span-2">
+        <Reveal index={6} className="min-w-0 xl:col-span-2">
           <MetricCard
             title="Do the severity bands mean anything?"
             subtitle="Mean remaining life behind each band, held-out engines"
@@ -197,8 +198,9 @@ export function AnomalyDetection() {
                   : "No held-out severity results are available in the saved evaluation report."} />
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={severityRul}>
+                <div className="h-60 w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <BarChart data={severityRul} margin={{ top: 24, right: 12, bottom: 0, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                     <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 11 }} />
                     <YAxis
@@ -216,13 +218,16 @@ export function AnomalyDetection() {
                       contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }}
                       formatter={(v: unknown) => [`${(v as number).toFixed(1)} cycles`, "mean RUL"]}
                     />
-                    <Bar dataKey="rul" radius={[6, 6, 0, 0]} animationDuration={900}>
+                    <Bar dataKey="rul" radius={[6, 6, 0, 0]} isAnimationActive={false}>
+                      <LabelList dataKey="rul" position="top" fill="#cbd5e1" fontSize={11}
+                        formatter={(value: unknown) => typeof value === "number" ? value.toFixed(1) : "—"} />
                       {severityRul.map((d) => (
                         <Cell key={d.name} fill={d.color} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
                 {evaluation.test?.severity_row_counts && (
                   <p className="mt-2 text-xs text-slate-500">
                     Evaluated cycles: {severityRul.map((d) =>
@@ -351,39 +356,46 @@ export function AnomalyDetection() {
       </Reveal>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Reveal index={9}>
+        <Reveal index={9} className="min-w-0">
           <MetricCard title="Mean Detector Score Across Alerts">
-            {detectorMeans.some((d) => d.score !== null) ? <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={detectorMeans} layout="vertical" margin={{ left: 40 }}>
+            {detectorMeans.some((d) => d.score !== null) ? <div className="h-[280px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart data={detectorMeans} layout="vertical" margin={{ left: 0, right: 54 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis type="number" domain={[0, 1]} stroke="#64748b" />
+                <XAxis type="number" domain={[0, 1]} ticks={[0, 0.5, 1]} stroke="#64748b" />
                 <YAxis dataKey="name" type="category" stroke="#64748b" width={130} tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }} />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} animationDuration={900}>
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                  <LabelList dataKey="score" position="right" fill="#cbd5e1" fontSize={11}
+                    formatter={(value: unknown) => typeof value === "number" ? value.toFixed(3) : "—"} />
                   {detectorMeans.map((d) => (
                     <Cell key={d.name} fill={d.color} />
                   ))}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer> : <Empty label="No detector scores are available in the current alerts." />}
+            </ResponsiveContainer>
+            </div> : <Empty label="No detector scores are available in the current alerts." />}
           </MetricCard>
         </Reveal>
 
-        <Reveal index={10}>
-          <MetricCard title="Severity Distribution">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={sevChart}>
+        <Reveal index={10} className="min-w-0">
+          <MetricCard title="Severity Distribution" subtitle={`Latest recorded cycle for ${engines.length.toLocaleString()} engines`}>
+            <div className="h-[280px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <BarChart data={sevChart} margin={{ top: 24, right: 12, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
+                <YAxis stroke="#64748b" allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={900}>
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive={false}>
+                  <LabelList dataKey="value" position="top" fill="#cbd5e1" fontSize={12} />
                   {sevChart.map((d) => (
                     <Cell key={d.name} fill={d.color} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
             <p className="mt-2 text-xs text-slate-500">
               Severity bands are fractions of the distance from the calibrated threshold to 1.0, so they move with the
               threshold instead of being fixed cuts.
@@ -392,7 +404,7 @@ export function AnomalyDetection() {
         </Reveal>
       </div>
 
-      <Reveal index={11}>
+      <Reveal index={11} className="min-w-0">
         <MetricCard title={`Engine E${focusId} — Detector Breakdown`}>
           <div className="mb-4 flex flex-wrap gap-2">
             {alerts.slice(0, 18).map((a) => (
@@ -412,7 +424,8 @@ export function AnomalyDetection() {
 
           {focus ? (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <ResponsiveContainer width="100%" height={280}>
+              <div className="h-[280px] w-full min-w-0">
+              {focusRadar.length ? <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <RadarChart data={focusRadar}>
                   <PolarGrid stroke="#1e293b" />
                   <PolarAngleAxis dataKey="detector" stroke="#64748b" />
@@ -423,12 +436,13 @@ export function AnomalyDetection() {
                     stroke="#22d3ee"
                     fill="#22d3ee"
                     fillOpacity={0.35}
-                    animationDuration={900}
+                    isAnimationActive={false}
                   />
                   <Legend />
                   <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }} />
                 </RadarChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer> : <Empty label="This engine has no detector scores to chart." />}
+              </div>
 
               <div className="space-y-3">
                 {DETECTORS.map((d, i) => {

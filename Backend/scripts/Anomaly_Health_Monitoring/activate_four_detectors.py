@@ -142,7 +142,7 @@ def finalize(run):
                     score_version="four_detector_ensemble_v1", activation_reason="Explicit user request for four models")
     atomic_write_json(metadata, metadata_path)
     reference_models = [p for p in active.paths.models.iterdir() if p.is_file() and
-                        (p.name.startswith(("twin_", "startup_profile_", "health_")) or
+                        (p.name.startswith(("twin_", "startup_profile_", "health_")) or "_twin" in p.name or
                          p.name in ("residual_z_calibration.json", "alert_memory.json"))]
     protected = reference_models + [active.paths.metrics / "digital_twin.json"]
     input_names = [active.paths.raw_data_csv, active.paths.cleaned_data_csv, active.paths.scaled_features_csv,
@@ -226,6 +226,16 @@ def finalize(run):
     existing.update(json.loads((cfg.paths.models / "training_provenance.json").read_text()))
     atomic_write_json(existing, run / "merged_training_provenance.json")
     copies.append((run / "merged_training_provenance.json", provenance_path))
+    registry_path = active.paths.models / active.paths.model_registry_json
+    new_registry_path = cfg.paths.models / cfg.paths.model_registry_json
+    if new_registry_path.exists():
+        registry = json.loads(registry_path.read_text()) if registry_path.exists() else {}
+        updates = json.loads(new_registry_path.read_text())
+        updates = json.loads(json.dumps(updates).replace(str(cfg.paths.models).replace("\\", "\\\\"),
+                                                       str(active.paths.models).replace("\\", "\\\\")))
+        registry.setdefault("models", {}).update(updates.get("models", {}))
+        atomic_write_json(registry, run / "merged_model_registry.json")
+        copies.append((run / "merged_model_registry.json", registry_path))
     for source, target in copies:
         if not source.is_file():
             raise FileNotFoundError(source)

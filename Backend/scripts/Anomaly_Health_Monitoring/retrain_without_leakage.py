@@ -40,6 +40,9 @@ DEFAULT_RUN = ROOT / "experiments/Anomaly_Health_Monitoring/run_20261014_leakage
 
 def staged_config(run):
     cfg = Config()
+    cfg.anomaly.fusion_weights = {"isolation_forest": 0.0, "mahalanobis": 0.0,
+                                  "lstm_autoencoder": 0.0, "residual_rule": 0.0,
+                                  "condition_consensus": 1.0}
     for name in ("models", "processed", "outputs", "logs", "mlruns", "experiments", "metrics", "reports", "uploads", "data_exchange"):
         setattr(cfg.paths, name, run / "bundle" / name)
     cfg.paths.scalers = cfg.paths.models / "scalers"

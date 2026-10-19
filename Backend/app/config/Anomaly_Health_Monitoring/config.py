@@ -343,11 +343,10 @@ class AnomalyConfig:
 
     fusion_weights: Dict[str, float] = field(
         default_factory=lambda: {
-            "isolation_forest": 0.0,
-            "mahalanobis": 0.0,
-            "lstm_autoencoder": 0.0,
-            "residual_rule": 0.0,
-            "condition_consensus": 1.0,
+            "isolation_forest": 0.25,
+            "mahalanobis": 0.25,
+            "lstm_autoencoder": 0.25,
+            "residual_rule": 0.25,
         }
     )
 

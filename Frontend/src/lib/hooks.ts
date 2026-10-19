@@ -110,6 +110,7 @@ export function useAnomalyDashboard(engineId?: number) {
   return useQuery({
     queryKey: ["anomaly-dashboard", engineId],
     queryFn: () => api.anomalyDashboard(engineId),
+    networkMode: "always",
 
 
     refetchInterval: 60_000,
@@ -449,6 +450,7 @@ export function useAnomalyEvaluation() {
   const q = useQuery({
     queryKey: ["anomaly-evaluation"],
     queryFn: () => api.anomalyEvaluation(),
+    networkMode: "always",
     staleTime: LIVE_MS,
     refetchInterval: () => refetchIntervalMs(),
   });
@@ -536,6 +538,7 @@ export function useDetectorConfig() {
   return useQuery({
     queryKey: ["detector-config"],
     queryFn: () => api.detectorConfig(),
+    networkMode: "always",
     staleTime: LIVE_MS,
     refetchInterval: () => refetchIntervalMs(),
   });
