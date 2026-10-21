@@ -1,0 +1,110 @@
+PAGE 1
+Guidelines for preparing IOP Conference Series 
+articles 
+IOP Conference Series Team 
+IOP Publishing, Bristol, UK 
+ 
+*E-mail: JPConf@ioppublishing.org 
+ 
+Abstract. This document provides guidelines for preparing articles using the 
+IOP Conference Series Word template. Authors must not change the page size 
+or margins in the template, and must not add headers, footers or page 
+numbers. IOP Publishing will add these components during production, but will 
+not make any other changes to the text or layout, and will not send out author 
+proofs. The submitted PDF must be in the final form ready for publication.  More 
+detail on the requirements is provided in the online author guidelines available at 
+https://conferenceseries.iop.org/content/authors. 
+1. Introduction 
+The file IOP-ConfSer-template.docx contains the basic layout for an article, in line with the 
+requirements for the IOP Conference Series titles. Do not change the page size or margins, and 
+do not add headers, footers or page numbers.  
+ 
+Replace the placeholder text in the template with the details for your article. Organise the main 
+text using section headings, and include any equations, figures, tables, lists. 
+ 
+General requirements for articles in IOP Conference Series titles are summarized in the sections 
+below. Refer to the online author guidelines for more details. 
+ 
+The submitted PDF must be in the final form ready for publication. Make sure you proofread 
+your article before submitting it.  Information on how to submit your article will be provided 
+by the conference organizer. 
+2. General requirements 
+2.1 Page layout 
+The following points  are set by the IOP-ConfSer-template file and  must be followed  to avoid 
+problems in the production of your proceedings article: 
+• page size: European A4; 
+• top-margin: 4 cm; bottom-margin: 2.7 cm; left- and right-margin: 2.5 cm; 
+• no page numbers, no other page headers or footers; 
+• text is single-spaced, not double-spaced; 
+• all pages are portrait orientation. 
+ 
+In addition: 
+• all fonts must be embedded in the submitted PDF. 
+
+PAGE 2
+2.2 Article content 
+All articles must have a title, authors and affiliations, and an abstract.  
+ 
+The abstract must be a single paragraph providing concise information about the content of the 
+article, including the main results obtained and conclusions drawn. The abstract must not contain 
+any table numbers, figure numbers, references or displayed mathematics.  
+ 
+Leave 10 mm space below the abstract before starting the main text of your article on the same 
+page. Organise the main text using section headings , and include any equations, figures, tables, 
+lists etc.  
+ 
+Information on article length limit will be provided by the conference organizer.  
+ 
+The template  file includes IOP -CS styles for headings, body text, captions, table content and 
+reference text. To apply a style, select the text and choose the required option from the Styles 
+panel. 
+ 
+2.2.1 Figures and tables 
+Figures and tables must be placed close to where they are mentioned in the text, not all together 
+at the end of the article. All figures and tables must have a caption. 
+ 
+The template file includes placeholder text boxes for a figure and a table. Replace the placeholder 
+information following the instructions in the template. Copy and paste the text boxes to add more 
+tables or figures. Delete the text boxes if they are not required. 
+ 
+2.2.2 Equations 
+Insert equations and inline math expressions using MathType if available. Otherwise use the 
+default Word equation editor. Equations that are converted to images are not permitted. Note 
+that t he Word auto-recover file will automatically convert equations to images. Save your file 
+regularly to avoid needing to use the auto-recover file. 
+3. References 
+You can choose to use either the Vancouver (numbered) or Harvard (author -year) system for 
+citing your references. Items in the reference list can be formatted in any style, as long as each 
+item contains all the information needed to find the reference. The  required details for some 
+standard reference types are given below. 
+ 
+• Journal article 
+o Authors, Year , Journal name, Volume number, Page/article number 
+ 
+• Book 
+o Authors or editors, Year, Chapter title (if relevant), Book title, Volume details (if 
+relevant), Publisher, Page number (if relevant) 
+ 
+• Conference proceedings (published in a conference series) 
+o Authors, Year , Conference series name, Volume, Page/article number  
+ 
+• Conference presentation (unpublished) 
+o Authors, Year , Presentation title, Conference name, Conference date and location  
+
+PAGE 3
+ 
+• Preprint 
+o Authors, Year , Preprint service name, Preprint number  
+ 
+• Thesis 
+o Authors, Year , Thesis type, Institution  
+ 
+• Website 
+o URL, Date of access  
+ 
+• Data 
+o Authors, Year , Dataset title, Repository name, URL (DOI if available)  
+ 
+• Software 
+o Authors/Organization responsible, Year , Software package title and version, 
+Repository name (if relevant), URL (DOI if available) 
