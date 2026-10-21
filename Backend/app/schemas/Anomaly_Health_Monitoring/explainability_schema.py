@@ -1,15 +1,3 @@
-"""
-Schemas for the explainability layer and the dashboard feed.
-
-The explainability layer converts numeric residuals into an account a
-maintenance engineer can act on, answering four questions per anomaly:
-
-* WHY did the anomaly occur?
-* WHICH sensors contributed, and by how much?
-* WHAT pattern do those sensors form?
-* HOW severe is it?
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -27,7 +15,7 @@ from app.schemas.Anomaly_Health_Monitoring.common_schema import (
 
 
 class ShapContribution(StrictModel):
-    """A single SHAP feature attribution."""
+
 
     feature: str = Field(..., description="Input feature name.")
     shap_value: float = Field(
@@ -38,7 +26,7 @@ class ShapContribution(StrictModel):
 
 
 class SubsystemAttribution(StrictModel):
-    """Aggregated deviation attributed to one engine subsystem."""
+
 
     subsystem: str = Field(..., description="e.g. 'HPC', 'LPT', 'burner'.")
     contribution: float = Field(
@@ -54,7 +42,7 @@ class SubsystemAttribution(StrictModel):
 
 
 class ExplanationEvidence(StrictModel):
-    """Provenance and numeric evidence shared by explanation/dashboard views."""
+
 
     shap_status: Optional[str] = None
     shap_sensor: Optional[str] = None
@@ -76,7 +64,7 @@ class ExplanationEvidence(StrictModel):
 
 
 class ExplanationRecord(ExplanationEvidence):
-    """A complete human-readable explanation for one engine at one cycle."""
+
 
     engine_id: int = Field(...)
     cycle: int = Field(..., ge=1)
@@ -110,7 +98,7 @@ class ExplanationRecord(ExplanationEvidence):
 
 
 class ExplainRequest(StrictModel):
-    """Parameters for the explainability stage."""
+
 
     max_rows: Optional[int] = Field(
         default=None,
@@ -130,7 +118,7 @@ class ExplainRequest(StrictModel):
 
 
 class ExplainResponse(BaseResponse):
-    """Result of the explainability stage."""
+
 
     rows: int = Field(default=0, ge=0)
     explained_rows: int = Field(default=0, ge=0)
@@ -147,12 +135,8 @@ class ExplainResponse(BaseResponse):
     metrics: Dict[str, Any] = Field(default_factory=dict)
 
 
-# --------------------------------------------------------------------------- #
-# Dashboard
-# --------------------------------------------------------------------------- #
-
 class EngineSummary(ExplanationEvidence):
-    """Latest-cycle rollup for one engine, as shown on a dashboard card."""
+
 
     engine_id: int = Field(...)
     latest_cycle: int = Field(default=0, ge=0)
@@ -179,21 +163,17 @@ class EngineSummary(ExplanationEvidence):
     detector_agreement: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     evolution_pattern: Optional[str] = Field(default=None)
 
-    # Per-detector contributions. The fused anomaly_score alone says a row was
-    # flagged but not which detector drove it -- the first thing an operator
-    # asks. These are the four detectors' individually normalised scores plus
-    # the calibrated cut they were compared against.
+
     isolation_forest_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     mahalanobis_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     lstm_ae_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     residual_rule_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    condition_consensus_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     threshold_used: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     anomaly_persistence_cycles: Optional[int] = Field(default=None, ge=0)
     early_warning_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
-    # Structured explainability. `subsystem_attribution` maps the deviation onto
-    # physical engine sections with a contribution share each; kept as loose
-    # dicts because the reasoning layer owns that shape, not the API.
+
     subsystem_attribution: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Per-subsystem contribution share, member sensors, mean "
@@ -210,7 +190,7 @@ class EngineSummary(ExplanationEvidence):
 
 
 class TimelinePoint(StrictModel):
-    """One point on an engine's health / anomaly timeline."""
+
 
     cycle: int = Field(..., ge=1)
     health_index: float = Field(default=100.0, ge=0.0, le=100.0)
@@ -229,7 +209,7 @@ class TimelinePoint(StrictModel):
 
 
 class AlertItem(ExplanationEvidence):
-    """An entry in the operator alert feed."""
+
 
     engine_id: int = Field(...)
     cycle: int = Field(..., ge=1)
@@ -249,21 +229,17 @@ class AlertItem(ExplanationEvidence):
     detector_agreement: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     evolution_pattern: Optional[str] = Field(default=None)
 
-    # Per-detector contributions. The fused anomaly_score alone says a row was
-    # flagged but not which detector drove it -- the first thing an operator
-    # asks. These are the four detectors' individually normalised scores plus
-    # the calibrated cut they were compared against.
+
     isolation_forest_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     mahalanobis_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     lstm_ae_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     residual_rule_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    condition_consensus_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     threshold_used: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     anomaly_persistence_cycles: Optional[int] = Field(default=None, ge=0)
     early_warning_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
-    # Structured explainability. `subsystem_attribution` maps the deviation onto
-    # physical engine sections with a contribution share each; kept as loose
-    # dicts because the reasoning layer owns that shape, not the API.
+
     subsystem_attribution: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Per-subsystem contribution share, member sensors, mean "
@@ -280,7 +256,7 @@ class AlertItem(ExplanationEvidence):
 
 
 class FleetStatistics(StrictModel):
-    """Fleet-wide rollup shown at the top of the dashboard."""
+
 
     total_engines: int = Field(default=0, ge=0)
     total_rows: int = Field(default=0, ge=0)
@@ -308,7 +284,7 @@ class FleetStatistics(StrictModel):
 
 
 class DashboardResponse(BaseResponse):
-    """The full dashboard payload."""
+
 
     fleet: FleetStatistics = Field(default_factory=FleetStatistics)
     engines: List[EngineSummary] = Field(default_factory=list)

@@ -1,0 +1,9 @@
+{
+  "rows": 33991,
+  "engines": 259,
+  "mean_confidence": 87.0682204229551,
+  "mean_reliability": 0.826297312268934,
+  "mean_uncertainty": 0.15227078903239094,
+  "low_confidence_rows": 0,
+  "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\confidence_scores.csv"
+}

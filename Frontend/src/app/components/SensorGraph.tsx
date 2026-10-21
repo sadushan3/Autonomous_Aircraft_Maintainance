@@ -20,14 +20,7 @@ const SUBSYSTEM_LABEL: Record<string, string> = {
   general: "General",
 };
 
-/**
- * Force-directed view of the engine's subsystem dependency graph.
- *
- * Laid out with a small spring simulation rather than a charting library: the
- * graph is only ~30 nodes, and the point is to show *fault propagation paths*
- * — which subsystems influence which — with the currently-faulty subsystem and
- * everything downstream of it highlighted.
- */
+
 export function SensorGraph({
   nodes,
   edges,
@@ -51,8 +44,7 @@ export function SensorGraph({
     return () => ro.disconnect();
   }, []);
 
-  // Deterministic spring layout. Seeded on a circle so the result is stable
-  // across re-renders — a graph that jumps every poll is unreadable.
+
   const positions = useMemo(() => {
     const n = nodes.length;
     if (!n) return {} as Record<string, { x: number; y: number }>;
@@ -71,7 +63,7 @@ export function SensorGraph({
       const force: Record<string, { x: number; y: number }> = {};
       for (const id of nodes) force[id] = { x: 0, y: 0 };
 
-      // Repulsion keeps labels from colliding.
+
       for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
           const a = pos[nodes[i]];
@@ -89,7 +81,7 @@ export function SensorGraph({
         }
       }
 
-      // Attraction along edges, scaled by the declared influence weight.
+
       for (const e of linked) {
         const a = pos[e.source];
         const b = pos[e.target];
@@ -107,7 +99,7 @@ export function SensorGraph({
       for (const id of nodes) {
         pos[id].x += Math.max(-12, Math.min(12, force[id].x)) * damp;
         pos[id].y += Math.max(-12, Math.min(12, force[id].y)) * damp;
-        // Keep inside the viewport with a margin for the node radius + label.
+
         pos[id].x = Math.max(60, Math.min(width - 60, pos[id].x));
         pos[id].y = Math.max(40, Math.min(height - 40, pos[id].y));
       }
@@ -115,7 +107,7 @@ export function SensorGraph({
     return pos;
   }, [nodes, edges, width, height]);
 
-  // Everything reachable from the faulty subsystem — the propagation path.
+
   const downstream = useMemo(() => {
     if (!faultySubsystem) return new Set<string>();
     const seen = new Set<string>([faultySubsystem]);

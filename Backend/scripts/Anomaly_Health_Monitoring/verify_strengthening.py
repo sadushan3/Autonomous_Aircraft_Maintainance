@@ -1,7 +1,3 @@
-"""Replay the strengthening audit without training or changing active models.
-
-Run from Backend: python -m scripts.Anomaly_Health_Monitoring.verify_strengthening
-"""
 from __future__ import annotations
 import hashlib
 import json

@@ -1,29 +1,3 @@
-"""
-Anomaly fusion and the operational-vs-fault gate.
-
-This is the orchestrator of the anomaly-detection layer.  It trains (or
-reloads) the enabled subset of four detector families, fuses their normalised scores into a single
-``anomaly_score``, applies the adaptive threshold from the feedback loop, and
-then runs the hard post-filter that is the core novelty requirement of this
-component: distinguishing a genuine fault from an operating-condition change.
-
-Fusion is a configured weighted sum:
-
-    anomaly_score = sum(weight_d * score_d for d in detectors)
-
-The operational-vs-fault gate then reclassifies any row that is:
-
-* flagged by the fusion threshold, **and**
-* within the regime-transition guard window (``is_mode_transition``), **and**
-* not sustained -- fewer than ``persistence_min_cycles`` consecutive flagged
-  cycles for the engine.
-
-as ``anomaly_type='operational'`` rather than ``'fault'``.  Operational
-detections are suppressed from escalating to the reasoning layer but are still
-recorded, so a genuine fault that happens to coincide with a regime change and
-*does* persist past the guard window is correctly still caught.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,6 +22,10 @@ from app.services.Anomaly_Health_Monitoring.anomaly_detection.mahalanobis_detect
 from app.services.Anomaly_Health_Monitoring.anomaly_detection.residual_anomaly_detector import (
     SCORE_COLUMN as RULE_SCORE_COLUMN,
     ResidualAnomalyDetector,
+)
+from app.services.Anomaly_Health_Monitoring.anomaly_detection.condition_consensus import (
+    SCORE_COLUMN as CONSENSUS_SCORE_COLUMN,
+    ConditionConsensusDetector,
 )
 from app.services.Anomaly_Health_Monitoring.anomaly_detection.early_warning_score import (
     EarlyWarningScorer,
@@ -79,19 +57,19 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     engine_wise_split,
 )
 
-#: Fused, weighted anomaly score in [0, 1].
+
 ANOMALY_SCORE_COLUMN = "anomaly_score"
 
-#: Boolean flag from comparing the fused score to the adaptive threshold.
+
 ANOMALY_FLAG_COLUMN = "anomaly_flag"
 
-#: 'fault' | 'operational' | 'none' -- the outcome of the gate.
+
 ANOMALY_TYPE_COLUMN = "anomaly_type"
 
-#: The adaptive threshold actually applied to this row.
+
 THRESHOLD_USED_COLUMN = "threshold_used"
 
-#: How many consecutive cycles (inclusive) this row's flag has persisted.
+
 PERSISTENCE_COLUMN = "anomaly_persistence_cycles"
 
 _DETECTOR_REGISTRY: Dict[str, str] = {
@@ -99,18 +77,16 @@ _DETECTOR_REGISTRY: Dict[str, str] = {
     "mahalanobis": MAHAL_SCORE_COLUMN,
     "lstm_autoencoder": LSTM_SCORE_COLUMN,
     "residual_rule": RULE_SCORE_COLUMN,
+    "condition_consensus": CONSENSUS_SCORE_COLUMN,
 }
 
 
 class AnomalyFusion:
-    """Trains all detectors, fuses scores, and classifies fault vs operational."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the fusion orchestrator.
 
-        Args:
-            config: Configuration supplying fusion weights and gate parameters.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.detectors: Dict[str, Any] = {
@@ -118,6 +94,7 @@ class AnomalyFusion:
             "mahalanobis": MahalanobisDetector(self.config),
             "lstm_autoencoder": LSTMAutoencoderDetector(self.config),
             "residual_rule": ResidualAnomalyDetector(self.config),
+            "condition_consensus": ConditionConsensusDetector(self.config),
         }
         self.detectors = {name: detector for name, detector in self.detectors.items()
                           if self.config.anomaly.fusion_weights.get(name, 0.0) > 0}
@@ -125,36 +102,21 @@ class AnomalyFusion:
         self.threshold_provider: Any = None
         self.severity_classifier = SeverityClassifier(self.config)
         self.early_warning_scorer = EarlyWarningScorer(self.config)
-        #: Fusion threshold calibrated from the healthy population's own
-        #: fused score, the same way every individual detector calibrates its
-        #: own threshold. None until train() (or load()) runs.
+
+
         self.calibrated_fusion_threshold: Optional[float] = None
 
-    # ------------------------------------------------------------------ #
-    # Detector training / loading
-    # ------------------------------------------------------------------ #
+
     def _feature_columns(self, frame: pd.DataFrame) -> List[str]:
-        """Resolve the residual z-score columns used as the detector feature space.
 
-        Args:
-            frame: Residuals frame.
 
-        Returns:
-            The residual z-score columns present.
-        """
         if self.config.anomaly.feature_space == "raw":
             return present_residual_columns(frame)
         return present_residual_z_columns(frame)
 
     def _healthy_mask(self, frame: pd.DataFrame) -> pd.Series:
-        """Select the same healthy region every individual detector trains on.
 
-        Args:
-            frame: Residuals frame.
 
-        Returns:
-            A boolean mask.
-        """
         from app.utils.Anomaly_Health_Monitoring.model_utils import RUL_COLUMN
 
         settings = self.config.healthy_region
@@ -171,29 +133,17 @@ class AnomalyFusion:
         return rul_ok & cycle_ok
 
     def _calibrate_fusion_threshold(self, frame: pd.DataFrame) -> float:
-        """Calibrate the fusion threshold against the healthy population's own fused score.
 
-        Every individual detector already sets its own flagging threshold from
-        the healthy region's score distribution (typically its 99th
-        percentile); the fused score needs the identical treatment.  A flat
-        constant here would be meaningless the moment any detector's score
-        scale changes, since "0.5" only means something relative to what
-        healthy behaviour actually produces on that scale.
 
-        Args:
-            frame: Residuals frame (the same one detectors were trained on).
-
-        Returns:
-            The calibrated threshold from healthy calibration engines.
-
-        Raises:
-            AnomalyHealthError: If calibration data or valid scores are absent.
-        """
         healthy = frame.loc[self._healthy_mask(frame)]
         if healthy.empty:
             raise AnomalyHealthError("No healthy calibration rows are available; a fusion cutoff cannot be fitted.")
+        if list(self.detectors) == ["condition_consensus"]:
+
+
+            return float(self.detectors["condition_consensus"].validate_calibration(frame))
         try:
-            # Score complete histories before applying the healthy label mask.
+
             healthy_scores = self.score(frame)
             healthy_fused = self.fuse(healthy_scores, fusion_threshold=0.0)
             threshold = percentile_threshold(
@@ -202,7 +152,7 @@ class AnomalyFusion:
             )
             if not np.isfinite(threshold):
                 raise ValueError("non-finite threshold")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise AnomalyHealthError("Fusion threshold calibration failed; the previous artifacts were retained.") from exc
 
         self.logger.info(
@@ -213,19 +163,9 @@ class AnomalyFusion:
         )
         return float(threshold)
 
-    def train(self, frame: pd.DataFrame, detector_names: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Fit every requested detector, tolerating individual failures.
+    def train(self, frame: pd.DataFrame, detector_names: Optional[List[str]] = None, context: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
 
-        Args:
-            frame: Residuals frame.
-            detector_names: Subset of detectors to (re)train; defaults to all.
 
-        Returns:
-            A summary of which detectors trained and their thresholds.
-
-        Raises:
-            AnomalyHealthError: If every detector fails to train.
-        """
         if "split" in frame:
             frame = frame.loc[frame["split"].eq("train")].copy()
             if frame.empty:
@@ -235,10 +175,18 @@ class AnomalyFusion:
             raise AnomalyHealthError("No residual z-score columns found; run the twin stage first.")
 
         names = detector_names or list(self.detectors.keys())
-        fit_frame, calibration_frame = engine_wise_split(
-            frame, validation_fraction=self.config.data.validation_engine_fraction,
-            random_state=self.config.data.random_state,
-        )
+        from app.utils.Anomaly_Health_Monitoring.training_split import load_training_split, training_scope
+        plan = load_training_split(self.config)
+        if plan:
+            fit_frame = training_scope(frame, self.config, required=True)
+            calibration_frame = training_scope(frame, self.config, ("calibration",), required=True)
+            selection_frame = training_scope(frame, self.config, ("selection",), required=True)
+        else:
+            fit_frame, calibration_frame = engine_wise_split(
+                frame, validation_fraction=self.config.data.validation_engine_fraction,
+                random_state=self.config.data.random_state,
+            )
+            selection_frame = calibration_frame
         if fit_frame.empty or calibration_frame.empty:
             raise AnomalyHealthError("Anomaly fitting and threshold calibration need separate engines.")
         summary: Dict[str, Any] = {}
@@ -250,28 +198,42 @@ class AnomalyFusion:
                 self.logger.warning("Unknown detector '%s' skipped", name)
                 continue
             try:
-                detector.fit(fit_frame, self.feature_columns)
+                if name == "condition_consensus" and plan:
+                    detector.fit(pd.concat([fit_frame, calibration_frame]), self.feature_columns)
+                    classify = (lambda values: self.classify_type(values, context)) if context is not None else None
+                    detector.calibrate_development_margin(selection_frame, classify=classify)
+                else:
+                    detector.fit(fit_frame, self.feature_columns)
                 trained_any = True
                 summary[name] = {"threshold": float(detector.threshold)}
-            except Exception as exc:  # noqa: BLE001 - one detector must not block the stage
+            except Exception as exc:
                 self.logger.error("Detector '%s' failed to train: %s", name, exc)
                 summary[name] = {"error": str(exc)}
 
         if not trained_any:
             raise AnomalyHealthError("Every anomaly detector failed to train.")
+        failed = [name for name in names if name not in summary or "error" in summary[name]]
+        if failed:
+            raise AnomalyHealthError(f"Requested anomaly detectors failed to train: {', '.join(failed)}")
 
-        self.calibrated_fusion_threshold = self._calibrate_fusion_threshold(calibration_frame)
-        # Publish a fitted detector only after its cutoff has been established
-        # on separate engines, preserving the previous artifact on failure.
+        cutoff_frame = selection_frame if list(self.detectors) == ["condition_consensus"] else calibration_frame
+        self.calibrated_fusion_threshold = self._calibrate_fusion_threshold(cutoff_frame)
+
+
         for name in names:
             if name in summary and "error" not in summary[name]:
                 self.detectors[name].save()
         atomic_write_json(
-            {"calibrated_fusion_threshold": self.calibrated_fusion_threshold},
+            {"calibrated_fusion_threshold": self.calibrated_fusion_threshold,
+             "fusion_weights": {name: self.config.anomaly.fusion_weights[name] for name in names},
+             "detectors": summary,
+             "feature_space": self.config.anomaly.feature_space,
+             "training_plan_id": plan["plan_id"] if plan else None,
+             "evaluation_status": "retrospective_condition_proxy"},
             self.config.paths.model_path("anomaly_fusion_meta.json"),
         )
-        # A feedback threshold belongs to its fitted score distribution. Reset
-        # it on retraining instead of silently applying an older model's cut.
+
+
         atomic_write_json(
             {"fusion_threshold": self.calibrated_fusion_threshold,
              "base_threshold": self.calibrated_fusion_threshold,
@@ -281,65 +243,52 @@ class AnomalyFusion:
         return summary
 
     def load(self) -> Dict[str, Any]:
-        """Reload every detector that has a persisted artefact.
 
-        Returns:
-            A summary of which detectors were reloaded.
-        """
+
+        meta = read_json(self.config.paths.model_path("anomaly_fusion_meta.json"), default=None)
+        expected_weights = {name: weight for name, weight in self.config.anomaly.fusion_weights.items() if weight > 0}
+        if meta and meta.get("fusion_weights") is not None and meta["fusion_weights"] != expected_weights:
+            raise AnomalyHealthError("Detector weights differ from the calibrated bundle; recalibrate the fusion threshold.")
         summary: Dict[str, Any] = {}
         for name, detector in list(self.detectors.items()):
             try:
                 detector.load()
                 summary[name] = {"threshold": float(detector.threshold)}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self.logger.warning("Detector '%s' could not be reloaded: %s", name, exc)
                 del self.detectors[name]
         if not self.detectors:
             raise AnomalyHealthError("No anomaly detectors could be reloaded; train them first.")
 
-        meta = read_json(self.config.paths.model_path("anomaly_fusion_meta.json"), default=None)
         if meta and meta.get("calibrated_fusion_threshold") is not None:
             self.calibrated_fusion_threshold = float(meta["calibrated_fusion_threshold"])
         return summary
 
-    # ------------------------------------------------------------------ #
-    # Scoring
-    # ------------------------------------------------------------------ #
+
     def score(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Score every row with every available detector.
 
-        Args:
-            frame: Residuals frame.
 
-        Returns:
-            A frame of identity keys plus one score column per detector.
-        """
         result = frame[get_identity_columns()].copy().reset_index(drop=True)
+        for metadata in ("split", "subset_id"):
+            if metadata in frame:
+                result[metadata] = frame[metadata].to_numpy()
         if "calibration_ready" in frame:
             result["calibration_ready"] = frame["calibration_ready"].to_numpy(bool)
         for name, detector in self.detectors.items():
             column = _DETECTOR_REGISTRY[name]
             try:
                 result[column] = detector.score(frame)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self.logger.error("Detector '%s' failed during scoring: %s", name, exc)
-                # Missing evidence must never masquerade as a normal reading.
+
                 result[column] = np.nan
         return result
 
     def fuse(
         self, scores: pd.DataFrame, fusion_threshold: Optional[float] = None
     ) -> pd.DataFrame:
-        """Compute the weighted fused anomaly score and boolean flag.
 
-        Args:
-            scores: Per-detector score frame from :meth:`score`.
-            fusion_threshold: Optional override of the fusion threshold.
 
-        Returns:
-            The frame with ``anomaly_score``, ``threshold_used`` and
-            ``anomaly_flag`` added.
-        """
         result = scores.copy()
         weights = dict(self.config.anomaly.fusion_weights)
         present_weighted = {
@@ -363,8 +312,8 @@ class AnomalyFusion:
         result["detectors_available"] = available_count
         expected = sum(w > 0 for w in weights.values())
         result["detector_coverage"] = available_count / max(expected, 1)
-        # A fused cutoff is calibrated for a particular detector mixture.
-        # Changing that mixture after a failure makes the cutoff invalid.
+
+
         if (available_count < expected).any():
             raise AnomalyHealthError("An enabled detector is unavailable; restore it before using the calibrated fusion threshold.")
 
@@ -384,27 +333,10 @@ class AnomalyFusion:
             result[ANOMALY_FLAG_COLUMN] &= result["calibration_ready"]
         return result
 
-    # ------------------------------------------------------------------ #
-    # Operational-vs-fault gate
-    # ------------------------------------------------------------------ #
+
     def classify_type(self, fused: pd.DataFrame, context: pd.DataFrame) -> pd.DataFrame:
-        """Separate genuine faults from suppressed operating-condition changes.
 
-        A flagged row is downgraded to ``'operational'`` when it sits inside
-        the regime-transition guard window *and* has not yet persisted for
-        ``persistence_min_cycles`` consecutive cycles.  A row that keeps being
-        flagged past that many cycles is treated as a fault even if it started
-        near a regime change, since a transient sensor response to a throttle
-        step does not sustain itself the way a real fault does.
 
-        Args:
-            fused: Output of :meth:`fuse`.
-            context: Frame carrying ``is_mode_transition`` and identity keys.
-
-        Returns:
-            The frame with ``anomaly_type`` and ``anomaly_persistence_cycles``
-            added.
-        """
         merged = merge_on_keys(
             fused,
             context[get_identity_columns() + [MODE_TRANSITION_COLUMN]]
@@ -419,11 +351,10 @@ class AnomalyFusion:
 
         merged = merged.sort_values(get_identity_columns()).reset_index(drop=True)
 
-        # Consecutive-flag run length per engine, causal (no future leakage).
+
         flagged = merged[ANOMALY_FLAG_COLUMN].astype(int)
-        # Missing cycles break consecutive evidence, even if both observed
-        # endpoints were flagged. Otherwise two distant samples can bypass
-        # the operational-transition guard.
+
+
         gap = merged.groupby("unit", sort=False)["cycle"].diff().ne(1)
         breaks = flagged.eq(0) | gap
         group_id = breaks.groupby(merged["unit"]).cumsum()
@@ -452,40 +383,22 @@ class AnomalyFusion:
         )
         return merged.drop(columns=[MODE_TRANSITION_COLUMN])
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save_scores(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``anomaly_scores.csv`` atomically.
 
-        Args:
-            frame: Per-detector scores.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(self.config.paths.anomaly_scores_csv)
         verify_identity_columns(frame, context="anomaly_scores output")
         return atomic_write_csv(frame, target, config=self.config)
 
     def save_fusion(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``anomaly_fusion.csv`` atomically.
 
-        Args:
-            frame: Fused and classified anomalies.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(self.config.paths.anomaly_fusion_csv)
         verify_identity_columns(frame, context="anomaly_fusion output")
         return atomic_write_csv(frame, target, config=self.config)
 
-    # ------------------------------------------------------------------ #
-    # Stage orchestration
-    # ------------------------------------------------------------------ #
+
     def run(
         self,
         residuals: Optional[pd.DataFrame] = None,
@@ -493,21 +406,8 @@ class AnomalyFusion:
         retrain: bool = True,
         fusion_threshold: Optional[float] = None,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the full anomaly-detection stage.
 
-        Args:
-            residuals: Optional in-memory residuals; otherwise ``residuals.csv``
-                is read from disk.
-            context: Optional in-memory context data (for the transition flag);
-                otherwise ``context_clusters.csv`` is read from disk.
-            retrain: Fit fresh detectors, or reload saved ones.
-            fusion_threshold: Optional override of the fusion threshold; when
-                omitted, an adapted threshold from the feedback loop is applied
-                if one exists.
 
-        Returns:
-            A ``(fused_frame, report)`` tuple.
-        """
         self.config.ensure_directories()
         source = residuals
         if source is None:
@@ -536,7 +436,7 @@ class AnomalyFusion:
                 context_source = source[get_identity_columns()].copy()
 
         if retrain:
-            train_summary = self.train(source)
+            train_summary = self.train(source, context=context_source)
         else:
             train_summary = self.load()
 
@@ -555,11 +455,7 @@ class AnomalyFusion:
         fused = self.fuse(scores, fusion_threshold=effective_threshold)
         classified = self.classify_type(fused, context_source)
 
-        # severity and early_warning_score are part of the anomaly_fusion.csv
-        # contract; compute them here so callers get one enriched file rather
-        # than needing to chain three separate stage invocations by hand.
-        # Recalibrate the severity bands only while retraining; inference
-        # reloads the frozen cuts.
+
         classified = self.severity_classifier.run(classified, calibrate=retrain)
         health_scores_path = self.config.paths.processed_path(
             self.config.paths.health_scores_csv
@@ -577,7 +473,7 @@ class AnomalyFusion:
         try:
             comparator_row_summary = comparator.summarize_rows(source)
             top_sensor_lookup = comparator_row_summary
-        except Exception:  # noqa: BLE001
+        except Exception:
             top_sensor_lookup = None
 
         type_counts = classified[ANOMALY_TYPE_COLUMN].value_counts().to_dict()
@@ -607,7 +503,7 @@ class AnomalyFusion:
 
 
 def main() -> None:
-    """Run anomaly detection standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     fusion = AnomalyFusion(config)

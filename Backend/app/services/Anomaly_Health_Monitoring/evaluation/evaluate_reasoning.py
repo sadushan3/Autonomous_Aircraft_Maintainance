@@ -1,21 +1,3 @@
-"""
-Reasoning-layer evaluation: coverage, diversity and memory-matching health.
-
-Checks that the reasoning stage is doing real work rather than degenerating
-into a single default answer:
-
-* **Coverage** -- what fraction of fault-type anomalies actually received a
-  root-cause record.
-* **Cause diversity** -- how many distinct causes were inferred; a single
-  dominant cause for every anomaly (e.g. always 'general diffuse deviation')
-  would indicate the subsystem graph or rule thresholds need attention.
-* **Evidence discipline** -- confirms every record carries
-  ``hard_causal_claim=False``, the non-negotiable requirement that this layer
-  never overstates its own certainty.
-* **Memory utilisation** -- how often a new anomaly matched something already
-  remembered, which should grow as the alert memory accumulates history.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -33,28 +15,17 @@ from app.utils.Anomaly_Health_Monitoring.utils import atomic_write_json, get_log
 
 
 class ReasoningEvaluator:
-    """Evaluates root-cause reasoning coverage, diversity and discipline."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the evaluator.
 
-        Args:
-            config: Configuration supplying report output paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
     def evaluate(self, root_causes: pd.DataFrame, total_fault_rows: int) -> Dict[str, Any]:
-        """Assemble the reasoning evaluation report.
 
-        Args:
-            root_causes: Output of :class:`RootCauseAnalyzer`.
-            total_fault_rows: Number of fault-type anomalies that should have
-                been reasoned about, for the coverage calculation.
 
-        Returns:
-            The evaluation report.
-        """
         if root_causes.empty:
             return {
                 "coverage": 0.0,
@@ -104,17 +75,8 @@ class ReasoningEvaluator:
         root_causes: Optional[pd.DataFrame] = None,
         total_fault_rows: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Execute the reasoning evaluation stage.
 
-        Args:
-            root_causes: Optional in-memory input; otherwise
-                ``root_cause_analysis.csv`` is read from disk.
-            total_fault_rows: Optional override; otherwise inferred from the
-                anomaly-detection metrics report.
 
-        Returns:
-            The evaluation report.
-        """
         self.config.ensure_directories()
         source = root_causes
         if source is None:
@@ -132,7 +94,7 @@ class ReasoningEvaluator:
 
 
 def main() -> None:
-    """Run reasoning evaluation standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     evaluator = ReasoningEvaluator(config)

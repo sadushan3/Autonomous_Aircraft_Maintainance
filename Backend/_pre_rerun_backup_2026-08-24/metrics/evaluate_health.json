@@ -1,0 +1,9 @@
+{
+  "rows": 33991,
+  "engines": 259,
+  "rul_correlation": 0.4960805072050351,
+  "monotonicity_score": 1.0,
+  "monotonicity_threshold": 0.7,
+  "mean_health_index": 88.8059726820923,
+  "passed": true
+}

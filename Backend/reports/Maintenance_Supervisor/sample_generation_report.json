@@ -1,0 +1,7 @@
+{
+    "status": "success",
+    "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\data\\Maintenance_Supervisor\\sample\\supervisor_sample_dataset.csv",
+    "total_rows": 40463,
+    "total_engines": 200,
+    "duration_seconds": 0.3241
+}

@@ -1,0 +1,10 @@
+{
+    "status": "success",
+    "output_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\data\\Maintenance_Supervisor\\Maintenance_Supervisor\\integrated\\supervisor_integrated_input.csv",
+    "total_rows": 24720,
+    "total_columns": 49,
+    "validation_errors": 0,
+    "validation_warnings": 0,
+    "synthetic_fallback_used": false,
+    "duration_seconds": 1.2202
+}

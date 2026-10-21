@@ -1,37 +1,3 @@
-"""
-Shared contract for every Digital Twin variant.
-
-A Digital Twin here answers one question: *given the operating context and how
-far into its life this engine is, what should its sensors be reading if it were
-healthy?*  The gap between that prediction and reality is the residual, and
-every downstream layer -- health index, anomaly detection, root-cause
-reasoning, explainability, uncertainty -- is built on it.
-
-Two design decisions are load-bearing and are enforced here rather than left to
-each variant:
-
-**Twins train on the healthy region only.**  Every C-MAPSS training engine runs
-to failure, so a twin fitted on the whole trajectory would learn *average*
-behaviour including the degraded tail, and residuals would stay flat as the
-engine dies.  The healthy region is defined once, in
-:meth:`BaseTwin.select_healthy_region`: high remaining life *and* early in the
-trajectory.  Twins then predict across all rows, so residuals grow as
-degradation proceeds. That growth is the entire signal.
-
-**The design matrix is context, never sensors.**  Inputs are the three
-operating settings, engine age, and the one-hot operating mode.  Sensors appear
-only as targets.  Feeding sensor values in as inputs would let the twin
-reconstruct a degraded reading from its neighbours and hide the fault it is
-supposed to expose.
-
-After prediction, commissioning calibration can remove a unit's manufacturing
-offset using only its first configured cycles. It excludes the current row and
-freezes after commissioning, so it cannot track or reconstruct a later fault.
-
-Classic C-MAPSS has no virtual sensors, so nothing here references ``X_v`` or
-any other N-CMAPSS variable group.
-"""
-
 from __future__ import annotations
 
 import time
@@ -67,32 +33,23 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     read_csv,
     save_model,
 )
+from app.utils.Anomaly_Health_Monitoring.training_split import load_training_split, training_scope, record_training_scope
 
-#: Maximum number of one-hot operating-mode columns. Six covers FD002/FD004.
+
 MAX_MODE_COLUMNS = 8
 
 
 class BaseTwin(ABC):
-    """Abstract base for the multi-output expected-sensor regressors.
 
-    Subclasses implement three hooks -- :meth:`_build_estimator`,
-    :meth:`_fit_estimator` and :meth:`_predict_estimator` -- and inherit the
-    design matrix, healthy-region selection, evaluation, persistence and
-    registry integration.
-    """
 
-    #: Logical name used for artefacts, registry entries and ensemble weights.
     name: str = "base"
 
-    #: File extension for the persisted model. Keras twins override this.
+
     artifact_suffix: str = ".pkl"
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the twin.
 
-        Args:
-            config: Configuration supplying hyper-parameters and paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(f"{__name__}.{self.name}", self.config)
         self.model: Any = None
@@ -101,19 +58,11 @@ class BaseTwin(ABC):
         self.n_modes: int = 1
         self.metrics: Dict[str, Any] = {}
 
-    # ------------------------------------------------------------------ #
-    # Subclass hooks
-    # ------------------------------------------------------------------ #
+
     @abstractmethod
     def _build_estimator(self, n_outputs: int) -> Any:
-        """Construct an unfitted estimator for this variant.
+        pass
 
-        Args:
-            n_outputs: Number of sensor channels to predict.
-
-        Returns:
-            The unfitted model object.
-        """
 
     @abstractmethod
     def _fit_estimator(
@@ -124,55 +73,17 @@ class BaseTwin(ABC):
         x_val: Optional[np.ndarray],
         y_val: Optional[np.ndarray],
     ) -> Any:
-        """Fit the estimator.
+        pass
 
-        Args:
-            estimator: The object returned by :meth:`_build_estimator`.
-            x_train: Training design matrix.
-            y_train: Training targets.
-            x_val: Optional validation design matrix.
-            y_val: Optional validation targets.
-
-        Returns:
-            The fitted estimator.
-        """
 
     @abstractmethod
     def _predict_estimator(self, estimator: Any, x: np.ndarray) -> np.ndarray:
-        """Predict expected sensor values.
+        pass
 
-        Args:
-            estimator: The fitted model.
-            x: Design matrix.
 
-        Returns:
-            An ``(n_rows, n_targets)`` prediction array.
-        """
-
-    # ------------------------------------------------------------------ #
-    # Healthy-region selection
-    # ------------------------------------------------------------------ #
     def select_healthy_region(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Return the rows a twin is allowed to learn 'normal' from.
 
-        A row qualifies when it has plenty of remaining life *and* sits early in
-        its trajectory.  Requiring both guards against two different mistakes:
-        the RUL test alone would admit long-lived engines' late cycles, and the
-        cycle-fraction test alone would admit early cycles of an engine that was
-        already unhealthy when observation began.
 
-        Every engine contributes at least ``min_rows_per_engine`` rows so that
-        an unusually short trajectory is not excluded entirely.
-
-        Args:
-            frame: Scaled data carrying RUL and identity keys.
-
-        Returns:
-            The healthy subset.
-
-        Raises:
-            AnomalyHealthError: If the selection is empty.
-        """
         settings = self.config.healthy_region
         result = frame.copy()
 
@@ -193,7 +104,7 @@ class BaseTwin(ABC):
 
         healthy_mask = rul_ok & cycle_ok
 
-        # Guarantee a minimum contribution from every engine.
+
         rank = result.groupby("unit")["cycle"].rank(method="first")
         floor_mask = rank <= float(settings.min_rows_per_engine)
         healthy_mask = healthy_mask | floor_mask
@@ -217,29 +128,12 @@ class BaseTwin(ABC):
         )
         return healthy
 
-    # ------------------------------------------------------------------ #
-    # Design matrix
-    # ------------------------------------------------------------------ #
+
     def build_design_matrix(
         self, frame: pd.DataFrame, n_modes: Optional[int] = None
     ) -> Tuple[np.ndarray, List[str]]:
-        """Build the context-only input matrix.
 
-        Columns, in fixed order: the three operating settings, raw cycle,
-        normalised cycle, then one-hot operating-mode indicators.  The order is
-        fixed so a saved model always meets the same layout at inference.
 
-        Args:
-            frame: Data carrying settings, cycle and operating mode.
-            n_modes: Number of one-hot mode columns to emit.  Defaults to the
-                count learned at training time.
-
-        Returns:
-            A ``(matrix, feature_names)`` tuple.
-
-        Raises:
-            AnomalyHealthError: If a required context column is absent.
-        """
         mode_column = get_operating_mode_column()
         settings = get_op_setting_columns()
 
@@ -259,15 +153,9 @@ class BaseTwin(ABC):
         names.append("cycle")
 
         reference = float(self.config.twin.age_reference_cycles)
-        if reference > 0:
-            cycle_norm = np.minimum(frame["cycle"].to_numpy(float) / reference, 1.0)
-        elif CYCLE_NORM_COLUMN in frame.columns:
-            cycle_norm = frame[CYCLE_NORM_COLUMN].astype(float).to_numpy()
-        else:
-            max_cycle = frame.groupby("unit")["cycle"].transform("max").astype(float)
-            cycle_norm = (
-                frame["cycle"].astype(float) / max_cycle.replace(0.0, np.nan)
-            ).fillna(0.0).to_numpy()
+        if not np.isfinite(reference) or reference <= 0:
+            raise AnomalyHealthError("Twin prediction requires a positive fixed age scale.")
+        cycle_norm = np.minimum(frame["cycle"].to_numpy(float) / reference, 1.0)
         blocks.append(cycle_norm.reshape(-1, 1))
         names.append(CYCLE_NORM_COLUMN)
 
@@ -285,12 +173,8 @@ class BaseTwin(ABC):
         return matrix, names
 
     def calibrate_predictions(self, frame: pd.DataFrame, predictions: np.ndarray) -> np.ndarray:
-        """Apply a past-only commissioning offset, frozen after N cycles.
 
-        Supply history from cycle 1. A partial trajectory starting later uses
-        the population prediction because it has no valid commissioning prefix.
-        Sorting internally makes the result independent of caller row order.
-        """
+
         limit = int(self.config.twin.commissioning_cycles)
         if limit <= 0 or frame.empty:
             return predictions
@@ -311,17 +195,8 @@ class BaseTwin(ABC):
         return calibrated
 
     def build_targets(self, frame: pd.DataFrame) -> Tuple[np.ndarray, List[str]]:
-        """Build the multi-output sensor target matrix.
 
-        Args:
-            frame: Scaled data carrying the active sensor columns.
 
-        Returns:
-            A ``(matrix, sensor_names)`` tuple.
-
-        Raises:
-            AnomalyHealthError: If no active sensor column is present.
-        """
         sensors = [c for c in get_active_sensors(self.config) if c in frame.columns]
         if not sensors:
             raise AnomalyHealthError(
@@ -330,21 +205,10 @@ class BaseTwin(ABC):
         values = frame[sensors].astype(float).to_numpy()
         return np.nan_to_num(values, nan=0.0, posinf=0.0, neginf=0.0), sensors
 
-    # ------------------------------------------------------------------ #
-    # Training
-    # ------------------------------------------------------------------ #
+
     def train(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Fit the twin on the healthy region and score it on held-out engines.
 
-        The validation split is engine-wise, so accuracy is measured on engines
-        the twin has never seen rather than on later cycles of engines it has.
 
-        Args:
-            frame: Scaled, context-labelled data.
-
-        Returns:
-            A metrics dictionary including RMSE, MAE and R-squared.
-        """
         started = time.perf_counter()
         mode_column = get_operating_mode_column()
         self.n_modes = (
@@ -352,13 +216,21 @@ class BaseTwin(ABC):
         )
         self.n_modes = max(min(self.n_modes, MAX_MODE_COLUMNS), 1)
 
-        healthy = self.select_healthy_region(frame)
-        train_frame, val_frame = engine_wise_split(
-            healthy,
-            unit_column="unit",
-            validation_fraction=self.config.data.validation_engine_fraction,
-            random_state=self.config.data.random_state,
-        )
+        plan = load_training_split(self.config)
+        if plan:
+            fitting = training_scope(frame, self.config, required=True)
+            validation = training_scope(frame, self.config, ("selection",), required=True)
+            train_frame = self.select_healthy_region(fitting)
+            val_frame = self.select_healthy_region(validation)
+            record_training_scope("twin_" + self.name, fitting, self.config)
+        else:
+
+            healthy = self.select_healthy_region(training_scope(frame, self.config))
+            train_frame, val_frame = engine_wise_split(
+                healthy, unit_column="unit",
+                validation_fraction=self.config.data.validation_engine_fraction,
+                random_state=self.config.data.random_state,
+            )
         if val_frame.empty:
             self.logger.warning(
                 "Validation split is empty (too few engines); scoring on the "
@@ -406,6 +278,9 @@ class BaseTwin(ABC):
                 "n_targets": int(y_train.shape[1]),
                 "n_modes": self.n_modes,
                 "fit_seconds": round(time.perf_counter() - started, 3),
+                "age_reference_cycles": float(self.config.twin.age_reference_cycles),
+                "training_plan_id": plan["plan_id"] if plan else None,
+                "validation_role": "selection" if plan else "inner_development",
             }
         )
         self.logger.info(
@@ -420,33 +295,8 @@ class BaseTwin(ABC):
 
     @staticmethod
     def _score(actual: np.ndarray, predicted: np.ndarray) -> Dict[str, float]:
-        """Compute multi-output regression metrics.
 
-        ``r2`` is averaged over *informative* sensors only -- those whose
-        target actually varies. Several C-MAPSS channels are constant within
-        an operating mode, and R-squared is undefined on a constant target
-        (its denominator is the target variance, which is zero). scikit-learn
-        does not error on that case; it silently returns 1.0 when the model
-        happens to reproduce the constant and 0.0 when it does not. Averaging
-        those pseudo-scores in badly distorts the result: on the pooled
-        FD001-4 fleet the four constant sensors handed the tree twins four
-        free 1.0s, inflating their reported R-squared by roughly 4/21 ~ 0.19
-        and reversing the true ranking against the Keras twin, which does not
-        reproduce the constants exactly and was being penalised for it.
 
-        ``rmse`` and ``mae`` stay pooled across all targets: unlike
-        R-squared they are well defined on a constant target, so excluding
-        those columns would change their meaning for no benefit.
-
-        Args:
-            actual: Ground-truth sensor matrix.
-            predicted: Predicted sensor matrix.
-
-        Returns:
-            A mapping with ``rmse``, ``mae``, ``r2`` (informative targets
-            only), ``r2_all_targets`` (the legacy figure, kept so older runs
-            remain comparable) and ``n_informative_targets``.
-        """
         actual = np.nan_to_num(np.asarray(actual, dtype=float))
         predicted = np.nan_to_num(np.asarray(predicted, dtype=float))
         rmse = float(np.sqrt(mean_squared_error(actual, predicted)))
@@ -483,15 +333,8 @@ class BaseTwin(ABC):
     def per_sensor_metrics(
         self, actual: np.ndarray, predicted: np.ndarray
     ) -> Dict[str, Dict[str, float]]:
-        """Break accuracy down by sensor channel.
 
-        Args:
-            actual: Ground-truth sensor matrix.
-            predicted: Predicted sensor matrix.
 
-        Returns:
-            A mapping of sensor name to its own RMSE / MAE / R-squared.
-        """
         results: Dict[str, Dict[str, float]] = {}
         for index, sensor in enumerate(self.target_names):
             column_actual = actual[:, index]
@@ -507,21 +350,10 @@ class BaseTwin(ABC):
             }
         return results
 
-    # ------------------------------------------------------------------ #
-    # Inference
-    # ------------------------------------------------------------------ #
+
     def predict(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Predict expected sensor values for every row.
 
-        Args:
-            frame: Scaled, context-labelled data.
 
-        Returns:
-            A frame of identity keys plus ``expected_sensor_*`` columns.
-
-        Raises:
-            AnomalyHealthError: If the twin has not been trained or loaded.
-        """
         if self.model is None:
             raise AnomalyHealthError(f"{self.name} twin used before train/load.")
 
@@ -536,37 +368,20 @@ class BaseTwin(ABC):
             result[column] = predictions[:, index]
         return result
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
-    def artifact_path(self) -> Path:
-        """Return where this twin's model file lives.
 
-        Returns:
-            The artefact path.
-        """
+    def artifact_path(self) -> Path:
+
+
         return self.config.paths.model_path(f"{self.name}_twin{self.artifact_suffix}")
 
     def metadata_path(self) -> Path:
-        """Return where this twin's metadata document lives.
 
-        Returns:
-            The metadata path.
-        """
+
         return self.config.paths.model_path(f"{self.name}_twin_meta.json")
 
     def save(self) -> Path:
-        """Persist the fitted model and its column metadata.
 
-        Args:
-            None.
 
-        Returns:
-            The artefact path written.
-
-        Raises:
-            AnomalyHealthError: If nothing has been trained.
-        """
         if self.model is None:
             raise AnomalyHealthError(f"Nothing to save; train the {self.name} twin first.")
 
@@ -597,14 +412,8 @@ class BaseTwin(ABC):
         return path
 
     def load(self) -> "BaseTwin":
-        """Reload a previously persisted twin and its column metadata.
 
-        Returns:
-            This instance, ready to predict.
 
-        Raises:
-            AnomalyHealthError: If the metadata document is missing.
-        """
         from app.utils.Anomaly_Health_Monitoring.utils import read_json
 
         meta = read_json(self.metadata_path(), default=None)
@@ -626,32 +435,18 @@ class BaseTwin(ABC):
         return self
 
     def _hyperparameters(self) -> Dict[str, Any]:
-        """Return this variant's configured hyper-parameters.
 
-        Returns:
-            The hyper-parameter mapping, or an empty dict when the variant has
-            no configured block.
-        """
+
         return dict(getattr(self.config.twin, self.name, {}) or {})
 
-    # ------------------------------------------------------------------ #
-    # Stage entry point
-    # ------------------------------------------------------------------ #
+
     def run(
         self,
         frame: Optional[pd.DataFrame] = None,
         retrain: bool = True,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Train (or load) the twin and produce expected-sensor predictions.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``scaled_features.csv``
-                is read from disk.
-            retrain: Fit a new model, or reload the saved one.
 
-        Returns:
-            A ``(predictions, metrics)`` tuple.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:

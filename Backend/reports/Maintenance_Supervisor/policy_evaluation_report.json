@@ -1,0 +1,68 @@
+{
+    "status": "success",
+    "champion_model_name": "ppo",
+    "methodology_note": "Regenerated after the 2026-09-17 batch-inference-collapse fix (see train_ppo_blended_report.json): the champion was retrained on a BLEND of the offline CMAPSS run-to-failure corpus (supervisor_encoded_dataset.csv, 200 engines -- the only source of genuine failure examples) and the real merged live-regime corpus (supervisor_integrated_input.csv, 259 engines, after fixing impute_missing_values' global-median-fill bug in supervisor_cleaner.py). The 28 test engines below are the genuine run-to-failure held-out engines (offline slice) -- never used for training or checkpoint selection -- because the live-regime engines contain zero true failures (0/259 end with predicted_rul <= 2.0) and so cannot support a meaningful failure-prevention comparison. See policy_evaluation_report_live_slice.json for that slice's (trivial, no-failure) numbers.",
+    "test_engines_evaluated": 28,
+    "maintenance_cost_reduction_pct_vs_reactive": 78.98,
+    "system_downtime_reduction_pct_vs_reactive": 68.89,
+    "failure_prevention_rate": 1.0,
+    "maintenance_cost_reduction_pct_vs_rule_cascade": 84.17,
+    "system_downtime_reduction_pct_vs_rule_cascade": 0.0,
+    "policies": {
+        "champion": {
+            "engines_evaluated": 28,
+            "failure_prevention_rate": 1.0,
+            "catastrophic_failures": 0,
+            "mean_maintenance_cost_usd": 500.0,
+            "total_maintenance_cost_usd": 14000.0,
+            "mean_downtime_hours": 12.0,
+            "total_downtime_hours": 336.0,
+            "terminal_event_distribution": {
+                "successful_scheduled_maintenance": 28
+            }
+        },
+        "reactive_tbo_baseline": {
+            "engines_evaluated": 28,
+            "failure_prevention_rate": 0.6786,
+            "catastrophic_failures": 9,
+            "mean_maintenance_cost_usd": 2378.57,
+            "total_maintenance_cost_usd": 66600.0,
+            "mean_downtime_hours": 38.571,
+            "total_downtime_hours": 1080.0,
+            "terminal_event_distribution": {
+                "emergency_shutdown_executed": 18,
+                "unplanned_catastrophic_failure": 9,
+                "censored_trajectory_end": 1
+            }
+        },
+        "rule_cascade_baseline": {
+            "engines_evaluated": 28,
+            "failure_prevention_rate": 1.0,
+            "catastrophic_failures": 0,
+            "mean_maintenance_cost_usd": 3159.29,
+            "total_maintenance_cost_usd": 88460.0,
+            "mean_downtime_hours": 12.0,
+            "total_downtime_hours": 336.0,
+            "terminal_event_distribution": {
+                "successful_scheduled_maintenance": 28
+            }
+        }
+    },
+    "interpretation": "Champion now matches rule_cascade_baseline exactly on safety (0 catastrophic failures, identical 12.0h mean downtime, both 100% successful_scheduled_maintenance) while costing 84.2% less per engine ($500 vs $3,159). The saving comes from timing: rule_cascade engages monitor_closely/schedule_inspection as soon as its thresholds are crossed and accumulates their per-step cost for many cycles before finally escalating, while the champion waits (continue_operation is free) and intervenes at the same safe moment rule_cascade eventually reaches -- same outcome, materially cheaper. This was NOT true of the pre-fix champion (see champion_model_manifest.json history / ppo_pre_liveregime_backup.joblib): it had 1 catastrophic failure on this same test set, i.e. it was WORSE than rule_cascade on safety, not just cost.",
+    "downtime_hours_assumption": {
+        "unplanned_catastrophic_failure": 72.0,
+        "unplanned_failure_during_monitoring": 72.0,
+        "unplanned_failure_during_inspection": 72.0,
+        "emergency_shutdown_executed": 24.0,
+        "successful_scheduled_maintenance": 12.0,
+        "censored_trajectory_end": 0.0,
+        "max_steps_reached": 0.0
+    },
+    "action_cost_usd": {
+        "continue_operation": 0.0,
+        "monitor_closely": 30.0,
+        "schedule_inspection": 150.0,
+        "schedule_maintenance": 500.0,
+        "immediate_maintenance": 1200.0
+    }
+}

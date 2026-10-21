@@ -1,4 +1,3 @@
-"""Causal history, calibration, persistence and score-scale regression checks."""
 import copy
 import tempfile
 import unittest
@@ -27,7 +26,7 @@ class ZeroPopulation:
 
 class EchoStartupProfile:
     def predict(self, x):
-        # 38 context columns precede the first frozen global sensor summary.
+
         return x[:, 38:39]
 
 
@@ -36,6 +35,8 @@ class PerformanceContracts(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.config = Config()
+
+        self.config.anomaly.fusion_weights = {"mahalanobis": 1.0}
         for key, value in vars(self.config.paths).items():
             if isinstance(value, Path):
                 setattr(self.config.paths, key, Path(self.directory.name) / key)

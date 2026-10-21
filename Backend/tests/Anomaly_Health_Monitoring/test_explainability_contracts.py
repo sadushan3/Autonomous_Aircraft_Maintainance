@@ -1,4 +1,3 @@
-"""Faithfulness, failure reporting and evidence regression checks."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,8 +28,8 @@ class ContextModel:
         self.multiplier = multiplier
 
     def predict(self, x):
-        # These assertions detect invalid independent perturbations of mode
-        # indicators/settings or of the two representations of cycle age.
+
+
         np.testing.assert_allclose(x[:, 3] / 300., x[:, 4])
         np.testing.assert_allclose(x[:, 5] + x[:, 6], 1.)
         np.testing.assert_allclose(x[:, 0], x[:, 6])

@@ -1,41 +1,3 @@
-/**
- * Health Monitoring -- digital-twin health index across the fleet.
- *
- * Data source note (this was a real bug, do not regress it):
- * ---------------------------------------------------------
- * This page previously derived its headline KPIs from `useFleetSummary()`,
- * which reads `/integration/dashboard` with `limit=4000`. That endpoint pages
- * a ~34k-row fused table, so the page was summarising 11.8% of the rows and
- * only the 33 engines that happened to fall in the first page -- and because
- * "latest per engine" was computed inside that page, the "current" cycle for
- * each engine was really its last cycle *within the page*, i.e. mid-life. The
- * headline read 75.0 when the true final-cycle fleet mean was 18.0.
- *
- * It now reads `/anomaly-health/dashboard`, which is the Anomaly & Health
- * component's own aggregate: unpaginated, computed server-side over every row,
- * and explicit about the distinction this page now surfaces --
- *
- *   SNAPSHOT  `mean_health_index`          -- each engine at its final cycle
- *   LIFETIME  `lifetime_mean_health_index` -- every row of recorded history
- *
- * Those answer different questions and differ by ~55 points on C-MAPSS train
- * units, which all run to failure. Showing either one unlabelled is
- * misleading, so the basis is always stated and switchable.
- *
- * Component boundary
- * ------------------
- * Every field on this page is owned by Anomaly & Health. Nothing here comes
- * from the Failure Risk agent -- no Anomaly service imports
- * `Predictive_Maintenance` at all.
- *
- * One label invites confusion and is deliberately disambiguated in the UI:
- * `health_state` has a bottom band literally named "Failure Risk", assigned by
- * `health_state_classifier.py` purely from the health index (`HI < 20`). It is
- * NOT the Failure Risk agent's `risk_10/30/50` output and shares no code path
- * with it. Two other fields read as predictive but are not:
- * `remaining_health_pct` is the health index as a percentage (not RUL), and
- * `early_warning_score` comes from `anomaly_detection/early_warning_score.py`.
- */
 import { useMemo, useState } from "react";
 import {
   Activity,
@@ -95,12 +57,7 @@ const STATE_COLOR: Record<string, string> = {
   "Failure Risk": "#b91c1c",
 };
 
-/**
- * Display label for the health-state bands. The backend's bottom band is named
- * "Failure Risk", which collides with the sibling Failure Risk component even
- * though the two are unrelated, so the chart shows the threshold instead. The
- * underlying value is never renamed -- only how it is presented.
- */
+
 const STATE_LABEL: Record<string, string> = {
   "Failure Risk": "HI < 20",
 };
@@ -110,7 +67,7 @@ const DASH = "—";
 const n1 = (v: unknown, d = 1) =>
   typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : DASH;
 
-/** The two bases the fleet block reports. They are not interchangeable. */
+
 type Basis = "snapshot" | "lifetime";
 
 export function HealthMonitoring() {
@@ -119,11 +76,7 @@ export function HealthMonitoring() {
   const [basis, setBasis] = useState<Basis>("snapshot");
   const [selected, setSelected] = useEngineParam();
 
-  // Every hook must run on every render, so the loading/error/empty returns
-  // live BELOW all of them. Placing them here instead made the first (loading)
-  // render register fewer hooks than the second, which React rejects with
-  // "Rendered more hooks than during the previous render". Consequently every
-  // derivation above those returns has to tolerate `dash.data` being absent.
+
   const fleet = dash.data?.fleet;
   const engines = dash.data?.engines ?? [];
   const timeline = (dash.data?.timeline ?? {}) as Record<string, AnomalyTimelinePoint[]>;
@@ -134,7 +87,7 @@ export function HealthMonitoring() {
       ? (fleet?.lifetime_mean_health_index as number)
       : (fleet?.mean_health_index ?? 0);
 
-  // State counts differ by basis: snapshot counts ENGINES, lifetime counts ROWS.
+
   const stateChart = useMemo(() => {
     const src: Array<[string, unknown]> =
       basis === "lifetime" && hasLifetime
@@ -172,15 +125,7 @@ export function HealthMonitoring() {
   const focusId = selected ?? String(ranked[0]?.engine_id ?? "");
   const focus = engines.find((e) => String(e.engine_id) === focusId);
 
-  /**
-   * Focus engine trajectory.
-   *
-   * `/dashboard` bundles timelines for the first 50 unit ids only, and since
-   * pooled units are subset-offset that is FD001 1..50 and nothing else -- so
-   * the engine this page ranks worst was never in it and the chart rendered
-   * empty. The bundled copy is still used when it happens to contain the focus
-   * engine, and the per-engine endpoint fills in every other case.
-   */
+
   const focusTimeline = useEngineHealthTimeline(focusId || undefined);
 
   const series = useMemo(() => {
@@ -197,11 +142,8 @@ export function HealthMonitoring() {
         return {
           cycle: p.cycle,
           health: hi === null ? null : Number(hi.toFixed(2)),
-          // Ground truth from the engine's actual remaining life. The health
-          // index never sees it, so the two lines converging is a result, not a
-          // fit. It replaces the old "twin spread" band, which rescaled a
-          // residual-dispersion figure onto the 0-100 health axis by an
-          // arbitrary factor of 100 and so shaded a width that meant nothing.
+
+
           target: target === null ? null : Number(target.toFixed(2)),
           anomaly:
             typeof p.anomaly_score === "number" ? Number((p.anomaly_score * 100).toFixed(1)) : null,
@@ -215,7 +157,7 @@ export function HealthMonitoring() {
       });
   }, [timeline, focusId, focusTimeline.data]);
 
-  /** How closely this engine's index tracks its own ground-truth curve. */
+
   const trackingR = useMemo(() => {
     const pairs = series.filter(
       (d): d is typeof d & { health: number; target: number } =>
@@ -247,7 +189,7 @@ export function HealthMonitoring() {
     [fleet?.top_root_causes],
   );
 
-  /** Ensemble breakdown for the focus engine -- the four detectors + fusion. */
+
   const detectors = focus
     ? [
         { name: "Isolation Forest", value: Number(focus.isolation_forest_score ?? 0) },
@@ -258,7 +200,7 @@ export function HealthMonitoring() {
       ].filter((d) => Number.isFinite(d.value))
     : [];
 
-  /** Engines with the strongest early-warning signal. */
+
   const earlyWarning = useMemo(
     () =>
       [...engines]
@@ -286,11 +228,7 @@ export function HealthMonitoring() {
     [hold?.per_subset],
   );
 
-  /**
-   * Engines quartiled by how degraded they start, against how long they were
-   * observed. The apparent inversion here is the reason the fleet ranking is
-   * weaker than the within-engine correlation, so it is shown, not buried.
-   */
+
   const biasQuartiles = useMemo(
     () =>
       Object.entries(hold?.bias_quartiles ?? {}).map(([name, q]) => ({
@@ -320,7 +258,7 @@ export function HealthMonitoring() {
 
   const alertMixTotal = alertMixChart.reduce((a, d) => a + d.value, 0) || 1;
 
-  // Safe to bail out now: every hook above has run.
+
   if (dash.isLoading) return <Loading label="Loading health monitoring…" />;
   if (dash.error) return <ErrorState error={dash.error} />;
   if (!fleet) return <Empty />;
@@ -337,7 +275,7 @@ export function HealthMonitoring() {
         right={<LiveBadge />}
       />
 
-      {/* Basis switch -- the single most important qualifier on this page. */}
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800/70 bg-slate-900/40 px-4 py-3">
         <span className="text-xs uppercase tracking-widest text-slate-500">Basis</span>
         <div className="flex overflow-hidden rounded-lg border border-slate-700">
@@ -437,7 +375,7 @@ export function HealthMonitoring() {
         </Reveal>
       </div>
 
-      {/* ---- health trajectory (existing chart, now with an uncertainty band) ---- */}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Reveal index={5} className="lg:col-span-2">
           <MetricCard
@@ -471,7 +409,7 @@ export function HealthMonitoring() {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  {/* The HI < 20 band boundary, so the state cut is visible. */}
+
                   <ReferenceLine
                     y={20}
                     stroke="#b91c1c"
@@ -549,7 +487,7 @@ export function HealthMonitoring() {
         </Reveal>
       </div>
 
-      {/* ---- detector ensemble + root causes ---- */}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Reveal index={7}>
           <MetricCard
@@ -687,7 +625,7 @@ export function HealthMonitoring() {
         </Reveal>
       </div>
 
-      {/* ---- focus engine detail ---- */}
+
       {focus && (
         <Reveal index={10}>
           <MetricCard
@@ -742,7 +680,7 @@ export function HealthMonitoring() {
         </Reveal>
       )}
 
-      {/* ---- Is the health index any good? Its own held-out evidence -------- */}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <Reveal index={11} className="xl:col-span-3">
           <MetricCard
@@ -875,7 +813,7 @@ export function HealthMonitoring() {
           </MetricCard>
         </Reveal>
 
-        {/* ---- the cross-engine confound, stated rather than hidden --------- */}
+
         <Reveal index={12} className="xl:col-span-2">
           <MetricCard
             title="Cross-engine comparability"
@@ -950,7 +888,7 @@ export function HealthMonitoring() {
         </Reveal>
       </div>
 
-      {/* ---- alert mix over every scored row, not just the latest cycle ----- */}
+
       {alertMixChart.length > 0 && (
         <Reveal index={13}>
           <GlassCard>
@@ -980,7 +918,7 @@ export function HealthMonitoring() {
         </Reveal>
       )}
 
-      {/* ---- drift, triage and feedback ---- */}
+
       <Reveal index={14}>
         <ContextDriftPanel />
       </Reveal>

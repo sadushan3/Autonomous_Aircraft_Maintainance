@@ -1,0 +1,38 @@
+{
+    "status": "success",
+    "model_name": "ppo",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\ppo.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 29,
+    "trained_via_environment": true,
+    "training_epochs": 80,
+    "final_train_epoch_stats": {
+        "epoch": 79,
+        "mean_episode_return": -1767.259,
+        "catastrophic_failure_rate": 0.0,
+        "policy_loss": -0.01029,
+        "value_loss": 0.00768,
+        "entropy": 0.28828,
+        "val_mean_episode_return": -3502.792,
+        "val_catastrophic_failure_rate": 0.0
+    },
+    "best_checkpoint_epoch": 24,
+    "best_checkpoint_val_metrics_at_selection": {
+        "episodes_evaluated": 32,
+        "mean_episode_return": -868.616,
+        "std_episode_return": 169.559,
+        "catastrophic_failure_rate": 0.0,
+        "successful_maintenance_rate": 1.0
+    },
+    "episode_metrics": {
+        "episodes_evaluated": 32,
+        "mean_episode_return": -868.616,
+        "std_episode_return": 169.559,
+        "catastrophic_failure_rate": 0.0,
+        "successful_maintenance_rate": 1.0
+    },
+    "val_accuracy": 0.5899,
+    "val_macro_f1": 0.1712,
+    "duration_seconds": 3147.5613
+}

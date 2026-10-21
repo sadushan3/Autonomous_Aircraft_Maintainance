@@ -1,24 +1,3 @@
-"""
-Confidence estimation: the uncertainty-layer orchestrator.
-
-Combines model agreement (:mod:`model_agreement`) with data quality
-(from the cleaning stage) into the single ``confidence_score`` every prediction
-in this component carries, following the weighted formula specified for the
-research objective:
-
-    confidence = 100 * (w_agree * model_agreement
-                       + w_rel   * detector_agreement
-                       + w_qual  * data_quality_score)
-
-``reliability_score`` is reported separately as the detector-agreement term
-alone (a caller who wants "how much did the detectors corroborate each other,
-independent of twin quality" can read it directly), and
-``uncertainty_score = 1 - model_agreement`` is reported as its own column
-because "how much does the expected value itself vary across twins" is exactly
-what a maintenance engineer needs when deciding whether to trust a flagged
-reading or ask for a second sensor check.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,32 +27,27 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     read_csv,
 )
 
-#: Final 0-100 confidence score.
+
 CONFIDENCE_SCORE_COLUMN = "confidence_score"
 
-#: 0-1 reliability, from detector agreement.
+
 RELIABILITY_SCORE_COLUMN = "reliability_score"
 
-#: 0-1 uncertainty, from twin disagreement.
+
 UNCERTAINTY_SCORE_COLUMN = "uncertainty_score"
 
 
 class ConfidenceEstimator:
-    """Blends model agreement and data quality into a single confidence score."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the estimator.
 
-        Args:
-            config: Configuration supplying the blend weights.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.agreement_scorer = ModelAgreementScorer(self.config)
 
-    # ------------------------------------------------------------------ #
-    # Computation
-    # ------------------------------------------------------------------ #
+
     def compute(
         self,
         frame: pd.DataFrame,
@@ -81,20 +55,8 @@ class ConfidenceEstimator:
         weight_reliability: Optional[float] = None,
         weight_data_quality: Optional[float] = None,
     ) -> pd.DataFrame:
-        """Compute the confidence triple for every row.
 
-        Args:
-            frame: Frame carrying twin-spread, detector scores and (optionally)
-                ``data_quality_score``.
-            weight_agreement: Optional override of the agreement weight.
-            weight_reliability: Optional override of the reliability weight.
-            weight_data_quality: Optional override of the data-quality weight.
 
-        Returns:
-            The frame with ``confidence_score``, ``reliability_score``,
-            ``uncertainty_score``, ``model_agreement`` and
-            ``detector_agreement`` added.
-        """
         result = self.agreement_scorer.compute(frame)
 
         if DATA_QUALITY_COLUMN not in result.columns:
@@ -134,19 +96,10 @@ class ConfidenceEstimator:
         )
         return result
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``confidence_scores.csv`` atomically.
 
-        Args:
-            frame: Frame with the confidence triple attached.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.confidence_scores_csv
         )
@@ -158,20 +111,8 @@ class ConfidenceEstimator:
         anomaly_scores: Optional[pd.DataFrame] = None,
         residuals: Optional[pd.DataFrame] = None,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the uncertainty stage.
 
-        Args:
-            anomaly_scores: Optional in-memory input carrying per-detector
-                scores and twin spread; otherwise ``anomaly_fusion.csv`` (which
-                carries ``anomaly_score``) merged with ``twin_predictions.csv``
-                (which carries ``twin_spread_mean``) is used.
-            residuals: Optional in-memory residuals carrying
-                ``data_quality_score``; otherwise ``cleaned_data.csv`` is
-                consulted for it.
 
-        Returns:
-            A ``(confidence_frame, report)`` tuple.
-        """
         self.config.ensure_directories()
         source = anomaly_scores
         if source is None:
@@ -222,7 +163,7 @@ class ConfidenceEstimator:
 
 
 def main() -> None:
-    """Run confidence estimation standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     estimator = ConfidenceEstimator(config)

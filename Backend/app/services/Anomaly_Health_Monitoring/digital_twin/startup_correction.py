@@ -1,8 +1,3 @@
-"""Serializable regressors for a frozen commissioning profile.
-
-Inputs are the existing compact profile, never observations after commissioning.
-The model owns its feature transform so experiment and serving use the same code.
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -100,7 +95,7 @@ class StartupCorrectionRegressor(RegressorMixin, BaseEstimator):
 
     def _weighted(self, transformed, scaler):
         values = scaler.transform(transformed)
-        # Feature scaling changes the kernel distance, without using any targets.
+
         values[:, 3:4] *= self.age_weight
         values[:, 38:59] *= self.profile_weight
         values[:, 59:80] *= self.mode_weight
@@ -113,7 +108,7 @@ class StartupCorrectionRegressor(RegressorMixin, BaseEstimator):
         self.n_features_in_ = x.shape[1]
         self.n_outputs_ = y.shape[1]
         self.models_ = {}
-        # A global ridge supplies an explicit fallback if a subset had no fit rows.
+
         self.fallback_ = make_pipeline(StandardScaler(), Ridge(alpha=100.)).fit(transformed, y)
         labels = np.argmax(x[:, 10:14], axis=1) if self.grouped else np.zeros(len(x), int)
         for label in np.unique(labels):
@@ -140,7 +135,7 @@ class StartupCorrectionRegressor(RegressorMixin, BaseEstimator):
 
 
 class BlendedStartupCorrection(RegressorMixin, BaseEstimator):
-    """Fixed convex blend, with weights selected on training-engine validation."""
+
     def __init__(self, baseline=None, candidate=None, weight=.5):
         self.baseline = baseline
         self.candidate = candidate
@@ -155,7 +150,7 @@ class BlendedStartupCorrection(RegressorMixin, BaseEstimator):
 
 
 class SensorBlendStartupCorrection(RegressorMixin, BaseEstimator):
-    """A convex mixture with fixed validation-selected weights per sensor."""
+
     def __init__(self, baseline=None, members=None, weights=None):
         self.baseline = baseline
         self.members = members

@@ -1,0 +1,132 @@
+{
+  "rows": 104897,
+  "engines": 707,
+  "evaluation_scope": "Recomputed from the four-detector experiment's official residuals with the current frozen health reference.",
+  "rul_correlation": 0.46011230818610077,
+  "monotonicity_score": 0.9477,
+  "monotonicity_threshold": 0.7,
+  "mean_health_index": 87.91253233124398,
+  "trajectory_metrics": {
+    "progression_engines": 159,
+    "engines_with_health_drop_at_least_5": 159,
+    "degradation_fraction": 1.0,
+    "median_health_drop": 48.89358740616372,
+    "flat_engine_fraction": 0.03253182461103253,
+    "median_within_engine_rul_correlation": 0.9199842037333128,
+    "additional_evaluation_smoothing": false
+  },
+  "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+  "acceptance": {
+    "finite_bounded_health": true,
+    "monotonicity": true,
+    "rul_proxy_correlation": true,
+    "detects_degradation": true
+  },
+  "passed": true,
+  "per_subset": {
+    "FD001": {
+      "rows": 13096,
+      "engines": 100,
+      "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+      "rul_correlation": 0.6487063101547722,
+      "monotonicity_score": 1.0,
+      "monotonicity_threshold": 0.7,
+      "mean_health_index": 92.17714363854988,
+      "trajectory_metrics": {
+        "progression_engines": 25,
+        "engines_with_health_drop_at_least_5": 25,
+        "degradation_fraction": 1.0,
+        "median_health_drop": 45.17327453156625,
+        "flat_engine_fraction": 0.1,
+        "median_within_engine_rul_correlation": 0.9422299472077686,
+        "additional_evaluation_smoothing": false
+      },
+      "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+      "acceptance": {
+        "finite_bounded_health": true,
+        "monotonicity": true,
+        "rul_proxy_correlation": true,
+        "detects_degradation": true
+      },
+      "passed": true
+    },
+    "FD002": {
+      "rows": 33991,
+      "engines": 259,
+      "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+      "rul_correlation": 0.6326795661224723,
+      "monotonicity_score": 0.9768,
+      "monotonicity_threshold": 0.7,
+      "mean_health_index": 89.85202018758498,
+      "trajectory_metrics": {
+        "progression_engines": 61,
+        "engines_with_health_drop_at_least_5": 61,
+        "degradation_fraction": 1.0,
+        "median_health_drop": 47.63944205771497,
+        "flat_engine_fraction": 0.011583011583011582,
+        "median_within_engine_rul_correlation": 0.9146763860018794,
+        "additional_evaluation_smoothing": false
+      },
+      "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+      "acceptance": {
+        "finite_bounded_health": true,
+        "monotonicity": true,
+        "rul_proxy_correlation": true,
+        "detects_degradation": true
+      },
+      "passed": true
+    },
+    "FD003": {
+      "rows": 16596,
+      "engines": 100,
+      "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+      "rul_correlation": 0.4313406754662825,
+      "monotonicity_score": 0.96,
+      "monotonicity_threshold": 0.7,
+      "mean_health_index": 85.79694534075085,
+      "trajectory_metrics": {
+        "progression_engines": 20,
+        "engines_with_health_drop_at_least_5": 20,
+        "degradation_fraction": 1.0,
+        "median_health_drop": 67.96725865373054,
+        "flat_engine_fraction": 0.07,
+        "median_within_engine_rul_correlation": 0.9516624277999552,
+        "additional_evaluation_smoothing": false
+      },
+      "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+      "acceptance": {
+        "finite_bounded_health": true,
+        "monotonicity": true,
+        "rul_proxy_correlation": true,
+        "detects_degradation": true
+      },
+      "passed": true
+    },
+    "FD004": {
+      "rows": 41214,
+      "engines": 248,
+      "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+      "rul_correlation": 0.43552530310465404,
+      "monotonicity_score": 0.8911,
+      "monotonicity_threshold": 0.7,
+      "mean_health_index": 85.80974687700171,
+      "trajectory_metrics": {
+        "progression_engines": 53,
+        "engines_with_health_drop_at_least_5": 53,
+        "degradation_fraction": 1.0,
+        "median_health_drop": 49.19960660667478,
+        "flat_engine_fraction": 0.012096774193548387,
+        "median_within_engine_rul_correlation": 0.9089087035429654,
+        "additional_evaluation_smoothing": false
+      },
+      "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+      "acceptance": {
+        "finite_bounded_health": true,
+        "monotonicity": true,
+        "rul_proxy_correlation": true,
+        "detects_degradation": true
+      },
+      "passed": true
+    }
+  }
+}

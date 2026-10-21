@@ -1,25 +1,3 @@
-"""
-Anomaly-detection evaluation: are we finding faults without crying wolf?
-
-Without ground-truth fault labels (classic C-MAPSS carries none), this module
-evaluates the anomaly layer against two proxies that *are* verifiable from the
-data:
-
-* **Alignment with RUL** -- fault-type anomalies should concentrate in the
-  low-RUL (near end-of-life) region rather than being scattered uniformly
-  across a trajectory, since real degradation is what the layer is supposed to
-  catch.
-* **Operational-suppression rate** -- on multi-regime subsets (FD002/FD004),
-  the fraction of raw detector flags that get reclassified as ``operational``
-  rather than escalated as ``fault``. Suppression counts describe gate activity;
-  gate quality requires comparing healthy false alarms and critical-condition
-  recall before and after suppression.
-
-Once labelled data or operator feedback accumulates, :mod:`feedback` closes
-the loop that a proper precision/recall evaluation would need; this module
-reports what can be assessed from the unlabelled signal alone.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -40,28 +18,17 @@ from app.services.Anomaly_Health_Monitoring.evaluation.monitoring_metrics import
 
 
 class AnomalyEvaluator:
-    """Evaluates the anomaly-detection layer against RUL alignment and gate behaviour."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the evaluator.
 
-        Args:
-            config: Configuration supplying report output paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
     def rul_alignment(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Compare mean RUL at fault-flagged rows against the fleet mean.
 
-        Args:
-            frame: Frame carrying ``anomaly_type`` and RUL (directly or via a
-                merge upstream).
 
-        Returns:
-            A mapping of mean RUL at fault rows vs. the fleet mean, and whether
-            faults concentrate at low RUL as expected.
-        """
         if RUL_COLUMN not in frame.columns or "anomaly_type" not in frame.columns:
             return {"available": False}
 
@@ -79,15 +46,8 @@ class AnomalyEvaluator:
         }
 
     def gate_behaviour(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Summarise how the operational-vs-fault gate behaved.
 
-        Args:
-            frame: Frame carrying ``anomaly_flag`` and ``anomaly_type``.
 
-        Returns:
-            A mapping of flagged/fault/operational counts and the suppression
-            rate.
-        """
         if "anomaly_type" not in frame.columns:
             return {"available": False}
 
@@ -105,14 +65,8 @@ class AnomalyEvaluator:
         }
 
     def evaluate(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Combine RUL alignment and gate behaviour into one report.
 
-        Args:
-            frame: Fused-anomaly frame, optionally merged with RUL.
 
-        Returns:
-            The combined evaluation report.
-        """
         rul = self.rul_alignment(frame)
         gate = self.gate_behaviour(frame)
         condition = condition_metrics(frame, healthy_rul=self.config.anomaly.calibration_healthy_rul)
@@ -134,15 +88,8 @@ class AnomalyEvaluator:
         return report
 
     def run(self, frame: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Execute the anomaly evaluation stage.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``anomaly_fusion.csv``
-                (merged with RUL from ``raw_data.csv`` when available) is used.
 
-        Returns:
-            The evaluation report.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:
@@ -172,7 +119,7 @@ class AnomalyEvaluator:
 
 
 def main() -> None:
-    """Run anomaly evaluation standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     evaluator = AnomalyEvaluator(config)

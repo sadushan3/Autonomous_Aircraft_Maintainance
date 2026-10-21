@@ -1,4 +1,3 @@
-"""Numeric evidence for the actual weighted and smoothed health index."""
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple
@@ -18,7 +17,7 @@ class HealthExplainer:
         self.config = config
 
     def explain(self, residuals: pd.DataFrame, health: pd.DataFrame) -> Dict[Tuple[int, int], Dict[str, Any]]:
-        """Reconstruct saved scores without fitting or changing calibration."""
+
         keys = ["unit", "cycle"]
         if health.empty or residuals.empty:
             return {}
@@ -30,7 +29,7 @@ class HealthExplainer:
         if not columns or "healthy_reference_deviation" not in calibration:
             return {}
         ordered = residuals.sort_values(keys).reset_index(drop=True)
-        # With validated persisted columns the production calculator never fits.
+
         computed = calculator.compute(ordered)
         scored = HealthScoreEngine(self.config).compute(computed)
         classifier = HealthStateClassifier(self.config)

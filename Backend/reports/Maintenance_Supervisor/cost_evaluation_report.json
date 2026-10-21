@@ -1,0 +1,39 @@
+{
+    "status": "success",
+    "test_records_evaluated": 40463,
+    "cost_savings_vs_tbo_usd": 1211430000.0,
+    "cost_reduction_percentage": 87.4,
+    "evaluations": {
+        "champion_supervisor_agent": {
+            "total_cost_usd": 174656000.0,
+            "mean_cost_per_cycle_usd": 4316.44,
+            "missed_critical_events": 205,
+            "false_critical_alarms": 0,
+            "timely_maintenance_events": 6013,
+            "inspections_performed": 0
+        },
+        "time_between_overhaul_baseline": {
+            "total_cost_usd": 1386086000.0,
+            "mean_cost_per_cycle_usd": 34255.64,
+            "missed_critical_events": 2685,
+            "false_critical_alarms": 34,
+            "timely_maintenance_events": 3533,
+            "inspections_performed": 0
+        },
+        "majority_vote_baseline": {
+            "total_cost_usd": 3109000000.0,
+            "mean_cost_per_cycle_usd": 76835.63,
+            "missed_critical_events": 6218,
+            "false_critical_alarms": 0,
+            "timely_maintenance_events": 0,
+            "inspections_performed": 0
+        }
+    },
+    "cost_matrix_usd": {
+        "catastrophic_failure_fn": 500000.0,
+        "premature_overhaul_fp": 35000.0,
+        "preventive_maintenance_tp": 12000.0,
+        "routine_inspection": 1500.0
+    },
+    "duration_seconds": 9.6959
+}

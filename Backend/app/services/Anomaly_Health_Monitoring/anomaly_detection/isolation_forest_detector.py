@@ -1,21 +1,3 @@
-"""
-Isolation Forest anomaly detector.
-
-Fits ``sklearn.ensemble.IsolationForest`` on the healthy-region residual
-features.  Isolation Forest scores a point by how few random splits it takes
-to separate it from the rest of the data; anomalous points isolate quickly
-because they sit in sparse regions of the residual space, which makes the
-method effective without requiring any distributional assumption -- unlike the
-Mahalanobis detector, which assumes (approximately) Gaussian residuals.
-
-The raw ``decision_function`` output is unbounded and lower-is-more-anomalous,
-which is awkward to fuse with the other detectors.  This module inverts and
-min-max normalises it into [0, 1] where higher means more anomalous, and
-calibrates the flagging threshold as a percentile of the *healthy* region's own
-scores -- so the threshold means "more anomalous than nearly all healthy
-behaviour", not an arbitrary constant.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -41,22 +23,18 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     save_model,
 )
 
-#: Column name this detector contributes to anomaly_scores.csv.
+
 SCORE_COLUMN = "isolation_forest_score"
 
 
 class IsolationForestDetector:
-    """Wraps IsolationForest with healthy-region fitting and score calibration."""
+
 
     ARTIFACT_NAME = "isolation_forest_detector.pkl"
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the detector.
 
-        Args:
-            config: Configuration supplying hyper-parameters and threshold
-                percentile.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.model: Optional[IsolationForest] = None
@@ -64,18 +42,10 @@ class IsolationForestDetector:
         self.threshold: float = 1.0
         self._healthy_scores_sorted: np.ndarray = np.array([], dtype=float)
 
-    # ------------------------------------------------------------------ #
-    # Healthy-region selection (mirrors BaseTwin's rule for consistency)
-    # ------------------------------------------------------------------ #
+
     def _healthy_mask(self, frame: pd.DataFrame) -> pd.Series:
-        """Select the same healthy region the digital twin trained on.
 
-        Args:
-            frame: Residual features carrying RUL and cycle when available.
 
-        Returns:
-            A boolean mask.
-        """
         settings = self.config.healthy_region
         if RUL_COLUMN in frame.columns:
             rul_ok = frame[RUL_COLUMN].astype(float) >= float(settings.rul_threshold)
@@ -85,23 +55,10 @@ class IsolationForestDetector:
         cycle_ok = frame["cycle"].astype(float) <= (float(settings.cycle_fraction) * max_cycle)
         return rul_ok & cycle_ok
 
-    # ------------------------------------------------------------------ #
-    # Fitting
-    # ------------------------------------------------------------------ #
+
     def fit(self, frame: pd.DataFrame, feature_columns: List[str]) -> "IsolationForestDetector":
-        """Fit the forest on the healthy region and calibrate its threshold.
 
-        Args:
-            frame: Residual feature frame.
-            feature_columns: Columns to use as the anomaly-detection feature
-                space, typically the residual z-score columns.
 
-        Returns:
-            This fitted instance.
-
-        Raises:
-            AnomalyHealthError: If no feature columns are available.
-        """
         present = [c for c in feature_columns if c in frame.columns]
         if not present:
             raise AnomalyHealthError("No residual feature columns available for IsolationForest.")
@@ -134,21 +91,10 @@ class IsolationForestDetector:
         )
         return self
 
-    # ------------------------------------------------------------------ #
-    # Scoring
-    # ------------------------------------------------------------------ #
+
     def score(self, frame: pd.DataFrame) -> np.ndarray:
-        """Score every row and normalise into [0, 1], higher = more anomalous.
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            An array of normalised anomaly scores.
-
-        Raises:
-            AnomalyHealthError: If called before fitting or loading.
-        """
         if self.model is None:
             raise AnomalyHealthError("IsolationForestDetector used before fit/load.")
         values = frame[self.feature_columns].astype(float).to_numpy()
@@ -157,28 +103,14 @@ class IsolationForestDetector:
         return empirical_percentile_normalize(self._healthy_scores_sorted, raw)
 
     def predict_flags(self, frame: pd.DataFrame) -> np.ndarray:
-        """Return boolean anomaly flags using the calibrated threshold.
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            A boolean array.
-        """
         return self.score(frame) > self.threshold
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self) -> Path:
-        """Persist the fitted forest and calibration metadata.
 
-        Returns:
-            The artefact path written.
 
-        Raises:
-            AnomalyHealthError: If nothing has been fitted.
-        """
         if self.model is None:
             raise AnomalyHealthError("Nothing to save; fit the detector first.")
         bundle = {
@@ -190,11 +122,8 @@ class IsolationForestDetector:
         return save_model(bundle, self.config.paths.model_path(self.ARTIFACT_NAME), config=self.config)
 
     def load(self) -> "IsolationForestDetector":
-        """Reload a previously persisted detector.
 
-        Returns:
-            This instance, ready to score.
-        """
+
         bundle = load_model(self.config.paths.model_path(self.ARTIFACT_NAME))
         self.model = bundle["model"]
         self.feature_columns = bundle["feature_columns"]
@@ -204,7 +133,7 @@ class IsolationForestDetector:
 
 
 def main() -> None:
-    """Fit and score the Isolation Forest detector standalone."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
 
     config = get_config()

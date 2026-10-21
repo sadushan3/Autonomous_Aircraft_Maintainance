@@ -1,0 +1,117 @@
+{
+    "status": "success",
+    "leakage_guard": {
+        "engineered_dataset_error_columns": [
+            "final_decision",
+            "maintenance_urgency",
+            "priority",
+            "requires_human_review",
+            "supervisor_score"
+        ],
+        "warning_count": 9,
+        "safe_feature_count": 319,
+        "leakage_survived_into_scaled_features": []
+    },
+    "training_pipeline": {
+        "status": "success",
+        "champion": {
+            "champion_model_name": "random_forest",
+            "champion_model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\random_forest.joblib",
+            "val_macro_f1": 0.9996,
+            "val_accuracy": 0.9998,
+            "val_log_loss": 9.7091,
+            "selection_metric": "val_macro_f1",
+            "all_candidates": [
+                {
+                    "name": "random_forest",
+                    "val_macro_f1": 0.9996,
+                    "val_accuracy": 0.9998
+                },
+                {
+                    "name": "xgboost",
+                    "val_macro_f1": 0.9992,
+                    "val_accuracy": 0.9995
+                },
+                {
+                    "name": "lightgbm",
+                    "val_macro_f1": 0.9984,
+                    "val_accuracy": 0.9994
+                },
+                {
+                    "name": "logistic_regression",
+                    "val_macro_f1": 0.3414,
+                    "val_accuracy": 0.4186
+                },
+                {
+                    "name": "dqn",
+                    "val_macro_f1": 0.3211,
+                    "val_accuracy": 0.5989
+                },
+                {
+                    "name": "ppo",
+                    "val_macro_f1": 0.035,
+                    "val_accuracy": 0.0958
+                }
+            ]
+        },
+        "total_models_trained": 6,
+        "duration_seconds": 294.5989
+    },
+    "baseline_comparison": {
+        "status": "success",
+        "input_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\processed\\Maintenance_Supervisor\\supervisor_encoded_dataset.csv",
+        "total_samples": 40463,
+        "comparison_table": [
+            {
+                "model": "Majority Vote Baseline",
+                "accuracy": 0.5959,
+                "macro_f1": 0.1494,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 1.0,
+                "cost_penalty": 396096.0
+            },
+            {
+                "model": "Rule-Based Baseline",
+                "accuracy": 1.0,
+                "macro_f1": 1.0,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 0.0,
+                "cost_penalty": 0.0
+            },
+            {
+                "model": "RUL-Only Baseline",
+                "accuracy": 0.9985,
+                "macro_f1": 0.9959,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 0.0223,
+                "cost_penalty": 305.0
+            },
+            {
+                "model": "Risk-Only Baseline",
+                "accuracy": 0.6971,
+                "macro_f1": 0.4785,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 0.3971,
+                "cost_penalty": 58550.0
+            },
+            {
+                "model": "Anomaly-Only Baseline",
+                "accuracy": 0.61,
+                "macro_f1": 0.243,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 0.7439,
+                "cost_penalty": 172796.0
+            },
+            {
+                "model": "Champion Supervisor Agent",
+                "accuracy": 0.7015,
+                "macro_f1": 0.4953,
+                "false_critical_rate": 0.0,
+                "missed_critical_rate": 0.0,
+                "cost_penalty": 110976.0
+            }
+        ],
+        "duration_seconds": 9.3634
+    },
+    "duration_seconds": 312.1525
+}

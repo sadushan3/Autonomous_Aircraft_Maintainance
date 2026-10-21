@@ -1,0 +1,11 @@
+{
+  "rows": 20631,
+  "engines": 100,
+  "alert_distribution": {
+    "none": 10313,
+    "warning": 5663,
+    "info": 3365,
+    "critical": 788,
+    "high": 502
+  }
+}

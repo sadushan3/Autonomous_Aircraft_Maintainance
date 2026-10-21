@@ -2,14 +2,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import type { SubsystemAttribution } from "../../lib/types";
 
-/**
- * Gas-path layout, in the order air actually flows through a turbofan.
- *
- * `x`/`w` are fractions of the diagram width so the whole thing scales with
- * its container, and `h` is a fraction of height — the core sections are drawn
- * taller than the bypass duct to read as an engine cross-section rather than a
- * bar chart.
- */
+
 const LAYOUT: Array<{ id: string; label: string; x: number; w: number; y: number; h: number }> = [
   { id: "fan", label: "Fan", x: 0.02, w: 0.12, y: 0.12, h: 0.76 },
   { id: "bypass", label: "Bypass Duct", x: 0.15, w: 0.7, y: 0.06, h: 0.16 },
@@ -32,14 +25,7 @@ const STATUS_STROKE: Record<string, string> = {
   nominal: "#334155",
 };
 
-/**
- * Engine cross-section shaded by each subsystem's contribution to the anomaly.
- *
- * This renders the reasoning layer's `subsystem_attribution` — a contribution
- * share, member sensors, mean residual z and elevated/nominal status per
- * physical section — which is a more interpretable answer to "why" than a flat
- * ranked sensor list, because it says *where* in the engine the deviation sits.
- */
+
 export function EngineAnatomy({
   attribution,
   height = 300,
@@ -78,7 +64,7 @@ export function EngineAnatomy({
           </marker>
         </defs>
 
-        {/* Airflow direction, front to back. */}
+
         <line
           x1={width * 0.02}
           y1={height * 0.5}

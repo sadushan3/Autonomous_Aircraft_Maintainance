@@ -1,4 +1,3 @@
-"""Contracts for optional corrections to the frozen startup prediction."""
 import tempfile
 import unittest
 import json

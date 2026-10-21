@@ -1,0 +1,16 @@
+{
+    "status": "success",
+    "input_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\data\\Maintenance_Supervisor\\Maintenance_Supervisor\\integrated\\supervisor_integrated_input.csv",
+    "total_samples": 33991,
+    "overrides_applied": 73,
+    "human_reviews_required": 33980,
+    "mean_confidence": 0.329,
+    "decisions_distribution": {
+        "continue_operation": 33857,
+        "schedule_maintenance": 77,
+        "immediate_maintenance": 31,
+        "schedule_inspection": 22,
+        "monitor_closely": 4
+    },
+    "duration_seconds": 1.6605
+}
