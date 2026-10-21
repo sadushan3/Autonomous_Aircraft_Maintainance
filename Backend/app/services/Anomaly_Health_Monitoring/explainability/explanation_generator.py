@@ -1,10 +1,3 @@
-"""Evidence-grounded narratives and local monitoring-reference SHAP.
-
-Every requested event receives residual, threshold, temporal and health evidence.
-A representative bounded alert sample receives local grouped SHAP of the full
-calibrated monitoring ensemble. Global summaries remain in the run report.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -47,14 +40,11 @@ _SEVERITY_PHRASES: Dict[str, str] = {
 
 
 class ExplanationGenerator:
-    """Builds the WHY/WHICH/WHAT/HOW narrative for reasoned anomalies."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the generator and its collaborators.
 
-        Args:
-            config: Configuration supplying explainability settings.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.ranker = SensorResidualRanker(self.config)
@@ -88,27 +78,15 @@ class ExplanationGenerator:
         extra = [c for c in evidence if c not in base or c in keys]
         return base.merge(evidence[extra], on=keys, how="left", validate="one_to_one")
 
-    # ------------------------------------------------------------------ #
-    # Narrative construction
-    # ------------------------------------------------------------------ #
+
     def _build_narrative(
         self,
         row: pd.Series,
         top_sensors: List[Dict[str, Any]],
         subsystem_attribution: List[Dict[str, Any]],
     ) -> Dict[str, str]:
-        """Compose the WHY / WHICH / WHAT / HOW text for one row.
 
-        Args:
-            row: A row from the merged reasoning + residual frame.
-            top_sensors: Output of :meth:`SensorResidualRanker.rank_row`.
-            subsystem_attribution: Output of
-                :meth:`SubsystemExplainer.explain_row`.
 
-        Returns:
-            A mapping with ``why``, ``which_sensors``, ``what_pattern``,
-            ``how_severe`` and the combined ``explanation_text``.
-        """
         severity = str(row.get("severity", "none"))
         root_cause = str(row.get("root_cause", "No fault indication"))
         subsystem = str(row.get("subsystem", "unknown"))
@@ -178,9 +156,7 @@ class ExplanationGenerator:
             "explanation_text": explanation_text,
         }
 
-    # ------------------------------------------------------------------ #
-    # Batch orchestration
-    # ------------------------------------------------------------------ #
+
     def generate(
         self,
         root_causes: pd.DataFrame,
@@ -194,19 +170,8 @@ class ExplanationGenerator:
         health: Optional[pd.DataFrame] = None,
         ensemble: Any = None,
     ) -> pd.DataFrame:
-        """Generate explanation records for every reasoned row.
 
-        Args:
-            root_causes: Output of :class:`RootCauseAnalyzer`
-                (``root_cause_analysis.csv``).
-            residuals: Residuals frame carrying ``residual_z_sensor_*`` columns.
-            include_shap: Whether to compute local grouped SHAP from
-                the calibrated monitoring ensemble for a bounded event sample.
-            engine_id: Optional restriction to a single engine.
 
-        Returns:
-            A frame of explanation records, one row per reasoned anomaly.
-        """
         self.last_report = {"shap_requested": bool(include_shap), "shap_computed": False,
                             "shap_rows_computed": 0, "shap_rows_failed": 0,
                             "explainer_used": "none", "shap_errors": []}
@@ -247,7 +212,7 @@ class ExplanationGenerator:
                 local_shap, details = MonitoringReferenceExplainer(ensemble, self.config).explain(
                     scaled, selected[keys + ["shap_sensor"]], predictions)
                 self.last_report.update(details)
-            except Exception as exc:  # explanation failure must be visible without losing narratives
+            except Exception as exc:
                 self.logger.warning("Local monitoring SHAP unavailable: %s", exc)
                 self.last_report["shap_errors"].append(str(exc))
                 self.last_report["shap_rows_failed"] = len(selected)
@@ -335,19 +300,10 @@ class ExplanationGenerator:
         )
         return result
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``explanation_reports.csv`` atomically.
 
-        Args:
-            frame: Explanation records.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.explanation_reports_csv
         )
@@ -365,18 +321,8 @@ class ExplanationGenerator:
         only_anomalies: bool = True,
         persist: bool = True,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the explainability stage.
 
-        Args:
-            root_causes: Optional in-memory input; otherwise
-                ``root_cause_analysis.csv`` is read from disk.
-            residuals: Optional in-memory input; otherwise ``residuals.csv`` is
-                read from disk.
-            include_shap: Whether to compute local SHAP for sampled events.
 
-        Returns:
-            A ``(explanations, report)`` tuple.
-        """
         self.config.ensure_directories()
         root_cause_source = root_causes
         if root_cause_source is None:
@@ -421,7 +367,7 @@ class ExplanationGenerator:
 
 
 def main() -> None:
-    """Run explanation generation standalone against the reasoning output."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     generator = ExplanationGenerator(config)

@@ -1,21 +1,3 @@
-"""
-ReasoningRuleEngine: infers a root-cause pattern from the top contributing sensors.
-
-This is a rule engine, deliberately not a trained classifier -- the research
-specification calls for this layer to stay rule- and graph-based so its
-conclusions remain auditable.  A rule fires when the top-contributing sensors
-for an anomaly fall predominantly within one subsystem (via
-:mod:`sensor_dependency_graph`) and the residual trend for that subsystem is
-rising.  Each rule states its cause, an inspection focus for a technician, and
-a likelihood in [0, 1] reflecting how cleanly the evidence matched -- not a
-calibrated probability, since these are hand-authored rules, not a fitted
-model.
-
-Every rule output carries ``hard_causal_claim=False``: the dependency graph
-encodes documented thermodynamic coupling, and a rule matching that pattern is
-evidence *consistent with* a cause, not proof of it.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,17 +13,7 @@ from app.utils.Anomaly_Health_Monitoring.utils import get_logger
 
 @dataclass
 class RuleMatch:
-    """One fired rule's conclusion.
 
-    Attributes:
-        cause: Root-cause description.
-        subsystem: The implicated subsystem label.
-        likelihood: Evidence-strength score in [0, 1].
-        evidence: Facts that caused this rule to fire.
-        rule_id: Identifier of the matched rule.
-        inspection_focus: What a technician should physically examine.
-        recommended_action: Suggested maintenance action.
-    """
 
     cause: str
     subsystem: str
@@ -52,7 +24,6 @@ class RuleMatch:
     recommended_action: str
 
 
-#: Subsystem -> (cause description, inspection focus, recommended action).
 _SUBSYSTEM_CAUSE_TEMPLATES: Dict[str, Tuple[str, str, str]] = {
     "hpc": (
         "High-Pressure Compressor efficiency degradation",
@@ -103,37 +74,25 @@ _SUBSYSTEM_CAUSE_TEMPLATES: Dict[str, Tuple[str, str, str]] = {
 
 
 class ReasoningRuleEngine:
-    """Fires subsystem-pattern rules against ranked sensor contributions."""
+
 
     def __init__(
         self,
         config: Optional[Config] = None,
         graph: Optional[SensorDependencyGraph] = None,
     ) -> None:
-        """Initialise the rule engine.
 
-        Args:
-            config: Configuration supplying reasoning thresholds.
-            graph: Optional injected dependency graph, for testing.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.graph = graph or SensorDependencyGraph(self.config)
 
-    # ------------------------------------------------------------------ #
-    # Rule evaluation
-    # ------------------------------------------------------------------ #
+
     def _subsystem_concentration(
         self, top_sensors: List[str]
     ) -> Dict[str, float]:
-        """Measure how concentrated the top sensors are within each subsystem.
 
-        Args:
-            top_sensors: Ranked contributing sensors, highest first.
 
-        Returns:
-            A mapping of subsystem to a rank-weighted concentration score.
-        """
         weights: Dict[str, float] = {}
         for rank, sensor in enumerate(top_sensors):
             subsystem = self.graph.subsystem_of(sensor)
@@ -147,21 +106,8 @@ class ReasoningRuleEngine:
         trend_rising: bool,
         health_state: str = "Healthy",
     ) -> RuleMatch:
-        """Fire the best-matching rule for a set of contributing sensors.
 
-        Args:
-            top_sensors: Ranked sensors by residual contribution, highest
-                first (typically the top-k from
-                :meth:`ResidualCalculator.top_contributors`).
-            trend_rising: Whether the aggregate residual trend is rising,
-                strengthening the match.
-            health_state: The engine's current health state label, used only
-                to phrase the recommended urgency.
 
-        Returns:
-            The best-matching :class:`RuleMatch`. Falls back to a low-likelihood
-            'no clear pattern' match when the input is empty.
-        """
         if not top_sensors:
             return RuleMatch(
                 cause="No fault indication",
@@ -213,19 +159,8 @@ class ReasoningRuleEngine:
     def rank_candidates(
         self, top_sensors: List[str], trend_rising: bool, health_state: str = "Healthy"
     ) -> List[RuleMatch]:
-        """Return every subsystem hypothesis ranked by concentration, not just the top one.
 
-        Useful for the explainability layer, which may want to show the
-        second-most-likely cause alongside the primary one.
 
-        Args:
-            top_sensors: Ranked contributing sensors.
-            trend_rising: Whether the aggregate residual trend is rising.
-            health_state: Current health state label.
-
-        Returns:
-            A list of :class:`RuleMatch`, most likely first.
-        """
         if not top_sensors:
             return [self.evaluate(top_sensors, trend_rising, health_state)]
 
@@ -258,7 +193,7 @@ class ReasoningRuleEngine:
 
 
 def main() -> None:
-    """Demonstrate the rule engine against a synthetic sensor pattern."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     engine = ReasoningRuleEngine(config)

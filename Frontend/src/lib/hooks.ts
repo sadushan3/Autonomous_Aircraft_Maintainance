@@ -105,22 +105,14 @@ export function useFeatureRouting() {
   return useQuery({ queryKey: ["feature-routing"], queryFn: api.featureRouting });
 }
 
-/**
- * The Anomaly & Health component's own dashboard.
- *
- * This is the only endpoint that carries the explainability layer -- generated
- * narrative, ranked contributing sensors, subsystem attribution and detector
- * agreement. The fused /integration/dashboard keeps root_cause but drops the
- * rest, so pages that show "why" must read from here.
- */
+
 export function useAnomalyDashboard(engineId?: number) {
   return useQuery({
     queryKey: ["anomaly-dashboard", engineId],
     queryFn: () => api.anomalyDashboard(engineId),
-    // Not LIVE_MS: this payload is a pipeline artefact that only changes when
-    // the pipeline re-runs, and building it reduces a 216 MB table. Polling it
-    // every 15s spent that repeatedly and, before the endpoint was made
-    // read-only, let one poll collide with the previous one mid-write.
+    networkMode: "always",
+
+
     refetchInterval: 60_000,
   });
 }
@@ -160,21 +152,14 @@ export function useFeedbackThresholds() {
   });
 }
 
-/**
- * Submit an operator verdict.
- *
- * This is the entry point to the component's learning loop: the verdict is
- * stored, matched back to the anomaly in alert memory, and the adaptive
- * threshold is recomputed from the full feedback history. Nothing in the UI
- * reached this before, so the loop had never run on real input.
- */
+
 export function useSubmitFeedback() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: api.submitFeedback,
     onSuccess: () => {
-      // The verdict can move the threshold, which changes what counts as an
-      // anomaly, so the dependent views are refetched rather than left stale.
+
+
       qc.invalidateQueries({ queryKey: ["feedback-summary"] });
       qc.invalidateQueries({ queryKey: ["feedback-thresholds"] });
       qc.invalidateQueries({ queryKey: ["anomaly-dashboard"] });
@@ -460,16 +445,12 @@ export function usePmTrajectory() {
   });
 }
 
-/**
- * Held-out validation results for the Anomaly & Health detector.
- *
- * Static offline output -- computed once against ground-truth labels the API
- * never sees -- so it is cached hard rather than polled.
- */
+
 export function useAnomalyEvaluation() {
   const q = useQuery({
     queryKey: ["anomaly-evaluation"],
     queryFn: () => api.anomalyEvaluation(),
+    networkMode: "always",
     staleTime: LIVE_MS,
     refetchInterval: () => refetchIntervalMs(),
   });
@@ -526,28 +507,18 @@ export function useFailureRiskPredict() {
   return { ...m, inferenceMs, predictedAt };
 }
 
-/**
- * The digital twin's training and validation evidence.
- *
- * Offline artefacts written once by the pipeline, so this is cached hard
- * rather than polled -- nothing about it changes between renders.
- */
+
 export function useTwinMetrics() {
   const q = useQuery({
     queryKey: ["twin-metrics"],
     queryFn: () => api.twinMetrics(),
-    staleTime: Infinity,
+    staleTime: LIVE_MS,
+    refetchInterval: () => refetchIntervalMs(),
   });
   return { ...q, available: q.data?.available ?? false };
 }
 
-/**
- * One engine's actual-vs-twin trace for one sensor.
- *
- * Keyed on engine and sensor so React Query keeps every pair the user has
- * already looked at: the backend read is ~3.5 s cold and instant warm, and
- * re-fetching on every dropdown change would make the picker feel broken.
- */
+
 export function useTwinTrace(
   engineId?: number | string,
   sensor?: string,
@@ -557,31 +528,23 @@ export function useTwinTrace(
     queryKey: ["twin-trace", engineId, sensor, maxPoints],
     queryFn: () => api.twinTrace(engineId!, sensor!, maxPoints),
     enabled: engineId !== undefined && !!sensor,
-    staleTime: Infinity,
+    staleTime: LIVE_MS,
+    refetchInterval: () => refetchIntervalMs(),
   });
 }
 
-/**
- * Detector weights and the fusion calibration rule, read from backend config.
- *
- * Static configuration, so it is cached rather than polled.
- */
+
 export function useDetectorConfig() {
   return useQuery({
     queryKey: ["detector-config"],
     queryFn: () => api.detectorConfig(),
-    staleTime: Infinity,
+    networkMode: "always",
+    staleTime: LIVE_MS,
+    refetchInterval: () => refetchIntervalMs(),
   });
 }
 
-/**
- * One engine's health trajectory, fetched on demand.
- *
- * The bundled `/dashboard` timelines cover only the first 50 unit ids, which
- * excludes almost every engine this page ranks as worst. Keyed per engine so
- * React Query keeps each one the user has already opened; the backend caches
- * the trajectory columns, so every engine after the first returns in ms.
- */
+
 export function useEngineHealthTimeline(engineId?: number | string) {
   return useQuery({
     queryKey: ["engine-health-timeline", String(engineId ?? "")],

@@ -1,20 +1,3 @@
-"""
-Dashboard service: reshapes the wide dashboard table into API-ready views.
-
-Three views are produced from ``dashboard_data.csv``:
-
-* **Fleet statistics** -- one summary row across every engine.
-* **Engine summaries** -- one card per engine, showing its latest cycle.
-* **Alert feed** -- every row with a non-'none' alert level, most recent
-  first, for an operator's triage queue.
-* **Per-engine timelines** -- health/anomaly history for charting.
-
-This module contains no I/O beyond reading the already-assembled wide table;
-:mod:`dashboard_data_generator` owns producing that table, and
-:mod:`dashboard_api` owns exposing these views plus the integration handoff
-file over HTTP.
-"""
-
 from __future__ import annotations
 
 import ast
@@ -34,7 +17,7 @@ EXPLANATION_EVIDENCE_COLUMNS = [
     "cause_support_type", "cause_likelihood", "candidate_causes", "anomaly_margin", "hard_causal_claim",
 ]
 
-#: Columns pulled onto an engine card / timeline point when present.
+
 _OPTIONAL_COLUMNS = [
     "health_index", "health_index_target", "health_score", "health_state", "health_trend",
     "remaining_health_pct", "anomaly_score", "anomaly_flag", "anomaly_type",
@@ -43,42 +26,31 @@ _OPTIONAL_COLUMNS = [
     "twin_spread_mean", "deterioration_rate", "reliability_score",
     "uncertainty_score", "model_agreement", "detector_agreement",
     "evolution_pattern",
-    # Per-detector scores and the calibrated cut. Without these the UI can show
-    # that a row was flagged but not which of the four detectors drove it, which
-    # is the first question anyone asks of an anomaly.
+
+
     "isolation_forest_score", "mahalanobis_score", "lstm_ae_score",
     "residual_rule_score", "condition_consensus_score", "threshold_used", "anomaly_persistence_cycles",
     "is_anomalous", "early_warning_score",
-    # Structured explainability. `subsystem_attribution` maps the deviation
-    # onto physical engine sections with a contribution share each, which is a
-    # far more interpretable answer to "why" than a flat sensor list -- it was
-    # being computed for every explained anomaly and thrown away at the API.
+
+
     "subsystem_attribution", "why", "which_sensors", "what_pattern",
     "how_severe", "shap_top_features",
 ] + EXPLANATION_EVIDENCE_COLUMNS
 
 
 class DashboardService:
-    """Reshapes the wide dashboard table into fleet/engine/alert/timeline views."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the service.
 
-        Args:
-            config: Configuration supplying the dashboard-data path.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
-    # ------------------------------------------------------------------ #
-    # Loading
-    # ------------------------------------------------------------------ #
-    def load(self) -> pd.DataFrame:
-        """Load ``dashboard_data.csv``.
 
-        Returns:
-            The wide dashboard table.
-        """
+    def load(self) -> pd.DataFrame:
+
+
         return read_csv(
             self.config.paths.processed_path(self.config.paths.dashboard_data_csv),
             required_columns=get_identity_columns(),
@@ -87,14 +59,8 @@ class DashboardService:
 
     @staticmethod
     def _latest_per_engine(frame: pd.DataFrame) -> pd.DataFrame:
-        """Reduce a frame to each engine's most recent cycle.
 
-        Args:
-            frame: The wide dashboard table.
 
-        Returns:
-            One row per engine, its latest cycle.
-        """
         return (
             frame.sort_values("cycle")
             .groupby("unit", as_index=False, sort=True)
@@ -103,30 +69,18 @@ class DashboardService:
             .reset_index(drop=True)
         )
 
-    # ------------------------------------------------------------------ #
-    # Fleet statistics
-    # ------------------------------------------------------------------ #
+
     def fleet_statistics(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Compute fleet-wide rollup statistics.
 
-        Args:
-            frame: The wide dashboard table.
 
-        Returns:
-            A mapping matching the ``FleetStatistics`` schema.
-        """
         latest = self._latest_per_engine(frame)
         state_counts = latest.get("health_state", pd.Series(dtype=object)).value_counts().to_dict()
         type_counts = frame.get("anomaly_type", pd.Series(dtype=object)).value_counts().to_dict()
         cause_counts = (
             frame.get("root_cause", pd.Series(dtype=object)).dropna().value_counts().head(5).to_dict()
         )
-        #: Health-state distribution across every recorded cycle of every
-        #: engine's lifetime, not just each engine's latest/most-recent cycle.
-        #: ``engines_*`` above answers "how is the fleet doing right now" (and
-        #: is naturally skewed toward degraded states for run-to-failure
-        #: trajectories, since every engine's *latest* row is near end-of-life
-        #: by construction); this answers "how healthy is a lifetime overall".
+
+
         lifetime_state_counts = frame.get("health_state", pd.Series(dtype=object)).value_counts().to_dict()
 
         return {
@@ -151,18 +105,10 @@ class DashboardService:
             "lifetime_rows_failure_risk": int(lifetime_state_counts.get("Failure Risk", 0)),
         }
 
-    # ------------------------------------------------------------------ #
-    # Engine cards
-    # ------------------------------------------------------------------ #
+
     def engine_summaries(self, frame: pd.DataFrame) -> List[Dict[str, Any]]:
-        """Build one summary card per engine.
 
-        Args:
-            frame: The wide dashboard table.
 
-        Returns:
-            A list of engine-summary dictionaries.
-        """
         latest = self._latest_per_engine(frame)
         totals = frame.groupby("unit")["cycle"].max().to_dict()
         cards: List[Dict[str, Any]] = []
@@ -179,21 +125,12 @@ class DashboardService:
             cards.append(self._sanitize(card))
         return cards
 
-    # ------------------------------------------------------------------ #
-    # Alert feed
-    # ------------------------------------------------------------------ #
+
     def alert_feed(self, frame: pd.DataFrame, limit: int = 100) -> List[Dict[str, Any]]:
-        """Build the operator alert feed, most severe/recent first.
 
-        Args:
-            frame: The wide dashboard table.
-            limit: Maximum alerts to return.
 
-        Returns:
-            A list of alert-item dictionaries.
-        """
         if "alert_level" not in frame.columns:
-            candidate = frame[frame.get("anomaly_flag", False) == True]  # noqa: E712
+            candidate = frame[frame.get("anomaly_flag", False) == True]
         else:
             candidate = frame[frame["alert_level"].fillna("none") != "none"]
 
@@ -225,19 +162,10 @@ class DashboardService:
             items.append(self._sanitize(item))
         return items
 
-    # ------------------------------------------------------------------ #
-    # Timelines
-    # ------------------------------------------------------------------ #
+
     def engine_timeline(self, frame: pd.DataFrame, engine_id: int) -> List[Dict[str, Any]]:
-        """Build the full cycle-by-cycle timeline for one engine.
 
-        Args:
-            frame: The wide dashboard table.
-            engine_id: Engine identifier.
 
-        Returns:
-            A list of timeline-point dictionaries, ordered by cycle.
-        """
         engine_rows = frame[frame["unit"] == engine_id].sort_values("cycle")
         points: List[Dict[str, Any]] = []
         for _, row in engine_rows.iterrows():
@@ -248,10 +176,8 @@ class DashboardService:
                 "twin_spread_mean", "deterioration_rate", "reliability_score",
                 "uncertainty_score", "model_agreement", "detector_agreement",
                 "evolution_pattern",
-                # Ground truth: 100 * clip(RUL, 0, rul_cap) / rul_cap. The health
-                # index is computed without it, so plotting the two together
-                # shows an unsupervised index against the true remaining-life
-                # curve rather than against nothing.
+
+
                 "health_index_target",
             ]:
                 if column in row.index and pd.notna(row[column]):
@@ -260,28 +186,12 @@ class DashboardService:
         return points
 
     def all_timelines(self, frame: pd.DataFrame, max_engines: int = 50) -> Dict[str, List[Dict[str, Any]]]:
-        """Build timelines for every engine, up to a cap.
 
-        Args:
-            frame: The wide dashboard table.
-            max_engines: Maximum number of engines to include, to bound
-                response size for large fleets.
 
-        Returns:
-            A mapping of engine id (as string) to its timeline.
-        """
         engines = sorted(frame["unit"].unique())[:max_engines]
         return {str(engine): self.engine_timeline(frame, engine) for engine in engines}
 
-    # ------------------------------------------------------------------ #
-    # Helpers
-    # ------------------------------------------------------------------ #
-    #: Columns that carry a stringified Python list in the wide CSV (several
-    #: upstream stages stringify list-typed columns before writing CSVs) and
-    #: must be parsed back into real lists before they reach a Pydantic model.
-    #: Columns stored as a stringified Python literal in CSV that must be
-    #: parsed back before serialising. `subsystem_attribution` is a list of
-    #: dicts, not a flat list, so the parser has to accept both shapes.
+
     _LIST_COLUMNS = {
         "top_sensors",
         "which_sensors",
@@ -293,16 +203,8 @@ class DashboardService:
 
     @classmethod
     def _sanitize(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Convert NumPy scalars and stringified lists into native JSON types.
 
-        Args:
-            payload: A dictionary possibly containing NumPy scalar values and
-                CSV-stringified list columns.
 
-        Returns:
-            The same dictionary with NumPy types converted and known list
-            columns parsed back into actual lists.
-        """
         clean: Dict[str, Any] = {}
         for key, value in payload.items():
             if key == "health_evidence" and isinstance(value, str):
@@ -328,11 +230,8 @@ class DashboardService:
         return clean
 
     def build_all(self) -> Dict[str, Any]:
-        """Build every dashboard view in one call.
 
-        Returns:
-            A mapping with ``fleet``, ``engines``, ``alerts`` and ``timeline``.
-        """
+
         frame = self.load()
         return {
             "fleet": self.fleet_statistics(frame),
@@ -343,7 +242,7 @@ class DashboardService:
 
 
 def main() -> None:
-    """Build every dashboard view standalone and print a summary."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     service = DashboardService(config)

@@ -1,12 +1,3 @@
-"""
-Schemas for the health-monitoring and anomaly-detection layers.
-
-These models describe what the component reports per ``(engine_id, cycle)``:
-the health index and state, the individual detector scores, the fused anomaly
-score, and the operational-versus-fault classification that keeps regime
-changes from masquerading as faults.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -23,12 +14,8 @@ from app.schemas.Anomaly_Health_Monitoring.common_schema import (
 )
 
 
-# --------------------------------------------------------------------------- #
-# Health monitoring
-# --------------------------------------------------------------------------- #
-
 class HealthRecord(StrictModel):
-    """Health assessment for one engine at one cycle."""
+
 
     engine_id: int = Field(..., description="Engine identifier.")
     cycle: int = Field(..., ge=1)
@@ -62,7 +49,7 @@ class HealthRecord(StrictModel):
 
 
 class HealthIndexResponse(BaseResponse):
-    """Result of the health-index / health-score stage."""
+
 
     rows: int = Field(default=0, ge=0)
     engines: int = Field(default=0, ge=0)
@@ -88,12 +75,8 @@ class HealthIndexResponse(BaseResponse):
     )
 
 
-# --------------------------------------------------------------------------- #
-# Anomaly detection
-# --------------------------------------------------------------------------- #
-
 class DetectorScores(StrictModel):
-    """Raw per-detector scores, each normalised into [0, 1]."""
+
 
     isolation_forest_score: float = Field(default=0.0, ge=0.0, le=1.0)
     mahalanobis_score: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -103,7 +86,7 @@ class DetectorScores(StrictModel):
 
 
 class AnomalyRecord(StrictModel):
-    """A fused anomaly assessment for one engine at one cycle."""
+
 
     engine_id: int = Field(..., description="Engine identifier.")
     cycle: int = Field(..., ge=1)
@@ -141,12 +124,7 @@ class AnomalyRecord(StrictModel):
 
 
 class AnomalyDetectionRequest(StrictModel):
-    """Parameters for the anomaly-detection stage.
 
-    Inference-only by design: this endpoint always reloads the persisted
-    detectors rather than refitting them, so no retrain flag is exposed here.
-    Refitting is a deliberate offline action via the pipeline scripts.
-    """
 
     detectors: Optional[List[str]] = Field(
         default=None,
@@ -166,7 +144,7 @@ class AnomalyDetectionRequest(StrictModel):
 
 
 class DetectorSummary(StrictModel):
-    """How one detector behaved across the run."""
+
 
     name: str = Field(...)
     threshold: float = Field(default=0.0)
@@ -178,7 +156,7 @@ class DetectorSummary(StrictModel):
 
 
 class AnomalyDetectionResponse(BaseResponse):
-    """Result of the anomaly-detection stage."""
+
 
     rows: int = Field(default=0, ge=0)
     engines: int = Field(default=0, ge=0)

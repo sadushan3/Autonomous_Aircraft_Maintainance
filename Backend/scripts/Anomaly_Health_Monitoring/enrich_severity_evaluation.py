@@ -1,4 +1,3 @@
-"""Summarize archived scores with frozen severity cuts; no pipeline or training."""
 from __future__ import annotations
 
 import copy
@@ -64,7 +63,7 @@ def main() -> None:
         "rows": len(frame),
         "method": "Existing SeverityClassifier.classify over archived ready test scores; no fitting or model inference",
     }
-    # Preserve all existing detection measurements exactly.
+
     unchanged = copy.deepcopy(report["metrics"])
     for key in ("severity_mean_rul", "severity_row_counts", "severity_summary_note"):
         unchanged["test"].pop(key, None)

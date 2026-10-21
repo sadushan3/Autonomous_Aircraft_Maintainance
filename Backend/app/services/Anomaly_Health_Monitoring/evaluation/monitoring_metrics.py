@@ -1,8 +1,3 @@
-"""Auditable monitoring metrics; RUL condition bands are explicitly proxies.
-
-Intervals resample whole engines, preserving serial dependence within each
-trajectory. No threshold is fitted by these evaluation functions.
-"""
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +11,7 @@ def engine_columns(frame: pd.DataFrame) -> list[str]:
 
 
 def boolean_values(series: pd.Series) -> np.ndarray:
-    """Parse CSV flags without interpreting the string 'False' as true."""
+
     converted = series.map({True: True, False: False, 1: True, 0: False,
                             "True": True, "False": False, "true": True, "false": False})
     if converted.isna().any():
@@ -31,6 +26,8 @@ def binary_metrics(labels: np.ndarray, scores: np.ndarray, flags: np.ndarray) ->
     ratio = lambda a, b: float(a / b) if b else None
     return {"rows": len(y), "true_positive": tp, "false_positive": fp,
             "false_negative": fn, "true_negative": tn,
+            "accuracy": ratio(tp + tn, len(y)),
+            "always_healthy_accuracy": ratio(tn + fp, len(y)),
             "precision": ratio(tp, tp + fp), "recall": ratio(tp, tp + fn),
             "f1": ratio(2 * tp, 2 * tp + fp + fn),
             "false_alarm_rate": ratio(fp, fp + tn),
@@ -38,8 +35,27 @@ def binary_metrics(labels: np.ndarray, scores: np.ndarray, flags: np.ndarray) ->
             "average_precision": float(average_precision_score(y, scores)) if y.any() and (~y).any() else None}
 
 
+def condition_candidate_improves(before: dict, after: dict, false_alarm_bound: float) -> bool:
+
+    def accepts(b, a, strict):
+        keys = ("f1", "recall", "false_alarm_rate")
+        if any(b.get(key) is None or a.get(key) is None for key in keys):
+            return False
+        return (a["f1"] > b["f1"] if strict else a["f1"] >= b["f1"] - 1e-12) and (
+            a["recall"] > b["recall"] if strict else a["recall"] >= b["recall"] - 1e-12) and (
+            a["false_alarm_rate"] <= b["false_alarm_rate"] + false_alarm_bound + 1e-12)
+    if not accepts(before, after, True) or any(before.get(key) is None or after.get(key) is None
+            or after[key] < before[key] - 1e-12 for key in ("auc", "average_precision")):
+        return False
+    for name, candidate in after.get("per_subset", {}).items():
+        baseline = before.get("per_subset", {}).get(name)
+        if baseline is None or not accepts(baseline, candidate, False):
+            return False
+    return True
+
+
 def engine_intervals(frame: pd.DataFrame, *, samples: int = 300, seed: int = 20261011) -> dict[str, Any]:
-    """Percentile intervals from engine-level confusion-count bootstrap."""
+
     counts = frame.groupby(engine_columns(frame), sort=True)[["tp", "fp", "fn", "tn"]].sum().to_numpy(float)
     if len(counts) < 2:
         return {"available": False, "reason": "At least two engines are required."}

@@ -1,15 +1,3 @@
-"""
-Shared Pydantic models and enumerations for the component's API surface.
-
-Everything here is transport-level: enums that pin down the vocabulary used
-across stages, a common response envelope, and the ``(engine_id, cycle)``
-integration key.  Domain logic lives in the service layer, never here.
-
-Note on the key naming convention: internally the component always uses
-``unit``.  The name ``engine_id`` appears only at the API / handoff boundary,
-which is exactly what these schemas represent.
-"""
-
 from __future__ import annotations
 
 from enum import Enum
@@ -18,12 +6,8 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-# --------------------------------------------------------------------------- #
-# Vocabulary
-# --------------------------------------------------------------------------- #
-
 class StageStatus(str, Enum):
-    """Outcome of a pipeline stage."""
+
 
     SUCCESS = "success"
     FAILED = "failed"
@@ -31,11 +15,7 @@ class StageStatus(str, Enum):
 
 
 class HealthState(str, Enum):
-    """The five-level health state ladder.
 
-    Ordered from best to worst; the ordering is meaningful and is relied upon
-    by the trend tracker and the alert engine.
-    """
 
     HEALTHY = "Healthy"
     DEGRADING = "Degrading"
@@ -45,7 +25,7 @@ class HealthState(str, Enum):
 
 
 class Severity(str, Enum):
-    """Anomaly severity bands."""
+
 
     NONE = "none"
     LOW = "low"
@@ -55,11 +35,7 @@ class Severity(str, Enum):
 
 
 class AnomalyType(str, Enum):
-    """Whether a detection reflects a fault or merely an operating change.
 
-    Separating these two is the core novelty requirement: a regime change in
-    FD002/FD004 must not be reported as a fault.
-    """
 
     NONE = "none"
     FAULT = "fault"
@@ -67,7 +43,7 @@ class AnomalyType(str, Enum):
 
 
 class AlertLevel(str, Enum):
-    """Operator-facing alert escalation levels."""
+
 
     NONE = "none"
     INFO = "info"
@@ -77,7 +53,7 @@ class AlertLevel(str, Enum):
 
 
 class EvolutionPattern(str, Enum):
-    """How an anomaly developed over time."""
+
 
     STABLE = "stable"
     GRADUAL = "gradual"
@@ -86,7 +62,7 @@ class EvolutionPattern(str, Enum):
 
 
 class FeedbackVerdict(str, Enum):
-    """Operator judgement on a raised alert."""
+
 
     ACCEPTED = "accepted"
     FALSE_ALARM = "false_alarm"
@@ -94,12 +70,8 @@ class FeedbackVerdict(str, Enum):
     UNKNOWN = "unknown"
 
 
-# --------------------------------------------------------------------------- #
-# Base models
-# --------------------------------------------------------------------------- #
-
 class StrictModel(BaseModel):
-    """Base model with a consistent configuration for the whole component."""
+
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -110,14 +82,14 @@ class StrictModel(BaseModel):
 
 
 class EngineCycleKey(StrictModel):
-    """The integration key every output row is addressable by."""
+
 
     engine_id: int = Field(..., description="Engine identifier (alias of 'unit').")
     cycle: int = Field(..., ge=1, description="Operational cycle number.")
 
 
 class BaseResponse(StrictModel):
-    """Common envelope returned by every endpoint."""
+
 
     status: StageStatus = Field(
         default=StageStatus.SUCCESS, description="Outcome of the request."
@@ -127,7 +99,7 @@ class BaseResponse(StrictModel):
 
 
 class ErrorResponse(StrictModel):
-    """Structured error payload returned on failure."""
+
 
     status: StageStatus = Field(default=StageStatus.FAILED)
     error_type: str = Field(..., description="Exception class name.")
@@ -139,7 +111,7 @@ class ErrorResponse(StrictModel):
 
 
 class StageResponse(BaseResponse):
-    """Result of running a single pipeline stage."""
+
 
     stage: str = Field(..., description="Stage identifier, e.g. '03_digital_twin'.")
     rows_in: int = Field(default=0, ge=0, description="Rows read from the input CSV.")
@@ -155,7 +127,7 @@ class StageResponse(BaseResponse):
 
 
 class PipelineResponse(BaseResponse):
-    """Result of a full end-to-end pipeline run."""
+
 
     stages: List[StageResponse] = Field(
         default_factory=list, description="Per-stage results in execution order."
@@ -172,7 +144,7 @@ class PipelineResponse(BaseResponse):
 
 
 class PaginationParams(StrictModel):
-    """Row-window controls for endpoints returning tabular data."""
+
 
     limit: int = Field(default=500, ge=1, le=100_000, description="Maximum rows.")
     offset: int = Field(default=0, ge=0, description="Rows to skip.")
@@ -182,7 +154,7 @@ class PaginationParams(StrictModel):
 
 
 class MetricsPayload(StrictModel):
-    """A named block of evaluation metrics."""
+
 
     name: str = Field(..., description="Metric group name, e.g. 'digital_twin'.")
     values: Dict[str, Any] = Field(default_factory=dict)

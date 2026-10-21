@@ -1,22 +1,3 @@
-"""
-KMeans-based operating-regime discovery.
-
-C-MAPSS encodes the operating condition in three settings columns
-(altitude, Mach number, throttle resolver angle).  FD001 and FD003 run at a
-single condition; FD002 and FD004 cycle through six.  Those six form tight,
-well-separated clusters in the 3-D settings space, which is exactly the shape
-KMeans handles well.
-
-The number of regimes is either taken from config or selected automatically by
-maximising the silhouette score over a candidate range.  Auto-selection matters
-when subsets are pooled: FD001 alone wants k=1, FD001+FD002 wants k=6, and
-hardcoding either would corrupt the other.
-
-Settings are standardised before clustering because the three channels have
-wildly different magnitudes (altitude ~0-42, Mach ~0-0.84, throttle ~60-100);
-without that, altitude alone would decide every cluster.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,17 +20,13 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 
 
 class KMeansContextModel:
-    """Discovers operating regimes by clustering the three settings columns."""
 
-    #: Filename used for the persisted model bundle.
+
     ARTIFACT_NAME = "context_kmeans.pkl"
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the model.
 
-        Args:
-            config: Configuration supplying the cluster count and search range.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.columns: List[str] = get_op_setting_columns()
@@ -58,21 +35,10 @@ class KMeansContextModel:
         self.n_modes: int = 0
         self.silhouette: Optional[float] = None
 
-    # ------------------------------------------------------------------ #
-    # Fitting
-    # ------------------------------------------------------------------ #
+
     def _matrix(self, frame: pd.DataFrame) -> np.ndarray:
-        """Extract and sanitise the settings matrix.
 
-        Args:
-            frame: Data containing the operating settings.
 
-        Returns:
-            An ``(n_rows, 3)`` float array.
-
-        Raises:
-            AnomalyHealthError: If a settings column is absent.
-        """
         missing = [c for c in self.columns if c not in frame.columns]
         if missing:
             raise AnomalyHealthError(
@@ -82,34 +48,14 @@ class KMeansContextModel:
         return np.nan_to_num(values, nan=0.0, posinf=0.0, neginf=0.0)
 
     def select_k(self, values: np.ndarray, raw: Optional[np.ndarray] = None) -> Tuple[int, Optional[float]]:
-        """Choose the regime count by maximising the silhouette score.
 
-        A silhouette cannot be computed for k=1, so single-regime data is
-        detected separately using the *raw* (pre-scaling) settings range.
-        Checking dispersion on the scaled matrix would never work: a fitted
-        StandardScaler normalises every column to unit variance by
-        construction, so scaled data always looks dispersed even when the raw
-        settings are flat (FD001/FD003) and the apparent spread is only
-        measurement noise blown up by the scaler.
 
-        Args:
-            values: Scaled settings matrix, used for the silhouette search.
-            raw: The pre-scaling settings matrix, used only to detect the
-                single-regime case. Falls back to ``values`` when omitted.
-
-        Returns:
-            A ``(k, silhouette)`` tuple; the score is None when k=1.
-        """
         configured = int(self.config.context.n_modes)
         if configured > 0:
             self.logger.info("Using configured operating-mode count k=%d", configured)
             return configured, None
 
-        # A genuine multi-regime subset separates settings by whole physical
-        # units (e.g. altitude spans ~0-42, Mach ~0-0.84); a single-condition
-        # subset only ever shows sub-unit measurement noise around one point.
-        # Comparing the raw range against a small absolute band per column
-        # tells the two apart regardless of how the noise later gets scaled.
+
         reference = raw if raw is not None else values
         column_range = np.ptp(reference, axis=0)
         single_regime_band = np.array([1.0, 0.05, 2.0])[: column_range.shape[0]]
@@ -159,14 +105,8 @@ class KMeansContextModel:
         return best_k, best_score
 
     def fit(self, frame: pd.DataFrame) -> "KMeansContextModel":
-        """Fit the scaler and KMeans model on the operating settings.
 
-        Args:
-            frame: Data containing the operating settings.
 
-        Returns:
-            This fitted instance.
-        """
         raw = self._matrix(frame)
         self.scaler = StandardScaler().fit(raw)
         scaled = self.scaler.transform(raw)
@@ -186,43 +126,18 @@ class KMeansContextModel:
         )
         return self
 
-    # ------------------------------------------------------------------ #
-    # Inference
-    # ------------------------------------------------------------------ #
+
     def predict(self, frame: pd.DataFrame) -> np.ndarray:
-        """Assign an operating regime to every row.
 
-        Args:
-            frame: Data containing the operating settings.
 
-        Returns:
-            An integer array of regime labels.
-
-        Raises:
-            AnomalyHealthError: If called before fitting or loading.
-        """
         if self.model is None or self.scaler is None:
             raise AnomalyHealthError("KMeansContextModel used before fit/load.")
         scaled = self.scaler.transform(self._matrix(frame))
         return self.model.predict(scaled).astype(int)
 
     def confidence(self, frame: pd.DataFrame) -> np.ndarray:
-        """Estimate how firmly each row belongs to its assigned regime.
 
-        KMeans has no probabilistic output, so confidence is derived from the
-        margin between the nearest and second-nearest centroid: a row sitting
-        midway between two regimes is genuinely ambiguous, and the uncertainty
-        layer should know that.
 
-        Args:
-            frame: Data containing the operating settings.
-
-        Returns:
-            A float array in [0, 1]; 1 means unambiguous membership.
-
-        Raises:
-            AnomalyHealthError: If called before fitting or loading.
-        """
         if self.model is None or self.scaler is None:
             raise AnomalyHealthError("KMeansContextModel used before fit/load.")
         if self.n_modes < 2:
@@ -239,31 +154,14 @@ class KMeansContextModel:
         return np.clip(np.nan_to_num(margin, nan=1.0), 0.0, 1.0)
 
     def fit_predict(self, frame: pd.DataFrame) -> np.ndarray:
-        """Fit the model then label the same data.
 
-        Args:
-            frame: Data containing the operating settings.
 
-        Returns:
-            An integer array of regime labels.
-        """
         return self.fit(frame).predict(frame)
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self, path: Optional[Path] = None) -> Path:
-        """Persist the fitted scaler and clustering model together.
 
-        Args:
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-
-        Raises:
-            AnomalyHealthError: If nothing has been fitted.
-        """
         if self.model is None:
             raise AnomalyHealthError("Nothing to save; fit the model first.")
         target = path or self.config.paths.model_path(self.ARTIFACT_NAME)
@@ -277,14 +175,8 @@ class KMeansContextModel:
         return save_model(bundle, target, config=self.config)
 
     def load(self, path: Optional[Path] = None) -> "KMeansContextModel":
-        """Reload a previously persisted model bundle.
 
-        Args:
-            path: Optional explicit source.
 
-        Returns:
-            This instance, ready to predict.
-        """
         target = path or self.config.paths.model_path(self.ARTIFACT_NAME)
         bundle = load_model(target)
         self.scaler = bundle["scaler"]
@@ -296,11 +188,8 @@ class KMeansContextModel:
         return self
 
     def summary(self) -> Dict[str, Any]:
-        """Return a description of the fitted clustering.
 
-        Returns:
-            A mapping of regime count, silhouette and centroid locations.
-        """
+
         centroids: List[List[float]] = []
         if self.model is not None and self.scaler is not None:
             centroids = self.scaler.inverse_transform(
@@ -316,7 +205,7 @@ class KMeansContextModel:
 
 
 def main() -> None:
-    """Fit KMeans regimes against ``engineered_features.csv``."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
 
     config = get_config()

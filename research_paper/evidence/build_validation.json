@@ -1,0 +1,16 @@
+{
+  "pages": 7,
+  "paper_size": "US Letter",
+  "citations_resolved": 10,
+  "figures": 3,
+  "tables": 4,
+  "all_fonts_embedded": true,
+  "times_family_body": true,
+  "no_overfull_boxes": true,
+  "no_missing_glyphs_or_unresolved_references": true,
+  "independent_original_test_label_check": true,
+  "detection_counts_and_saved_metrics_reproduced": true,
+  "health_recomputed_from_current_frozen_reference": true,
+  "evaluation_status": "retrospective condition proxies; not a blind test",
+  "remaining_metadata": "Affiliation and specific conference requirements not supplied"
+}

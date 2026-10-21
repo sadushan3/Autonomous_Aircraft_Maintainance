@@ -1,23 +1,3 @@
-"""
-Per-operating-mode scaling.
-
-This module implements the single most important correctness requirement in the
-component.  In FD002 and FD004 the engine runs under six operating regimes, and
-switching regime moves several sensor readings *further* than a real fault
-does.  A globally fitted scaler therefore encodes regime identity as if it were
-degradation, and every downstream detector then reports regime changes as
-anomalies.
-
-The fix is to fit one scaler per operating mode and standardise each row
-against the distribution of its own regime.  After that transformation a value
-of ``+2`` means "two standard deviations high *for this regime*", which is a
-statement about the engine's condition rather than about its throttle setting.
-
-Scalers are persisted individually to ``models/scalers/mode_{k}.pkl`` so
-inference reproduces training exactly.  A row whose mode was never seen during
-fitting is mapped to the nearest fitted mode rather than being dropped.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -55,19 +35,11 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 
 
 class PerModeScaler:
-    """Fits and applies one scaler per operating mode.
 
-    Attributes:
-        scalers: Fitted scaler per mode label.
-        columns: The columns the scalers were fitted on, in a fixed order.
-    """
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the scaler.
 
-        Args:
-            config: Configuration supplying the scaler kind and output paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.mode_column = get_operating_mode_column()
@@ -75,51 +47,26 @@ class PerModeScaler:
         self.columns: List[str] = []
         self.mode_centroids: Dict[int, List[float]] = {}
 
-    # ------------------------------------------------------------------ #
-    # Column resolution
-    # ------------------------------------------------------------------ #
+
     def resolve_columns(self, frame: pd.DataFrame) -> List[str]:
-        """Determine which columns to scale.
 
-        The candidate list comes from the canonical resolver (active sensors
-        plus operating settings); only presence in the frame is checked.  No
-        pattern matching is performed.
 
-        Args:
-            frame: Data about to be scaled.
-
-        Returns:
-            The columns to scale, in canonical order.
-        """
         candidates = get_active_sensors(self.config) + get_op_setting_columns()
         return [name for name in candidates if name in frame.columns]
 
     def _make_scaler(self) -> Any:
-        """Instantiate a scaler of the configured kind.
 
-        Returns:
-            An unfitted scikit-learn scaler.
-        """
+
         if str(self.config.context.scaler_kind).lower() == "robust":
             return RobustScaler()
         return StandardScaler()
 
-    # ------------------------------------------------------------------ #
-    # Training
-    # ------------------------------------------------------------------ #
+
     def fit(self, frame: pd.DataFrame) -> "PerModeScaler":
-        """Fit one scaler per operating mode.
 
-        Args:
-            frame: Data carrying the operating-mode label.
 
-        Returns:
-            This fitted instance.
-
-        Raises:
-            AnomalyHealthError: If the operating-mode column is absent, which
-                means the context-modelling stage has not run.
-        """
+        from app.utils.Anomaly_Health_Monitoring.training_split import training_scope
+        frame = training_scope(frame, self.config)
         if self.mode_column not in frame.columns:
             raise AnomalyHealthError(
                 f"'{self.mode_column}' is missing. Per-mode normalisation "
@@ -141,8 +88,8 @@ class PerModeScaler:
             scaler = self._make_scaler()
 
             if len(group) < 2:
-                # A single-row mode has no dispersion to learn from. Fit on the
-                # whole dataset so the transform stays defined and stable.
+
+
                 self.logger.warning(
                     "Operating mode %d has only %d row(s); fitting its scaler on "
                     "the full dataset instead.",
@@ -173,21 +120,10 @@ class PerModeScaler:
         )
         return self
 
-    # ------------------------------------------------------------------ #
-    # Inference
-    # ------------------------------------------------------------------ #
+
     def transform(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Standardise each row against the distribution of its own mode.
 
-        Args:
-            frame: Data carrying the operating-mode label.
 
-        Returns:
-            A copy with the scaled columns replaced in place.
-
-        Raises:
-            AnomalyHealthError: If the scaler has not been fitted.
-        """
         if not self.scalers:
             raise AnomalyHealthError("PerModeScaler.transform called before fit/load.")
         if self.mode_column not in frame.columns:
@@ -208,15 +144,14 @@ class PerModeScaler:
             mode_key = int(mode)
             scaler = self.scalers.get(mode_key)
             if scaler is None:
-                fallback = self._nearest_mode(result.loc[index])
-                scaler = self.scalers[fallback]
-                self.logger.warning(
-                    "Operating mode %d was not seen during fitting; using the "
-                    "nearest fitted mode %d for %d row(s).",
-                    mode_key,
-                    fallback,
-                    len(index),
-                )
+
+
+                for row_index in index:
+                    row = result.loc[[row_index]]
+                    fallback = self._nearest_mode(row)
+                    position = result.index.get_loc(row_index)
+                    scaled_block[position] = self.scalers[fallback].transform(row[self.columns].astype(float))[0]
+                continue
             positions = result.index.get_indexer(index)
             scaled_block[positions, :] = scaler.transform(
                 result.loc[index, self.columns].astype(float)
@@ -226,18 +161,8 @@ class PerModeScaler:
         return result
 
     def _nearest_mode(self, rows: pd.DataFrame) -> int:
-        """Find the fitted mode whose centroid is closest to these rows.
 
-        This keeps inference robust when live data lands in a regime the
-        training data never covered, instead of failing or silently dropping
-        the rows.
 
-        Args:
-            rows: The rows whose mode is unknown.
-
-        Returns:
-            The nearest fitted mode label.
-        """
         settings = [c for c in get_op_setting_columns() if c in rows.columns]
         if not settings or not self.mode_centroids:
             return sorted(self.scalers.keys())[0]
@@ -255,28 +180,14 @@ class PerModeScaler:
         return best_mode
 
     def fit_transform(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Fit the per-mode scalers and immediately apply them.
 
-        Args:
-            frame: Data carrying the operating-mode label.
 
-        Returns:
-            The scaled frame.
-        """
         return self.fit(frame).transform(frame)
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save_scalers(self) -> Path:
-        """Persist every fitted scaler plus the metadata needed to reload them.
 
-        Returns:
-            The path of the metadata document.
 
-        Raises:
-            AnomalyHealthError: If nothing has been fitted.
-        """
         if not self.scalers:
             raise AnomalyHealthError("No fitted scalers to save.")
         self.config.ensure_directories()
@@ -295,14 +206,8 @@ class PerModeScaler:
         return path
 
     def load_scalers(self) -> "PerModeScaler":
-        """Reload previously fitted scalers from disk.
 
-        Returns:
-            This instance, ready to transform.
 
-        Raises:
-            AnomalyHealthError: If no scaler metadata is present.
-        """
         meta = read_json(self.config.paths.scalers / "scaler_meta.json", default=None)
         if not meta:
             raise AnomalyHealthError(
@@ -321,19 +226,10 @@ class PerModeScaler:
         self.logger.info("Loaded %d per-mode scaler(s)", len(self.scalers))
         return self
 
-    # ------------------------------------------------------------------ #
-    # Stage orchestration
-    # ------------------------------------------------------------------ #
+
     def save(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``scaled_features.csv`` atomically.
 
-        Args:
-            frame: Scaled data.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.scaled_features_csv
         )
@@ -341,14 +237,8 @@ class PerModeScaler:
         return atomic_write_csv(frame, target, config=self.config)
 
     def load_saved(self, path: Optional[Path] = None) -> pd.DataFrame:
-        """Read back ``scaled_features.csv``.
 
-        Args:
-            path: Optional explicit source.
 
-        Returns:
-            The loaded frame.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.scaled_features_csv
         )
@@ -359,17 +249,8 @@ class PerModeScaler:
         frame: Optional[pd.DataFrame] = None,
         refit: bool = True,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the scaling stage.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``context_clusters.csv``
-                is read from disk.
-            refit: Fit fresh scalers.  When False, previously saved scalers are
-                reloaded and only applied.
 
-        Returns:
-            A ``(scaled_frame, report)`` tuple.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:
@@ -380,7 +261,13 @@ class PerModeScaler:
             )
 
         if refit:
-            scaled = self.fit_transform(source)
+            from app.utils.Anomaly_Health_Monitoring.training_split import load_training_split, prepare_training_split, training_scope, record_training_scope
+            if load_training_split(self.config) is None:
+                prepare_training_split(source, self.config)
+            fitting = training_scope(source, self.config, required=True)
+            self.fit(fitting)
+            record_training_scope("scaling", fitting, self.config)
+            scaled = self.transform(source)
             self.save_scalers()
         else:
             self.load_scalers()
@@ -406,7 +293,7 @@ class PerModeScaler:
 
 
 def main() -> None:
-    """Run per-mode scaling standalone against ``context_clusters.csv``."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     scaler = PerModeScaler(config)

@@ -1,15 +1,3 @@
-"""
-Sensor residual ranking: answering "which sensors contributed" cheaply.
-
-SHAP explains the twin's *prediction*; this module explains the *deviation*
-directly from the residuals already computed, with none of SHAP's
-computational cost.  It is what the reasoning layer and the dashboard use for
-every row (SHAP is reserved for the smaller sample the explainability stage
-processes on request), and it is deliberately simple enough that an operator
-can recompute it by hand from the residual columns: rank sensors by absolute
-robust z-score, done.
-"""
-
 from __future__ import annotations
 
 from typing import Dict, List, Optional
@@ -27,32 +15,19 @@ from app.utils.Anomaly_Health_Monitoring.utils import get_logger
 
 
 class SensorResidualRanker:
-    """Ranks sensors by contribution to a row's total residual deviation."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the ranker.
 
-        Args:
-            config: Configuration supplying the default top-k count.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
     def rank_row(
         self, row: pd.Series, sensors: List[str], top_k: Optional[int] = None
     ) -> List[Dict[str, float]]:
-        """Rank one row's sensors by |residual z-score|.
 
-        Args:
-            row: A row carrying ``residual_z_sensor_*`` columns.
-            sensors: Active sensor names to consider.
-            top_k: Cap on how many to return; defaults to config.
 
-        Returns:
-            A list of ``{'sensor', 'residual_z', 'contribution'}`` mappings,
-            highest contribution first. ``contribution`` is each sensor's
-            share of the row's total absolute z-score.
-        """
         z_columns = get_residual_z_columns(sensors)
         pairs = [
             (sensor_from_residual(col), float(row.get(col, 0.0)))
@@ -76,20 +51,8 @@ class SensorResidualRanker:
     def rank_frame(
         self, frame: pd.DataFrame, sensors: List[str], top_k: Optional[int] = None
     ) -> pd.DataFrame:
-        """Compute the top contributing sensor names for every row at once.
 
-        Vectorised over the residual z-score matrix for speed on the full
-        dataset, rather than looping via :meth:`rank_row`.
 
-        Args:
-            frame: Frame carrying ``residual_z_sensor_*`` columns.
-            sensors: Active sensor names to consider.
-            top_k: Cap on how many sensors to keep per row.
-
-        Returns:
-            A frame with one column, ``top_sensors``, holding a Python list of
-            sensor names per row, ranked by |z|.
-        """
         z_columns = [c for c in get_residual_z_columns(sensors) if c in frame.columns]
         limit = int(top_k or self.config.reasoning.top_k_sensors)
         if not z_columns:
@@ -105,7 +68,7 @@ class SensorResidualRanker:
 
 
 def main() -> None:
-    """Demonstrate ranking against ``residuals.csv``."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
     from app.utils.Anomaly_Health_Monitoring.model_utils import get_identity_columns
 

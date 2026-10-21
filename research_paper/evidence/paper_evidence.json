@@ -1,0 +1,775 @@
+{
+  "scope": "Anomaly_Health_Monitoring only; retrospective condition proxies, not verified faults",
+  "model_version": "four_detector_ensemble_v1",
+  "training_plan_id": "a7640407800ce92ec8735a24ebad802b1e391843e38bf11ae0cb0d2d12d41c96",
+  "engine_roles": {
+    "fit": 396,
+    "calibration": 85,
+    "selection": 86,
+    "confirmation": 142
+  },
+  "dataset": [
+    {
+      "subset": "FD001",
+      "train_engines": 100,
+      "train_rows": 20631,
+      "test_engines": 100,
+      "test_rows": 13096
+    },
+    {
+      "subset": "FD002",
+      "train_engines": 260,
+      "train_rows": 53759,
+      "test_engines": 259,
+      "test_rows": 33991
+    },
+    {
+      "subset": "FD003",
+      "train_engines": 100,
+      "train_rows": 24720,
+      "test_engines": 100,
+      "test_rows": 16596
+    },
+    {
+      "subset": "FD004",
+      "train_engines": 249,
+      "train_rows": 61249,
+      "test_engines": 248,
+      "test_rows": 41214
+    }
+  ],
+  "independent_raw_label_check": true,
+  "maximum_fusion_reconstruction_error": 3.3306690738754696e-16,
+  "overall": {
+    "available": true,
+    "label_basis": "RUL condition proxies; not confirmed fault labels",
+    "healthy_rul_min": 125,
+    "critical_rul_max": 30,
+    "flag_policy": "escalated fault",
+    "input_rows": 104897,
+    "evaluated_rows": 83788,
+    "input_engines": 707,
+    "evaluated_engines": 690,
+    "engines_without_ready_prediction": 17,
+    "warmup_or_unready_rows_excluded": 21109,
+    "invalid_rows": 0,
+    "middle_band_rows_excluded_from_binary_metrics": 31982,
+    "healthy_rows": 49232,
+    "critical_rows": 2574,
+    "rows": 51806,
+    "true_positive": 1627,
+    "false_positive": 181,
+    "false_negative": 947,
+    "true_negative": 49051,
+    "accuracy": 0.9782264602555688,
+    "always_healthy_accuracy": 0.9503146353704204,
+    "precision": 0.8998893805309734,
+    "recall": 0.6320901320901321,
+    "f1": 0.7425832952989503,
+    "false_alarm_rate": 0.003676470588235294,
+    "auc": 0.9951612162978752,
+    "average_precision": 0.885976343574882,
+    "engine_events": {
+      "engines": 690,
+      "engines_reaching_critical": 159,
+      "critical_engines_detected": 131,
+      "detection_rate_of_reaching": 0.8238993710691824,
+      "engines_with_healthy_observations": 635,
+      "healthy_engines_with_false_alert": 15,
+      "healthy_engine_false_alert_rate": 0.023622047244094488,
+      "false_alert_episodes": 29,
+      "false_alert_episodes_per_1000_healthy_cycles": 0.5890477738056549,
+      "first_alert_rul_median": 40.5,
+      "sustained_alert_required_cycles": 3,
+      "engines_with_sustained_alert": 163,
+      "first_sustained_alert_rul_median": 38.0,
+      "lead_time_note": "RUL at the alert, including early false alerts; not proof of correct fault onset detection."
+    },
+    "confidence_intervals": {
+      "available": true,
+      "method": "whole-engine percentile bootstrap",
+      "samples": 300,
+      "seed": 20261011,
+      "confidence": 0.95,
+      "precision": [
+        0.8229963214567595,
+        0.9593249306925032
+      ],
+      "recall": [
+        0.5733865015686223,
+        0.6948072947474709
+      ],
+      "f1": [
+        0.6961511975452862,
+        0.786417902772812
+      ],
+      "false_alarm_rate": [
+        0.0013766782384260624,
+        0.006551501593949279
+      ]
+    },
+    "confirmed_label_metrics": {
+      "available": false,
+      "reason": "No independently verified fault_label column supplied."
+    }
+  },
+  "per_subset": {
+    "FD001": {
+      "available": true,
+      "label_basis": "RUL condition proxies; not confirmed fault labels",
+      "healthy_rul_min": 125,
+      "critical_rul_max": 30,
+      "flag_policy": "escalated fault",
+      "input_rows": 13096,
+      "evaluated_rows": 10096,
+      "input_engines": 100,
+      "evaluated_engines": 100,
+      "engines_without_ready_prediction": 0,
+      "warmup_or_unready_rows_excluded": 3000,
+      "invalid_rows": 0,
+      "middle_band_rows_excluded_from_binary_metrics": 4643,
+      "healthy_rows": 5121,
+      "critical_rows": 332,
+      "rows": 5453,
+      "true_positive": 247,
+      "false_positive": 0,
+      "false_negative": 85,
+      "true_negative": 5121,
+      "accuracy": 0.984412250137539,
+      "always_healthy_accuracy": 0.9391160828901522,
+      "precision": 1.0,
+      "recall": 0.7439759036144579,
+      "f1": 0.853195164075993,
+      "false_alarm_rate": 0.0,
+      "auc": 0.9997970793543242,
+      "average_precision": 0.9968947836722603,
+      "engine_events": {
+        "engines": 100,
+        "engines_reaching_critical": 25,
+        "critical_engines_detected": 20,
+        "detection_rate_of_reaching": 0.8,
+        "engines_with_healthy_observations": 89,
+        "healthy_engines_with_false_alert": 0,
+        "healthy_engine_false_alert_rate": 0.0,
+        "false_alert_episodes": 0,
+        "false_alert_episodes_per_1000_healthy_cycles": 0.0,
+        "first_alert_rul_median": 36.0,
+        "sustained_alert_required_cycles": 3,
+        "engines_with_sustained_alert": 22,
+        "first_sustained_alert_rul_median": 30.5,
+        "lead_time_note": "RUL at the alert, including early false alerts; not proof of correct fault onset detection."
+      },
+      "confidence_intervals": {
+        "available": true,
+        "method": "whole-engine percentile bootstrap",
+        "samples": 300,
+        "seed": 20261011,
+        "confidence": 0.95,
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          0.5995147553971083,
+          0.8709327279298815
+        ],
+        "f1": [
+          0.7496163202122954,
+          0.9310126302162571
+        ],
+        "false_alarm_rate": [
+          0.0,
+          0.0
+        ]
+      },
+      "confirmed_label_metrics": {
+        "available": false,
+        "reason": "No independently verified fault_label column supplied."
+      }
+    },
+    "FD002": {
+      "available": true,
+      "label_basis": "RUL condition proxies; not confirmed fault labels",
+      "healthy_rul_min": 125,
+      "critical_rul_max": 30,
+      "flag_policy": "escalated fault",
+      "input_rows": 33991,
+      "evaluated_rows": 26252,
+      "input_engines": 259,
+      "evaluated_engines": 253,
+      "engines_without_ready_prediction": 6,
+      "warmup_or_unready_rows_excluded": 7739,
+      "invalid_rows": 0,
+      "middle_band_rows_excluded_from_binary_metrics": 11925,
+      "healthy_rows": 13240,
+      "critical_rows": 1087,
+      "rows": 14327,
+      "true_positive": 678,
+      "false_positive": 0,
+      "false_negative": 409,
+      "true_negative": 13240,
+      "accuracy": 0.9714525022684442,
+      "always_healthy_accuracy": 0.9241292664200461,
+      "precision": 1.0,
+      "recall": 0.6237350505979761,
+      "f1": 0.7682719546742209,
+      "false_alarm_rate": 0.0,
+      "auc": 0.9996151301984174,
+      "average_precision": 0.9951079560933485,
+      "engine_events": {
+        "engines": 253,
+        "engines_reaching_critical": 61,
+        "critical_engines_detected": 50,
+        "detection_rate_of_reaching": 0.819672131147541,
+        "engines_with_healthy_observations": 229,
+        "healthy_engines_with_false_alert": 0,
+        "healthy_engine_false_alert_rate": 0.0,
+        "false_alert_episodes": 0,
+        "false_alert_episodes_per_1000_healthy_cycles": 0.0,
+        "first_alert_rul_median": 36.0,
+        "sustained_alert_required_cycles": 3,
+        "engines_with_sustained_alert": 58,
+        "first_sustained_alert_rul_median": 35.5,
+        "lead_time_note": "RUL at the alert, including early false alerts; not proof of correct fault onset detection."
+      },
+      "confidence_intervals": {
+        "available": true,
+        "method": "whole-engine percentile bootstrap",
+        "samples": 300,
+        "seed": 20261011,
+        "confidence": 0.95,
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          0.5370244463287638,
+          0.7044894532593323
+        ],
+        "f1": [
+          0.6987844944563177,
+          0.8266281107894529
+        ],
+        "false_alarm_rate": [
+          0.0,
+          0.0
+        ]
+      },
+      "confirmed_label_metrics": {
+        "available": false,
+        "reason": "No independently verified fault_label column supplied."
+      }
+    },
+    "FD003": {
+      "available": true,
+      "label_basis": "RUL condition proxies; not confirmed fault labels",
+      "healthy_rul_min": 125,
+      "critical_rul_max": 30,
+      "flag_policy": "escalated fault",
+      "input_rows": 16596,
+      "evaluated_rows": 13596,
+      "input_engines": 100,
+      "evaluated_engines": 100,
+      "engines_without_ready_prediction": 0,
+      "warmup_or_unready_rows_excluded": 3000,
+      "invalid_rows": 0,
+      "middle_band_rows_excluded_from_binary_metrics": 4775,
+      "healthy_rows": 8530,
+      "critical_rows": 291,
+      "rows": 8821,
+      "true_positive": 212,
+      "false_positive": 125,
+      "false_negative": 79,
+      "true_negative": 8405,
+      "accuracy": 0.9768733703661716,
+      "always_healthy_accuracy": 0.967010543022333,
+      "precision": 0.629080118694362,
+      "recall": 0.7285223367697594,
+      "f1": 0.6751592356687898,
+      "false_alarm_rate": 0.014654161781946073,
+      "auc": 0.9884531248111578,
+      "average_precision": 0.8053290845175319,
+      "engine_events": {
+        "engines": 100,
+        "engines_reaching_critical": 20,
+        "critical_engines_detected": 18,
+        "detection_rate_of_reaching": 0.9,
+        "engines_with_healthy_observations": 95,
+        "healthy_engines_with_false_alert": 6,
+        "healthy_engine_false_alert_rate": 0.06315789473684211,
+        "false_alert_episodes": 19,
+        "false_alert_episodes_per_1000_healthy_cycles": 2.2274325908558033,
+        "first_alert_rul_median": 61.5,
+        "sustained_alert_required_cycles": 3,
+        "engines_with_sustained_alert": 26,
+        "first_sustained_alert_rul_median": 62.0,
+        "lead_time_note": "RUL at the alert, including early false alerts; not proof of correct fault onset detection."
+      },
+      "confidence_intervals": {
+        "available": true,
+        "method": "whole-engine percentile bootstrap",
+        "samples": 300,
+        "seed": 20261011,
+        "confidence": 0.95,
+        "precision": [
+          0.4400172821539021,
+          0.8979205293408729
+        ],
+        "recall": [
+          0.547599168073306,
+          0.8948951863354037
+        ],
+        "f1": [
+          0.5284915515512519,
+          0.834052140590931
+        ],
+        "false_alarm_rate": [
+          0.0026512996570024184,
+          0.032519550186337697
+        ]
+      },
+      "confirmed_label_metrics": {
+        "available": false,
+        "reason": "No independently verified fault_label column supplied."
+      }
+    },
+    "FD004": {
+      "available": true,
+      "label_basis": "RUL condition proxies; not confirmed fault labels",
+      "healthy_rul_min": 125,
+      "critical_rul_max": 30,
+      "flag_policy": "escalated fault",
+      "input_rows": 41214,
+      "evaluated_rows": 33844,
+      "input_engines": 248,
+      "evaluated_engines": 237,
+      "engines_without_ready_prediction": 11,
+      "warmup_or_unready_rows_excluded": 7370,
+      "invalid_rows": 0,
+      "middle_band_rows_excluded_from_binary_metrics": 10639,
+      "healthy_rows": 22341,
+      "critical_rows": 864,
+      "rows": 23205,
+      "true_positive": 490,
+      "false_positive": 56,
+      "false_negative": 374,
+      "true_negative": 22285,
+      "accuracy": 0.9814695108812755,
+      "always_healthy_accuracy": 0.9627666451195863,
+      "precision": 0.8974358974358975,
+      "recall": 0.5671296296296297,
+      "f1": 0.6950354609929078,
+      "false_alarm_rate": 0.0025066022111812363,
+      "auc": 0.9958394257692633,
+      "average_precision": 0.8167362446764354,
+      "engine_events": {
+        "engines": 237,
+        "engines_reaching_critical": 53,
+        "critical_engines_detected": 43,
+        "detection_rate_of_reaching": 0.8113207547169812,
+        "engines_with_healthy_observations": 222,
+        "healthy_engines_with_false_alert": 9,
+        "healthy_engine_false_alert_rate": 0.04054054054054054,
+        "false_alert_episodes": 10,
+        "false_alert_episodes_per_1000_healthy_cycles": 0.44760753771093503,
+        "first_alert_rul_median": 40.0,
+        "sustained_alert_required_cycles": 3,
+        "engines_with_sustained_alert": 57,
+        "first_sustained_alert_rul_median": 37.0,
+        "lead_time_note": "RUL at the alert, including early false alerts; not proof of correct fault onset detection."
+      },
+      "confidence_intervals": {
+        "available": true,
+        "method": "whole-engine percentile bootstrap",
+        "samples": 300,
+        "seed": 20261011,
+        "confidence": 0.95,
+        "precision": [
+          0.7867621676255637,
+          0.9766215566944266
+        ],
+        "recall": [
+          0.46034288747346075,
+          0.6684265306122448
+        ],
+        "f1": [
+          0.5989068648078016,
+          0.7789322209287285
+        ],
+        "false_alarm_rate": [
+          0.0005446447895405656,
+          0.005321631221061952
+        ]
+      },
+      "confirmed_label_metrics": {
+        "available": false,
+        "reason": "No independently verified fault_label column supplied."
+      }
+    }
+  },
+  "health_recomputed_evaluation": {
+    "rows": 104897,
+    "engines": 707,
+    "evaluation_scope": "Recomputed from the four-detector experiment's official residuals with the current frozen health reference.",
+    "rul_correlation": 0.46011230818610077,
+    "monotonicity_score": 0.9477,
+    "monotonicity_threshold": 0.7,
+    "mean_health_index": 87.91253233124398,
+    "trajectory_metrics": {
+      "progression_engines": 159,
+      "engines_with_health_drop_at_least_5": 159,
+      "degradation_fraction": 1.0,
+      "median_health_drop": 48.89358740616372,
+      "flat_engine_fraction": 0.03253182461103253,
+      "median_within_engine_rul_correlation": 0.9199842037333128,
+      "additional_evaluation_smoothing": false
+    },
+    "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+    "acceptance": {
+      "finite_bounded_health": true,
+      "monotonicity": true,
+      "rul_proxy_correlation": true,
+      "detects_degradation": true
+    },
+    "passed": true,
+    "per_subset": {
+      "FD001": {
+        "rows": 13096,
+        "engines": 100,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.6487063101547722,
+        "monotonicity_score": 1.0,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 92.17714363854988,
+        "trajectory_metrics": {
+          "progression_engines": 25,
+          "engines_with_health_drop_at_least_5": 25,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 45.17327453156625,
+          "flat_engine_fraction": 0.1,
+          "median_within_engine_rul_correlation": 0.9422299472077686,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD002": {
+        "rows": 33991,
+        "engines": 259,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.6326795661224723,
+        "monotonicity_score": 0.9768,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 89.85202018758498,
+        "trajectory_metrics": {
+          "progression_engines": 61,
+          "engines_with_health_drop_at_least_5": 61,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 47.63944205771497,
+          "flat_engine_fraction": 0.011583011583011582,
+          "median_within_engine_rul_correlation": 0.9146763860018794,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD003": {
+        "rows": 16596,
+        "engines": 100,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.4313406754662825,
+        "monotonicity_score": 0.96,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 85.79694534075085,
+        "trajectory_metrics": {
+          "progression_engines": 20,
+          "engines_with_health_drop_at_least_5": 20,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 67.96725865373054,
+          "flat_engine_fraction": 0.07,
+          "median_within_engine_rul_correlation": 0.9516624277999552,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD004": {
+        "rows": 41214,
+        "engines": 248,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.43552530310465404,
+        "monotonicity_score": 0.8911,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 85.80974687700171,
+        "trajectory_metrics": {
+          "progression_engines": 53,
+          "engines_with_health_drop_at_least_5": 53,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 49.19960660667478,
+          "flat_engine_fraction": 0.012096774193548387,
+          "median_within_engine_rul_correlation": 0.9089087035429654,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      }
+    }
+  },
+  "health_saved_evaluation_for_audit_only": {
+    "rows": 104897,
+    "engines": 707,
+    "evaluation_scope": "Reused official C-MAPSS test trajectories; retrospective condition-proxy evidence",
+    "rul_correlation": 0.45916145749043125,
+    "monotonicity_score": 0.9463,
+    "monotonicity_threshold": 0.7,
+    "mean_health_index": 87.90897820306073,
+    "trajectory_metrics": {
+      "progression_engines": 159,
+      "engines_with_health_drop_at_least_5": 159,
+      "degradation_fraction": 1.0,
+      "median_health_drop": 48.67121747961161,
+      "flat_engine_fraction": 0.033946251768033946,
+      "median_within_engine_rul_correlation": 0.920910155106819,
+      "additional_evaluation_smoothing": false
+    },
+    "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+    "acceptance": {
+      "finite_bounded_health": true,
+      "monotonicity": true,
+      "rul_proxy_correlation": true,
+      "detects_degradation": true
+    },
+    "passed": true,
+    "evaluation_status": "reused_benchmark_exploratory",
+    "training_plan_id": "a7640407800ce92ec8735a24ebad802b1e391843e38bf11ae0cb0d2d12d41c96",
+    "health_index_mean": 87.90897820306073,
+    "health_index_std": 16.13530821606648,
+    "per_subset": {
+      "FD001": {
+        "rows": 13096,
+        "engines": 100,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.6438813764891668,
+        "monotonicity_score": 1.0,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 92.16917527240824,
+        "trajectory_metrics": {
+          "progression_engines": 25,
+          "engines_with_health_drop_at_least_5": 25,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 45.35363755646178,
+          "flat_engine_fraction": 0.1,
+          "median_within_engine_rul_correlation": 0.9322101840759595,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD002": {
+        "rows": 33991,
+        "engines": 259,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.6325599283845158,
+        "monotonicity_score": 0.973,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 89.85005155211513,
+        "trajectory_metrics": {
+          "progression_engines": 61,
+          "engines_with_health_drop_at_least_5": 61,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 47.69797612980554,
+          "flat_engine_fraction": 0.015444015444015444,
+          "median_within_engine_rul_correlation": 0.9145807112958798,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD003": {
+        "rows": 16596,
+        "engines": 100,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.4265127456682687,
+        "monotonicity_score": 0.96,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 85.77374977837465,
+        "trajectory_metrics": {
+          "progression_engines": 20,
+          "engines_with_health_drop_at_least_5": 20,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 68.03388269782607,
+          "flat_engine_fraction": 0.08,
+          "median_within_engine_rul_correlation": 0.9551983290927328,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      },
+      "FD004": {
+        "rows": 41214,
+        "engines": 248,
+        "evaluation_scope": "Current batch; RUL correlation is a condition proxy, not independently labelled health accuracy.",
+        "rul_correlation": 0.43505682746349367,
+        "monotonicity_score": 0.8911,
+        "monotonicity_threshold": 0.7,
+        "mean_health_index": 85.81419696144883,
+        "trajectory_metrics": {
+          "progression_engines": 53,
+          "engines_with_health_drop_at_least_5": 53,
+          "degradation_fraction": 1.0,
+          "median_health_drop": 49.17190802773871,
+          "flat_engine_fraction": 0.008064516129032258,
+          "median_within_engine_rul_correlation": 0.9083563481417187,
+          "additional_evaluation_smoothing": false
+        },
+        "monotonicity_definition": "Fraction of engines with <=15% late-life steps rising by more than 1 health point; production index, no second smoothing.",
+        "acceptance": {
+          "finite_bounded_health": true,
+          "monotonicity": true,
+          "rul_proxy_correlation": true,
+          "detects_degradation": true
+        },
+        "passed": true
+      }
+    },
+    "official_results_used_for_promotion": false
+  },
+  "health_difference_from_saved": {
+    "rul_correlation": 0.0009508506956695251,
+    "monotonicity_score": 0.0013999999999999568,
+    "mean_health_index": 0.0035541281832536242
+  },
+  "explanation_saved_batch_evaluation": {
+    "rows_explained": 1193,
+    "completeness": {
+      "completeness_fraction": 1.0,
+      "missing_by_field": {
+        "why": 0,
+        "which_sensors": 0,
+        "what_pattern": 0,
+        "how_severe": 0
+      },
+      "missing_columns": []
+    },
+    "consistency": {
+      "consistency_fraction": 1.0,
+      "rows_checked": 1193,
+      "unmatched_rows": 0,
+      "root_cause_coverage_fraction": 1.0
+    },
+    "shap_computed": true,
+    "shap_requested": true,
+    "fidelity": {
+      "shap_rows_computed": 128,
+      "shap_rows_failed": 0,
+      "shap_rows_not_sampled": 1065,
+      "shap_rows_disabled": 0,
+      "shap_coverage_fraction": 0.10729253981559095,
+      "shap_valid_fraction": 1.0,
+      "max_additivity_error": 8.774986351989256e-07,
+      "max_reference_error": 0.0,
+      "health_rows_computed": 1193,
+      "health_coverage_fraction": 1.0,
+      "health_valid_fraction": 1.0,
+      "quantitative_evidence_fraction": 1.0
+    },
+    "acceptance": {
+      "mostly_complete": true,
+      "sensor_consistency": true,
+      "quantitative_evidence": true,
+      "shap_valid_for_attempted_rows": true,
+      "health_fidelity": true,
+      "automated_checks_passed": true
+    },
+    "validation_scope": "Automated completeness, identity, evidence and numeric fidelity checks. Physical root causes still require expert/label validation."
+  },
+  "sources_sha256": {
+    "experiments\\Anomaly_Health_Monitoring\\run_20261018_four_detectors\\official_scores.csv": "dd49633658c93f782865ec85abe94889da0973b7ef2234aab1b9bb7673cd999b",
+    "experiments\\Anomaly_Health_Monitoring\\run_20261015_linear_baseline_verified\\comparison.csv": "bf6d17269ade3fb995856e06c567d4ff2ccfb9884bff492ffe96af14f2db19ec",
+    "metrics\\holdout_test_evaluation.json": "15312b0d12e8f2b734f028a93139cfcd5ed91861b99543d168da7529efa0465a",
+    "metrics\\evaluate_explainability.json": "c29bd12e97e8f1128fe9696456e027d67e61a72b60fa1195d2841ef03ebabf82",
+    "models\\anomaly_fusion_meta.json": "84df88fac96d4eda1c4365c00f9c9f155e033d466ab1540ee5cc6dae88ff84a1",
+    "models\\training_split.json": "6b1c9408f932fd9160a7fa00c3f3638dbd38b9903abcbd7fe8b1b550ad6d660d",
+    "models\\health_index_calibration.json": "f985163196a817eb9c26b04da1553c361e6df753dded4b617a61f03f9a00e84a",
+    "models\\health_state_thresholds.json": "090d57bc9aaf03855d12be1e23cb57c57cf51db32d74e7b341291fcf5b1a2ee9",
+    "models\\twin_ensemble_weights.json": "362fcb5be10f904e41d0bea11aa7ae075120683eeba92a65fee864cef2186a47",
+    "experiments\\Anomaly_Health_Monitoring\\run_20261018_four_detectors\\protocol.json": "ccf5cfc4f4a06ee8eb55f4b1675f71a96c4515eb54db16b8f9a2020b153a871a",
+    "experiments\\Anomaly_Health_Monitoring\\run_20261018_four_detectors\\activation_verification.json": "fd7f5205c2041e42ed35f0257103f46e92b4a75908f266cf69b4783a219e5fe9",
+    "experiments\\Anomaly_Health_Monitoring\\run_20261018_four_detectors\\official_inputs.joblib": "412186f9edf3cc93d75c50f8caae2f77c8e68fdf0ca217146930bcf5bf857453",
+    "processed\\health_index.csv": "73ed6842d5bb2f2f50ada22080d5672bc45024fe9f643c84c2113398076fdd0d",
+    "processed\\raw_data.csv": "b3a8b49ab5a61ae2509f38960df34028aab013391fe9b4f166451a77488b2bf8",
+    "experiments\\Anomaly_Health_Monitoring\\run_20261015_linear_baseline_verified\\protocol.json": "6809efcad7360d7baa8829d2e355c885c2025be0d9d6ab31a398d6c28e56a839",
+    "app\\services\\Anomaly_Health_Monitoring\\anomaly_detection\\anomaly_fusion.py": "1741c20fcbe278afed6c162ca5fb46ff9405bf54c95d741e444776033152ff0a",
+    "app\\services\\Anomaly_Health_Monitoring\\anomaly_detection\\mahalanobis_detector.py": "80a91cd76834f4b2e27762b1c21445f324e9f4acfe55fe60950bee512b54dfaf",
+    "app\\services\\Anomaly_Health_Monitoring\\anomaly_detection\\lstm_autoencorder.py": "594e023063dc8dc2d7dd97d69557bac2817f131f6a73addd99d78a6eff3f2756",
+    "app\\services\\Anomaly_Health_Monitoring\\anomaly_detection\\isolation_forest_detector.py": "abc23d1715c4f283bfc54de98a82b51cc623e34c41cd2284348e450b181370b5",
+    "app\\services\\Anomaly_Health_Monitoring\\anomaly_detection\\residual_anomaly_detector.py": "5da1e17e393cd1cd979a113c30cd924f4ccc577c3803faa17faa6a51a4db3869",
+    "data\\raw\\train_FD001.txt": "963b5e22825b34d8b21c69e1aeb4af3e647050eb672ee8834ba4b5d91d2de0f8",
+    "data\\raw\\test_FD001.txt": "3cda7109ce17bafb5443f2ac926cfcf88154b941b8c4cf95eb55d1ddd6f52851",
+    "data\\raw\\RUL_FD001.txt": "a19c8ec94931949d0485bdc35118206e9c81c4547b422efb9cf86f4ceddbceca",
+    "data\\raw\\train_FD002.txt": "dac6c4dbc4e7c1bdeb5747da3d313d05c395bb99801b44a002b26a2ba13d788f",
+    "data\\raw\\test_FD002.txt": "de7b5bf7e998a985c378488480528b7c02cff1406a46740def362dda8d9b4e02",
+    "data\\raw\\RUL_FD002.txt": "c851dd96a6ea6998d3c4a8f834d3c8013aa90e93a6ed950dc826ad0655b2906b",
+    "data\\raw\\train_FD003.txt": "2abbe9968cc5e8eb091980f51b20f62bb4127336d3482cb52071d53bf23329e2",
+    "data\\raw\\test_FD003.txt": "299babd63c8d987cef079c4a425429f33b3a34797d803bbe2ad48c29dbd0d790",
+    "data\\raw\\RUL_FD003.txt": "df1e0566306b174a2de41c67a3e7a51877889598b78643fc3e5685259091b7cb",
+    "data\\raw\\train_FD004.txt": "27ef6160b6a1dcb2613a88de9c239f763b223f02cdc41dc5cdedc5dc189b6218",
+    "data\\raw\\test_FD004.txt": "1dc675fff0624bac10786927c6715b37d1297657137400d2b1a3138d777a3ba5",
+    "data\\raw\\RUL_FD004.txt": "196b836b85a95ac7fdbbf29c5fdf1657382eafa445644d114ffaaf50dc2975e1",
+    "app\\config\\Anomaly_Health_Monitoring\\config.py": "7d14edc95217e43ec1afa8522457bf3f6e4d47859aa638e75fe5ec15912d9a1a",
+    "app\\utils\\Anomaly_Health_Monitoring\\training_split.py": "8ec669cc7713d5ac91af8819ccd143f75a24ce91e8283921f676d4ed3a1c5404",
+    "app\\services\\Anomaly_Health_Monitoring\\health_monitoring\\health_index_calculator.py": "591439c9451c637ec384a45997a87db572c496baee69bf364c5486b8533d59d4",
+    "app\\services\\Anomaly_Health_Monitoring\\health_monitoring\\health_score_engine.py": "122fdfdd4eef88f6ee0eebf9bf1328a2d580b9ad801717bad5e8b528c3776123",
+    "app\\services\\Anomaly_Health_Monitoring\\evaluation\\evaluate_health.py": "cf65649455c711b330112607cef982424e0937cd0d700b3843e3d49dcd764b46",
+    "app\\services\\Anomaly_Health_Monitoring\\evaluation\\monitoring_metrics.py": "704cd6b4cb97ee00079cb24171148f1d3b5820f648fa5275460c8294e7f628fa"
+  },
+  "analysis_environment": {
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.5.2",
+    "scipy": "1.14.1",
+    "matplotlib": "3.9.4"
+  }
+}

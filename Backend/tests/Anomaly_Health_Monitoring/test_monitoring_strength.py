@@ -1,4 +1,3 @@
-"""Failure, temporal causality, calibration isolation, and evaluation contracts."""
 import copy
 import json
 from pathlib import Path
@@ -25,7 +24,7 @@ class MonitoringStrengthTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.config = Config()
-        # These tests exercise the legacy covariance detector explicitly.
+
         self.config.anomaly.fusion_weights = {"mahalanobis": 1.0}
         self.config.mlops.log_to_file = False
         self.config.mlops.enable_mlflow = False

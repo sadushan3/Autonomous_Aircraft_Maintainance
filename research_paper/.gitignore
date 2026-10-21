@@ -1,0 +1,9 @@
+tools/
+__pycache__/
+*.aux
+*.log
+*.blg
+*.bbl
+*.out
+*.synctex.gz
+preview_*.png

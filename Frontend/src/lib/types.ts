@@ -41,7 +41,6 @@ export interface DecisionRow {
   risk_acceleration: number | null;
   risk_state: string | null;
 
-  // --- Anomaly & Health component ---
   health_index: number | null;
   health_state: string | null;
   anomaly_score: number | null;
@@ -122,7 +121,7 @@ export interface CompareResponse {
   [engineId: string]: DecisionRow[];
 }
 
-/** One physical engine section's share of an anomaly's deviation. */
+
 export interface SubsystemAttribution {
   subsystem: string;
   subsystem_label: string;
@@ -132,7 +131,7 @@ export interface SubsystemAttribution {
   status: "degraded" | "elevated" | "nominal" | string;
 }
 
-/** One engine's rollup from the Anomaly & Health dashboard. */
+
 export interface AnomalyEngine {
   engine_id: number | string;
   latest_cycle: number;
@@ -179,7 +178,7 @@ export interface AnomalyEngine {
   [key: string]: unknown;
 }
 
-/** One explained alert, carrying the generated diagnostic narrative. */
+
 export interface AnomalyAlert {
   engine_id: number | string;
   cycle: number;
@@ -223,18 +222,14 @@ export interface AnomalyAlert {
   [key: string]: unknown;
 }
 
-/** Anomaly & Health component's own dashboard payload. */
+
 export interface AnomalyDashboardResponse {
   status?: string;
   fleet: {
     total_engines: number;
     total_rows: number;
-    /**
-     * Mean health index at each engine's FINAL observed cycle -- a snapshot of
-     * "how the fleet stands now", not an average over history. On C-MAPSS
-     * train units, which all run to failure, this is necessarily low.
-     * Contrast `lifetime_mean_health_index`.
-     */
+
+
     mean_health_index: number;
     engines_healthy: number;
     engines_degrading: number;
@@ -246,7 +241,7 @@ export interface AnomalyDashboardResponse {
     operational_anomalies?: number;
     mean_confidence?: number;
     top_root_causes?: Record<string, number>;
-    /** Mean health index across every row, i.e. over the whole recorded life. */
+
     lifetime_mean_health_index?: number;
     lifetime_rows_healthy?: number;
     lifetime_rows_degrading?: number;
@@ -257,16 +252,16 @@ export interface AnomalyDashboardResponse {
   };
   engines: AnomalyEngine[];
   alerts: AnomalyAlert[];
-  /** Per-engine time series, keyed by engine id. */
+
   timeline?: Record<string, AnomalyTimelinePoint[]>;
   [key: string]: unknown;
 }
 
-/** One cycle of one engine's recorded history. */
+
 export interface AnomalyTimelinePoint {
   cycle: number;
   health_index: number | null;
-  /** Ground truth: 100 * clip(RUL, 0, rul_cap) / rul_cap. */
+
   health_index_target?: number | null;
   health_state: string | null;
   anomaly_score: number | null;
@@ -527,11 +522,7 @@ export interface FleetSummaryResponse {
   engines: DecisionRow[];
 }
 
-// --------------------------------------------------------------------------
-// Anomaly & Health -- validation, drift and feedback
-// --------------------------------------------------------------------------
 
-/** `GET /anomaly-health/evaluation/metrics` -- offline held-out results. */
 export interface AnomalyEvaluationResponse {
   available: boolean;
   searched_paths?: string[];
@@ -541,7 +532,7 @@ export interface AnomalyEvaluationResponse {
       metrics?: AnomalyHoldoutMetrics;
       error?: string;
     };
-    /** Reasoning-stage rollups; carries all causes, not the dashboard's top 5. */
+
     reasoning?: {
       rows_input?: number;
       rows_reasoned?: number;
@@ -551,19 +542,19 @@ export interface AnomalyEvaluationResponse {
       evolution_distribution?: Record<string, number>;
       memory_matches?: number;
     };
-    /** Reasoning-stage acceptance gates. */
+
     evaluate_reasoning?: {
       rows_reasoned?: number;
       total_fault_rows?: number;
       coverage?: number;
       n_distinct_causes?: number;
       n_distinct_subsystems?: number;
-      /** Always 0: the reasoner states likelihoods, never demonstrated cause. */
+
       hard_causal_claims?: number;
       memory_match_rate?: number;
       acceptance?: Record<string, boolean>;
     };
-    /** Narrative completeness and consistency over every explained row. */
+
     evaluate_explainability?: {
       rows_explained?: number;
       completeness?: {
@@ -582,7 +573,7 @@ export interface AnomalyEvaluationResponse {
       };
       acceptance?: Record<string, boolean>;
     };
-    /** The health stage's acceptance gate, on training rows. */
+
     evaluate_health?: {
       rows?: number;
       engines?: number;
@@ -592,13 +583,13 @@ export interface AnomalyEvaluationResponse {
       mean_health_index?: number;
       passed?: boolean;
     };
-    /** Alert-level mix over every scored row, not just the latest cycle. */
+
     health_alerts?: {
       rows?: number;
       engines?: number;
       alert_distribution?: Record<string, number>;
     };
-    /** The anomaly stage's own acceptance report. */
+
     evaluate_anomaly?: {
       rul_alignment?: {
         available?: boolean;
@@ -611,7 +602,7 @@ export interface AnomalyEvaluationResponse {
         total_flagged?: number;
         fault_anomalies?: number;
         operational_anomalies?: number;
-        /** Share of raw flags the operating-context gate reclassifies. */
+
         operational_suppression_rate?: number;
       };
       acceptance?: Record<string, boolean>;
@@ -627,7 +618,7 @@ export interface AnomalyEvaluationResponse {
       rul_correlation?: number;
       health_index_mean?: number;
       health_index_std?: number;
-      /** Negative: engines observed longer read lower, independent of health. */
+
       mean_hi_vs_observed_length?: number;
       baseline_bias_spearman?: number;
       engines_starting_degraded?: number;
@@ -677,7 +668,7 @@ export interface AnomalyEvalSplit {
   severity_summary_note?: string;
 }
 
-/** `GET /anomaly-health/context-status` -- operating-mode drift. */
+
 export interface ContextDrift {
   drift_detected: boolean;
   psi: number;
@@ -690,7 +681,7 @@ export interface ContextDrift {
   setting_drift?: Record<string, number>;
 }
 
-/** `GET /anomaly-health/feedback/summary`. */
+
 export interface FeedbackSummary {
   feedback?: { total?: number; by_verdict?: Record<string, number> };
   memory?: {
@@ -700,7 +691,7 @@ export interface FeedbackSummary {
   };
 }
 
-/** `GET /anomaly-health/feedback/thresholds` -- adaptive fusion threshold. */
+
 export interface FeedbackThresholds {
   scale?: number;
   fusion_threshold?: number;
@@ -743,12 +734,12 @@ export interface FailureRiskPredictionResponse {
   debug?: Record<string, unknown> | null;
 }
 
-/** One member of the digital twin ensemble, from `GET /anomaly-health/twin/metrics`. */
+
 export interface TwinModel {
   name: string;
   rmse: number | null;
   mae: number | null;
-  /** Inverse-RMSE fusion weight; sums to 1 across members. */
+
   weight: number | null;
   fit_seconds: number | null;
   epochs_trained?: number | null;
@@ -759,7 +750,7 @@ export interface TwinModel {
   is_best: boolean;
 }
 
-/** Per-engine twin fidelity row, from `metrics/twin_comparison.json`. */
+
 export interface TwinEngineSummary {
   unit: number;
   last_cycle: number;
@@ -771,15 +762,26 @@ export interface TwinEngineSummary {
   dominant_pattern: string;
 }
 
-/**
- * `GET /anomaly-health/twin/metrics` -- the twin's own evidence.
- *
- * Static offline output: training error, the residual acceptance gates and the
- * per-engine fidelity table, none of which the API recomputes.
- */
+
 export interface TwinMetricsResponse {
   available: boolean;
   message?: string;
+  forecast?: {
+    available: boolean;
+    active: boolean;
+    recipe?: string | null;
+    message?: string;
+    r2?: number;
+    rmse?: number;
+    mae?: number;
+    rows?: number | null;
+    engines?: number | null;
+    informative_targets?: number | null;
+    target_channels?: number | null;
+    population?: string;
+    evaluation_status?: string;
+    per_subset?: Record<string, { r2: number | null; rmse: number | null; mae: number | null }>;
+  };
   summary: {
     rows: number | null;
     engines: number | null;
@@ -794,9 +796,9 @@ export interface TwinMetricsResponse {
     mean_twin_spread: number | null;
     best_member: string | null;
     best_member_rmse: number | null;
-    /** Subset names in pooling order, e.g. ["FD001", ... "FD004"]. */
+
     subsets: string[];
-    /** Unit ids are offset by `subset index * this` when subsets are pooled. */
+
     unit_id_offset_step: number;
   };
   models: TwinModel[];
@@ -824,33 +826,34 @@ export interface TwinMetricsResponse {
   patterns: Record<string, number>;
   mean_deviating_sensors: number | null;
   engines: TwinEngineSummary[];
-  /** Sensors the twin can actually model; constant channels are excluded. */
+
   available_sensors: string[];
 }
 
-/** One cycle of an engine's actual-vs-twin trace. */
+
 export interface TwinTracePoint {
   cycle: number;
-  /** What the twin says a healthy engine would read here. */
+  forecast?: number | null;
+
   expected: number;
-  /** The real reading, offset-corrected to this engine's own baseline. */
+
   actual: number | null;
   band_low: number;
   band_high: number;
-  /** Disagreement across the four members -- the twin's own uncertainty. */
+
   spread: number;
   residual: number | null;
   anomaly: number | null;
   anomaly_score: number | null;
 }
 
-/** `GET /anomaly-health/twin/trace`. */
+
 export interface TwinTraceResponse {
   available: boolean;
   engine_id: number;
   sensor: string;
   last_cycle: number;
-  /** End of the window the twin was fitted on. */
+
   healthy_until_cycle: number;
   onset_cycle: number | null;
   points_returned: number;
@@ -860,7 +863,7 @@ export interface TwinTraceResponse {
   points: TwinTracePoint[];
 }
 
-/** `GET /anomaly-health/detector-config` -- the fusion contract, from config. */
+
 export interface DetectorConfigResponse {
   available: boolean;
   detectors: Array<{
@@ -868,15 +871,20 @@ export interface DetectorConfigResponse {
     weight: number;
     weight_share: number;
     principle: string | null;
+    enabled?: boolean;
+    trained?: boolean;
+    threshold?: number | null;
   }>;
   fusion: {
+    active_detectors?: number;
+    calibrated_threshold?: number | null;
     threshold_percentile: number;
     fallback_threshold: number;
     normalisation: string;
   };
 }
 
-/** `GET /anomaly-health/engine/{id}/timeline` -- any engine's trajectory. */
+
 export interface EngineTimelineResponse {
   available: boolean;
   engine_id: number;
@@ -886,7 +894,7 @@ export interface EngineTimelineResponse {
   points: AnomalyTimelinePoint[];
 }
 
-/** One hypothesised cause with the evidence that fired it. */
+
 export interface CandidateCause {
   cause: string;
   likelihood: number;
@@ -896,7 +904,7 @@ export interface CandidateCause {
   inspection_focus: string;
 }
 
-/** How much one sensor contributed to an anomaly. */
+
 export interface SensorContribution {
   sensor: string;
   residual?: number;
@@ -905,7 +913,7 @@ export interface SensorContribution {
   subsystem?: string;
 }
 
-/** One cycle of reasoning output, from `GET /anomaly-health/reasoning/{id}`. */
+
 export interface RootCauseRecord {
   engine_id: number;
   cycle: number;
@@ -927,7 +935,7 @@ export interface RootCauseRecord {
   previously_false_alarm: boolean;
   recommended_action: string;
   inspection_focus: string;
-  /** Always false: physical couplings are not demonstrated causation. */
+
   hard_causal_claim: boolean;
 }
 

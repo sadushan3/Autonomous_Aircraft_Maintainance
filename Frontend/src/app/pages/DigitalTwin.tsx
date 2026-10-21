@@ -1,30 +1,14 @@
-/**
- * Digital Twin — the evidence that the twin works.
- *
- * The twin's job is to answer one question: what would a *healthy* engine read
- * under the operating conditions this engine is actually running in? Everything
- * downstream (health index, detectors, root cause) consumes the gap between
- * that answer and the real reading, so this screen is built around making that
- * gap visible on a real engine, then showing that the residual stream it
- * produces passes the three gates it must pass before anyone may rely on it.
- *
- * All figures come from offline artefacts (`metrics/digital_twin.json`,
- * `metrics/evaluate_digital_twin.json`, `metrics/twin_comparison.json`) and the
- * stored prediction/residual tables. Nothing here is recomputed live.
- */
 import { useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
   Boxes,
   CheckCircle2,
-  Cpu,
   Gauge,
   Layers,
   LineChart as LineChartIcon,
   Search,
   Sigma,
-  Waves,
 } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -58,13 +42,6 @@ import {
 import { useFleetModes, useTwinMetrics, useTwinTrace } from "../../lib/hooks";
 import type { TwinEngineSummary } from "../../lib/types";
 
-const MODEL_LABELS: Record<string, string> = {
-  random_forest: "Random Forest",
-  xgboost: "XGBoost",
-  lightgbm: "LightGBM",
-  tensorflow: "Keras MLP",
-};
-
 const PATTERN_META: Record<string, { label: string; color: string; hint: string }> = {
   none: { label: "No deviation", color: "#10b981", hint: "reading sits inside the twin's band" },
   narrow: { label: "Narrow", color: "#f59e0b", hint: "one or two sensors adrift — localised fault" },
@@ -73,11 +50,7 @@ const PATTERN_META: Record<string, { label: string; color: string; hint: string 
 
 const sensorLabel = (s: string) => s.replace("sensor_", "Sensor ");
 
-/**
- * Pooled runs offset unit ids per subset so they never collide, so engine
- * 30249 is really FD004's engine 249. The scheme comes from the backend rather
- * than being assumed here, so it cannot drift from the pipeline config.
- */
+
 function makeEngineLabel(subsets: string[], step: number) {
   return (unit: number) => {
     if (!step || !subsets.length) return `Engine ${unit}`;
@@ -111,15 +84,7 @@ export function DigitalTwin() {
     [data?.summary.subsets, data?.summary.unit_id_offset_step],
   );
 
-  /**
-   * Sensors whose standardised residual is trustworthy to *open* on.
-   *
-   * Two channels are quantised almost to constants, so dividing by their tiny
-   * healthy variance inflates their z far past the ceiling. They stay in the
-   * picker -- the spread chart below explains them -- but auto-selecting one
-   * would open the page on a two-valued staircase instead of a degradation
-   * curve.
-   */
+
   const ceiling = data?.validation.spread.ceiling ?? 3.5;
   const p99 = data?.validation.spread.per_sensor_p99_abs_z;
   const wellScaledSensors = useMemo(
@@ -127,11 +92,7 @@ export function DigitalTwin() {
     [availableSensors, p99, ceiling],
   );
 
-  /**
-   * Default to the worst-deviating engine that is best *shown* -- the largest
-   * peak residual whose dominant sensor is one of the well-scaled channels. An
-   * arbitrary "engine 1" often degrades so gently the chart looks like noise.
-   */
+
   const defaultEngine = useMemo(() => {
     if (!engines.length) return null;
     const ranked = [...engines].sort((a, b) => b.max_abs_residual - a.max_abs_residual);
@@ -149,8 +110,7 @@ export function DigitalTwin() {
     ? "sensor_11"
     : wellScaledSensors[0] ?? availableSensors[0] ?? "sensor_11";
 
-  // Each engine's own worst sensor is the one worth showing first, provided it
-  // is a channel whose residual scale means anything.
+
   const activeSensor =
     sensor ??
     (activeEngine && wellScaledSensors.includes(activeEngine.dominant_sensor_at_worst)
@@ -165,6 +125,7 @@ export function DigitalTwin() {
         cycle: p.cycle,
         expected: p.expected,
         actual: p.actual,
+        forecast: p.forecast ?? null,
         band: [p.band_low, p.band_high] as [number, number],
         residual: p.residual,
         anomaly: p.anomaly,
@@ -172,11 +133,7 @@ export function DigitalTwin() {
     [trace.data],
   );
 
-  /**
-   * How far the residual travelled between the window the twin was fitted on
-   * and this engine's final cycle. A twin that only fits noise would land near
-   * 1x; the whole premise of the component is that it does not.
-   */
+
   const growth = useMemo(() => {
     const pts = trace.data?.points ?? [];
     const until = trace.data?.healthy_until_cycle ?? 0;
@@ -212,9 +169,11 @@ export function DigitalTwin() {
 
   const s = data.summary;
   const v = data.validation;
+  const forecast = data.forecast;
+  const forecastReady = forecast?.available === true;
+  const forecastSubsets = Object.entries(forecast?.per_subset ?? {}).sort(([a], [b]) => a.localeCompare(b));
 
-  // Three gates decide whether the residual stream may be consumed downstream.
-  // Each bar is stated on the card so the pass is checkable, not asserted.
+
   const bias = v.centring.mean_absolute_bias;
   const exceed = v.spread.exceedance_fraction;
   const rising = v.growth.fraction_rising;
@@ -249,8 +208,6 @@ export function DigitalTwin() {
   ];
   const gatesPassed = gates.filter((g) => g.passed).length;
 
-  const maxRmse = Math.max(...data.models.map((m) => m.rmse ?? 0), 0.0001);
-
   const spreadBySensor = availableSensors.map((name) => ({
     name: sensorLabel(name),
     p99: Number((v.spread.per_sensor_p99_abs_z[name] ?? 0).toFixed(2)),
@@ -270,70 +227,71 @@ export function DigitalTwin() {
     <div className="space-y-6">
       <PageHeader
         title="Digital Twin"
-        subtitle="The healthy-behaviour reference every other layer is measured against"
+        subtitle="Active sensor forecasts and health monitoring evidence"
         right={
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
-              gatesPassed === gates.length
+              forecastReady
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                 : "border-amber-500/30 bg-amber-500/10 text-amber-400"
             }`}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
-            {gatesPassed}/{gates.length} residual gates passed
+            {forecastReady ? "Forecast active" : "Forecast metrics unavailable"}
           </span>
         }
       />
 
-      {/* ---------------- Headline: what the twin costs and how well it fits ---- */}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Reveal index={0}>
           <KPICard
-            title="Ensemble RMSE"
-            value={<AnimatedNumber value={s.weighted_mean_rmse ?? 0} decimals={4} />}
-            icon={Sigma}
+            title="Forecast R²"
+            value={forecastReady ? <AnimatedNumber value={forecast.r2!} decimals={5} /> : "—"}
+            icon={Activity}
             status="info"
-            subtitle={`best member ${MODEL_LABELS[s.best_member ?? ""] ?? s.best_member ?? "—"} at ${fmt(s.best_member_rmse, 4)}`}
+            subtitle="Official benchmark · informative sensor channels"
           />
         </Reveal>
         <Reveal index={1}>
           <KPICard
-            title="Twin Models Fused"
-            value={<AnimatedNumber value={s.n_twins} />}
-            icon={Cpu}
-            status="neutral"
-            subtitle={data.models.map((m) => MODEL_LABELS[m.name] ?? m.name).join(" · ")}
+            title="Forecast RMSE"
+            value={forecastReady ? <AnimatedNumber value={forecast.rmse!} decimals={5} /> : "—"}
+            icon={Sigma}
+            status="info"
+            subtitle="Raw sensor targets · lower is better"
           />
         </Reveal>
         <Reveal index={2}>
           <KPICard
-            title="Member Disagreement"
-            value={<AnimatedNumber value={s.mean_twin_spread ?? 0} decimals={3} />}
-            icon={Waves}
+            title="Forecast MAE"
+            value={forecastReady ? <AnimatedNumber value={forecast.mae!} decimals={5} /> : "—"}
+            icon={Gauge}
             status="info"
-            subtitle="mean spread across the four twins — the band on the chart below"
+            subtitle="Raw sensor targets · lower is better"
           />
         </Reveal>
         <Reveal index={3}>
           <KPICard
-            title="Sensors Modelled"
-            value={
-              <span>
-                <AnimatedNumber value={s.informative_sensors ?? 0} />
-                <span className="text-lg text-slate-500">/{s.sensors_modelled ?? 0}</span>
-              </span>
-            }
+            title="Evaluated Cycles"
+            value={forecastReady && typeof forecast.rows === "number" ? <AnimatedNumber value={forecast.rows} /> : "—"}
             icon={Layers}
             status="neutral"
-            subtitle={`${s.operating_modes ?? "—"} operating regimes · ${(s.rows ?? 0).toLocaleString()} rows · ${s.engines ?? 0} engines`}
+            subtitle={forecastReady ? `${forecast.engines?.toLocaleString() ?? "—"} engines · post-commissioning forecasts` : "No verified forecast metrics for the active model"}
           />
         </Reveal>
       </div>
 
-      {/* ---------------- Hero: the gap IS the signal ------------------------- */}
+      <p className="text-xs leading-relaxed text-slate-400">
+        {forecastReady
+          ? "Saved official C-MAPSS benchmark using unsmoothed, normalized sensor targets. These are retrospective results; the health and anomaly reference remains separate."
+          : forecast?.message ?? "Run a verified forecast evaluation to populate these metrics."}
+      </p>
+
+
       <Reveal index={4}>
         <MetricCard
-          title="Actual reading vs. twin's healthy expectation"
+          title="Actual reading, active forecast and healthy reference"
           subtitle={
             trace.data
               ? `${engineLabel(trace.data.engine_id)} · ${sensorLabel(trace.data.sensor)} · ${trace.data.cycles_total} cycles · ${trace.data.units}`
@@ -345,7 +303,7 @@ export function DigitalTwin() {
                 value={activeEngineId ?? ""}
                 onChange={(e) => {
                   setEngineId(Number(e.target.value));
-                  setSensor(null); // follow the new engine's own worst sensor
+                  setSensor(null);
                 }}
                 className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-1.5 text-sm text-slate-100 outline-none focus:border-cyan-500"
               >
@@ -399,12 +357,16 @@ export function DigitalTwin() {
                   twin's healthy expectation
                 </span>
                 <span className="flex items-center gap-2">
+                  <span className="h-0.5 w-5 bg-violet-400" />
+                  active sensor forecast
+                </span>
+                <span className="flex items-center gap-2">
                   <span className="h-3 w-5 rounded-sm bg-cyan-400/25" />
                   where the four twins disagree
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="h-3 w-5 rounded-sm bg-emerald-500/20" />
-                  window the twin was fitted on
+                  early-life reference window
                 </span>
               </div>
               <ResponsiveContainer width="100%" height={340}>
@@ -427,18 +389,18 @@ export function DigitalTwin() {
                     labelFormatter={(c) => `Cycle ${c}`}
                   />
 
-                  {/* The window the twin was actually fitted on. */}
+
                   {trace.data && (
                     <ReferenceArea
                       x1={chart[0].cycle}
                       x2={trace.data.healthy_until_cycle}
                       fill="#10b981"
                       fillOpacity={0.07}
-                      label={{ value: "twin fitted here", fill: "#10b981", fontSize: 10, position: "insideTopLeft" }}
+                      label={{ value: "early-life reference", fill: "#10b981", fontSize: 10, position: "insideTopLeft" }}
                     />
                   )}
 
-                  {/* Where the four members disagree — the twin's own uncertainty. */}
+
                   <Area
                     dataKey="band"
                     stroke="none"
@@ -456,6 +418,16 @@ export function DigitalTwin() {
                     dot={false}
                     name="twin expectation (healthy)"
                     animationDuration={900}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="#a78bfa"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                    name="active sensor forecast"
+                    isAnimationActive={false}
                   />
                   <Line
                     type="monotone"
@@ -485,7 +457,7 @@ export function DigitalTwin() {
 
               <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <TraceStat
-                  label="Residual in fitted window"
+                  label="Residual in early-life window"
                   value={growth ? fmt(growth.base, 2) : "—"}
                   tone="ok"
                 />
@@ -511,99 +483,66 @@ export function DigitalTwin() {
               </div>
 
               <p className="mt-3 text-xs text-slate-500">
-                The dashed line is what the twin says a <span className="text-cyan-300">healthy</span> engine would
-                read under this engine's own operating conditions; the shaded band is where its four members disagree.
-                Both series are corrected for this engine's early-life offset, so the vertical gap between them is
-                exactly the residual every downstream layer consumes — inside the band while the engine is healthy,
-                opening steadily as it degrades.
+                The purple line is the active sensor forecast, shown after its startup history is complete.
+                The dashed cyan line is the healthy monitoring reference; its shaded band shows member disagreement.
+                All lines share the engine's offset-corrected sensor scale. The orange-to-cyan gap drives health and anomaly monitoring.
               </p>
             </>
           )}
         </MetricCard>
       </Reveal>
 
-      {/* ---------------- Ensemble leaderboard -------------------------------- */}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <Reveal index={5} className="xl:col-span-3">
           <MetricCard
-            title="Ensemble members"
-            subtitle={`Trained on ${(s.train_rows ?? 0).toLocaleString()} healthy rows, validated on ${(s.val_rows ?? 0).toLocaleString()} held out · ${s.n_features ?? "—"} context features → ${s.sensors_modelled ?? "—"} sensor targets`}
+            title="Forecast performance by subset"
+            subtitle="Active model ? saved official C-MAPSS benchmark"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-800/60 text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="py-2 pr-3 font-semibold">Model</th>
-                    <th className="py-2 pr-3 font-semibold">RMSE</th>
-                    <th className="py-2 pr-3 font-semibold">MAE</th>
-                    <th className="py-2 pr-3 font-semibold">Fusion weight</th>
-                    <th className="py-2 font-semibold">Fit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.models.map((m) => (
-                    <tr key={m.name} className="border-b border-slate-800/30 hover:bg-slate-800/20">
-                      <td className="py-3 pr-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-200">
-                            {MODEL_LABELS[m.name] ?? m.name}
-                          </span>
-                          {m.is_best && (
-                            <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
-                              BEST
-                            </span>
-                          )}
-                        </div>
-                        {m.epochs_trained ? (
-                          <div className="mt-0.5 text-[11px] text-slate-500">
-                            {m.epochs_trained} epochs (early-stopped)
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="py-3 pr-3">
-                        <div className="text-slate-300">{fmt(m.rmse, 4)}</div>
-                        <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-slate-800/70">
-                          <div
-                            className={`h-full rounded-full ${m.is_best ? "bg-emerald-500" : "bg-cyan-500/70"}`}
-                            style={{ width: `${((m.rmse ?? 0) / maxRmse) * 100}%` }}
-                          />
-                        </div>
-                      </td>
-                      <td className="py-3 pr-3 text-slate-400">{fmt(m.mae, 4)}</td>
-                      <td className="py-3 pr-3 text-slate-400">
-                        {m.weight === null ? "—" : `${(m.weight * 100).toFixed(1)}%`}
-                      </td>
-                      <td className="py-3 text-slate-500">{fmt(m.fit_seconds, 1)}s</td>
+            {forecastReady ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800/60 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <th className="py-2 pr-3 font-semibold">Subset</th>
+                      <th className="py-2 pr-3 font-semibold">R?</th>
+                      <th className="py-2 pr-3 font-semibold">RMSE</th>
+                      <th className="py-2 font-semibold">MAE</th>
                     </tr>
-                  ))}
-                  <tr className="bg-cyan-500/5">
-                    <td className="py-3 pr-3 font-semibold text-cyan-300">Fused ensemble</td>
-                    <td className="py-3 pr-3 font-semibold text-cyan-300">
-                      {fmt(s.weighted_mean_rmse, 4)}
-                    </td>
-                    <td className="py-3 pr-3 text-slate-500">—</td>
-                    <td className="py-3 pr-3 text-slate-500">100%</td>
-                    <td className="py-3 text-slate-500">
-                      {fmt(data.models.reduce((a, m) => a + (m.fit_seconds ?? 0), 0), 1)}s total
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-3 text-xs text-slate-500">
-              Members are fused by inverse RMSE, which is why the weights sit so close to even — no member is
-              materially stronger than the others. The point of keeping four is not accuracy but{" "}
-              <span className="text-cyan-300">disagreement</span>: where they diverge, the twin is guessing, and that
-              spread becomes the uncertainty band rather than being averaged away.
-            </p>
+                  </thead>
+                  <tbody>
+                    {forecastSubsets.map(([name, score]) => (
+                      <tr key={name} className="border-b border-slate-800/30">
+                        <td className="py-3 pr-3 font-medium text-slate-200">{name}</td>
+                        <td className="py-3 pr-3 text-slate-300">{fmt(score.r2, 5)}</td>
+                        <td className="py-3 pr-3 text-slate-300">{fmt(score.rmse, 5)}</td>
+                        <td className="py-3 text-slate-300">{fmt(score.mae, 5)}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-cyan-500/5 font-semibold text-cyan-300">
+                      <td className="py-3 pr-3">All subsets</td>
+                      <td className="py-3 pr-3">{fmt(forecast.r2, 5)}</td>
+                      <td className="py-3 pr-3">{fmt(forecast.rmse, 5)}</td>
+                      <td className="py-3">{fmt(forecast.mae, 5)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                  R? averages informative sensor channels. RMSE and MAE include all sensor targets
+                  in normalized units. The aggregate is calculated over the complete benchmark population.
+                </p>
+              </div>
+            ) : (
+              <Empty label="No verified forecast results are available for the active model." />
+            )}
           </MetricCard>
         </Reveal>
 
-        {/* ---------------- Acceptance gates ---------------------------------- */}
+
         <Reveal index={6} className="xl:col-span-2">
           <MetricCard
             title="Residual acceptance gates"
-            subtitle={`Checked on ${(v.healthy_rows_checked ?? 0).toLocaleString()} healthy rows of ${(v.total_rows ?? 0).toLocaleString()}`}
+            subtitle={`${gatesPassed}/${gates.length} reference gates passed · ${(v.healthy_rows_checked ?? 0).toLocaleString()} healthy rows checked`}
           >
             <div className="space-y-3">
               {gates.map((g, i) => (
@@ -646,7 +585,7 @@ export function DigitalTwin() {
         </Reveal>
       </div>
 
-      {/* ---------------- Per-sensor spread + deviation patterns -------------- */}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Reveal index={7}>
           <MetricCard
@@ -737,7 +676,7 @@ export function DigitalTwin() {
         </Reveal>
       </div>
 
-      {/* ---------------- Per-engine fidelity table -------------------------- */}
+
       <Reveal index={9}>
         <MetricCard
           title="Per-engine twin fidelity"
@@ -843,7 +782,7 @@ export function DigitalTwin() {
         </MetricCard>
       </Reveal>
 
-      {/* ---------------- How it works + operating context -------------------- */}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Reveal index={10} className="lg:col-span-2">
           <GlassCard variant="primary">

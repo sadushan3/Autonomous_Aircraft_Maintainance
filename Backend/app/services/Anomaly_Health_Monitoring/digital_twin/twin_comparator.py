@@ -1,17 +1,3 @@
-"""
-Actual-vs-expected comparison and deviation summarisation.
-
-Where :mod:`residual_calculator` produces the raw per-sensor numbers, this
-module turns them into a per-row and per-engine *narrative* summary: which
-direction sensors are moving, how many are simultaneously deviating, and
-whether the deviation pattern is broad (many sensors, mild each) or narrow
-(one or two sensors, severe).  That distinction feeds directly into severity
-classification and root-cause reasoning -- a broad mild deviation usually
-means the twin's expectation is slightly off for an unusual regime, while a
-narrow severe deviation is the classic signature of a localised component
-fault.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,43 +23,32 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     read_csv,
 )
 
-#: Number of sensors whose |z| exceeds the deviation threshold, per row.
+
 N_DEVIATING_SENSORS_COLUMN = "n_deviating_sensors"
 
-#: Whether the deviation is 'broad' (many sensors) or 'narrow' (few sensors).
+
 DEVIATION_PATTERN_COLUMN = "deviation_pattern"
 
-#: |z| above which a sensor counts as deviating for the pattern classification.
+
 DEVIATION_Z_THRESHOLD = 2.0
 
-#: Fraction of active sensors above which a deviation is called 'broad'.
+
 BROAD_PATTERN_FRACTION = 0.35
 
 
 class TwinComparator:
-    """Summarises actual-vs-expected deviation across an engine fleet."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the comparator.
 
-        Args:
-            config: Configuration supplying output paths.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
-    # ------------------------------------------------------------------ #
-    # Row-level summarisation
-    # ------------------------------------------------------------------ #
+
     def summarize_rows(self, residuals: pd.DataFrame) -> pd.DataFrame:
-        """Attach deviation-count and deviation-pattern columns.
 
-        Args:
-            residuals: Output of :class:`ResidualCalculator`.
 
-        Returns:
-            The frame with two additional columns.
-        """
         z_columns = present_residual_z_columns(residuals)
 
         result = residuals.copy()
@@ -94,19 +69,10 @@ class TwinComparator:
         result[DEVIATION_PATTERN_COLUMN] = pattern
         return result
 
-    # ------------------------------------------------------------------ #
-    # Engine-level summarisation
-    # ------------------------------------------------------------------ #
+
     def summarize_engines(self, residuals: pd.DataFrame) -> pd.DataFrame:
-        """Roll deviation statistics up to one row per engine.
 
-        Args:
-            residuals: Row-level summary produced by :meth:`summarize_rows`.
 
-        Returns:
-            A per-engine frame with mean/max deviation and the dominant
-            sensor at the worst observed cycle.
-        """
         z_columns = present_residual_z_columns(residuals)
         rows: List[Dict[str, Any]] = []
 
@@ -136,20 +102,10 @@ class TwinComparator:
             )
         return pd.DataFrame(rows)
 
-    # ------------------------------------------------------------------ #
-    # Stage orchestration
-    # ------------------------------------------------------------------ #
+
     def run(self, residuals: Optional[pd.DataFrame] = None) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the comparison stage.
 
-        Args:
-            residuals: Optional in-memory residuals; otherwise ``residuals.csv``
-                is read from disk.
 
-        Returns:
-            A ``(row_summary, report)`` tuple. The engine-level summary is
-            included in the report for convenience.
-        """
         self.config.ensure_directories()
         source = residuals
         if source is None:
@@ -180,7 +136,7 @@ class TwinComparator:
 
 
 def main() -> None:
-    """Run the comparator standalone against ``residuals.csv``."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     comparator = TwinComparator(config)

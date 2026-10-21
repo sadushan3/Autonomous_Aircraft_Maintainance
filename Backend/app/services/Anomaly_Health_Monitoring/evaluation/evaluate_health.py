@@ -1,16 +1,3 @@
-"""
-Evaluate health trajectories against RUL condition proxies.
-
-Checks include finite 0-100 outputs, Spearman association with RUL, stability
-over the last observed trajectory segment, and health decline in engines that
-reach the critical RUL band. A flat index cannot pass merely by being stable.
-The production index is evaluated directly, without a second smoothing pass.
-Censored trajectories describe the observed interval, not an observed failure.
-These checks do not establish accuracy against independently labelled health
-or faults. The stability gate allows small positive steps; passing is not a
-claim of strict mathematical monotonicity.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -34,37 +21,23 @@ from app.utils.Anomaly_Health_Monitoring.model_utils import RUL_COLUMN, get_iden
 from app.utils.Anomaly_Health_Monitoring.utils import atomic_write_json, get_logger, read_csv
 from app.services.Anomaly_Health_Monitoring.evaluation.monitoring_metrics import engine_columns
 
-#: Small tolerance allowing cycle-to-cycle noise without failing monotonicity.
+
 _MONOTONICITY_NOISE_TOLERANCE = 1.0
 
 
 class HealthEvaluator:
-    """Validates the health-index layer against its monotonicity/RUL contract."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the evaluator.
 
-        Args:
-            config: Configuration supplying the acceptance threshold and the
-                healthy-region cycle fraction (used to define "final phase").
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
-    # ------------------------------------------------------------------ #
-    # Core metrics
-    # ------------------------------------------------------------------ #
+
     def rul_correlation(self, frame: pd.DataFrame) -> Optional[float]:
-        """Compute the Spearman correlation between health index and true RUL.
 
-        Args:
-            frame: Frame carrying ``health_index`` and ``RUL`` (or
-                ``health_index_target``, used as a RUL proxy when raw RUL is
-                absent).
 
-        Returns:
-            The Spearman correlation, or None when RUL is unavailable.
-        """
         rul_column = RUL_COLUMN if RUL_COLUMN in frame.columns else None
         if rul_column is None and HEALTH_INDEX_TARGET_COLUMN not in frame.columns:
             return None
@@ -77,19 +50,8 @@ class HealthEvaluator:
         return float(correlation) if np.isfinite(correlation) else 0.0
 
     def monotonicity_score(self, frame: pd.DataFrame) -> float:
-        """Compute the fraction of engines with a non-increasing health index late in life.
 
-        For each engine, examines the trailing portion of the trajectory
-        (cycles beyond the healthy-region cycle fraction, i.e. the degradation
-        phase) and checks whether the EWMA-smoothed health index is
-        non-increasing there, within a small noise tolerance.
 
-        Args:
-            frame: Frame carrying identity keys, ``cycle`` and ``health_index``.
-
-        Returns:
-            The fraction of qualifying engines that pass, in [0, 1].
-        """
         cutoff_fraction = float(self.config.healthy_region.cycle_fraction)
         passing = 0
         total = 0
@@ -104,10 +66,10 @@ class HealthEvaluator:
                 continue
 
             total += 1
-            # The production index is already smoothed. Smoothing again here
-            # makes noisy and unresponsive outputs appear artificially good.
+
+
             diffs = late_phase[HEALTH_INDEX_COLUMN].diff().dropna()
-            # Allow small positive blips (noise) but not a sustained rise.
+
             violations = (diffs > _MONOTONICITY_NOISE_TOLERANCE).sum()
             violation_rate = violations / max(len(diffs), 1)
             if violation_rate <= 0.15:
@@ -116,7 +78,7 @@ class HealthEvaluator:
         return float(passing / total) if total else 0.0
 
     def trajectory_metrics(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Detect flat indices and measure progression without further smoothing."""
+
         drops, correlations, flat = [], [], 0
         eligible = 0
         for _, group in frame.groupby(engine_columns(frame), sort=True):
@@ -125,8 +87,8 @@ class HealthEvaluator:
             if len(values) < 10:
                 continue
             flat += bool(np.ptp(values) < 1.0)
-            # Censored engines that never enter the critical band are not
-            # expected to show a full healthy-to-failing trajectory.
+
+
             if RUL_COLUMN in ordered and ordered[RUL_COLUMN].min() > 30:
                 continue
             eligible += 1
@@ -143,20 +105,10 @@ class HealthEvaluator:
                 "median_within_engine_rul_correlation": float(np.median(correlations)) if correlations else None,
                 "additional_evaluation_smoothing": False}
 
-    # ------------------------------------------------------------------ #
-    # Orchestration
-    # ------------------------------------------------------------------ #
+
     def evaluate(self, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Run both acceptance checks and combine them into a verdict.
 
-        Args:
-            frame: Health-scores/states frame carrying identity keys, RUL (if
-                available) and ``health_index``.
 
-        Returns:
-            A report with ``rul_correlation``, ``monotonicity_score`` and
-            ``passed``.
-        """
         finite = np.isfinite(frame[HEALTH_INDEX_COLUMN].to_numpy(float))
         in_range = frame[HEALTH_INDEX_COLUMN].between(0, 100).to_numpy()
         valid = frame.loc[finite & in_range].copy()
@@ -203,15 +155,8 @@ class HealthEvaluator:
         return report
 
     def run(self, frame: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Execute the health evaluation stage.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``health_states.csv``
-                (falling back to ``health_scores.csv``) is read from disk.
 
-        Returns:
-            The evaluation report.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:
@@ -237,7 +182,7 @@ class HealthEvaluator:
 
 
 def main() -> None:
-    """Run health evaluation standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     evaluator = HealthEvaluator(config)

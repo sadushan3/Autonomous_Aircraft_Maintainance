@@ -1,20 +1,3 @@
-"""
-Extended evaluation for the Random Forest twin.
-
-Complements the generic training metrics with two forest-specific
-diagnostics:
-
-* **Out-of-bag-style generalisation check** -- since scikit-learn's
-  multi-output ``RandomForestRegressor`` supports ``oob_score_`` only for
-  single-output targets, this module instead compares train-set accuracy
-  against held-out engine accuracy directly, which surfaces overfitting to
-  specific engines' idiosyncrasies (manufacturing bias, unusual noise) rather
-  than genuine operating-context patterns.
-* **Tree-count sensitivity** -- refits the forest at a few smaller tree counts
-  to show whether the configured ``n_estimators`` is actually buying accuracy
-  or just spending compute.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -37,30 +20,17 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
 
 
 class RandomForestEvaluator:
-    """Extended diagnostics for a trained Random Forest Digital Twin."""
+
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the evaluator.
 
-        Args:
-            config: Configuration supplying output paths and the random seed.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
 
     def check_overfitting(self, twin: RandomForestTwin, frame: pd.DataFrame) -> Dict[str, Any]:
-        """Compare training-engine accuracy against held-out-engine accuracy.
 
-        A large gap indicates the forest has memorised specific engines rather
-        than learning the operating-context -> sensor relationship in general.
 
-        Args:
-            twin: A trained :class:`RandomForestTwin`.
-            frame: Scaled, context-labelled data.
-
-        Returns:
-            A report of train vs. validation RMSE and the resulting gap.
-        """
         healthy = twin.select_healthy_region(frame)
         train_frame, val_frame = engine_wise_split(
             healthy,
@@ -76,11 +46,11 @@ class RandomForestEvaluator:
         x_val, _ = twin.build_design_matrix(val_frame, n_modes=twin.n_modes)
         y_val, _ = twin.build_targets(val_frame)
 
-        train_pred = twin._predict_estimator(twin.model, x_train)  # noqa: SLF001
-        val_pred = twin._predict_estimator(twin.model, x_val)  # noqa: SLF001
+        train_pred = twin._predict_estimator(twin.model, x_train)
+        val_pred = twin._predict_estimator(twin.model, x_val)
 
-        train_metrics = twin._score(y_train, train_pred)  # noqa: SLF001
-        val_metrics = twin._score(y_val, val_pred)  # noqa: SLF001
+        train_metrics = twin._score(y_train, train_pred)
+        val_metrics = twin._score(y_val, val_pred)
 
         gap = val_metrics["rmse"] - train_metrics["rmse"]
         return {
@@ -93,16 +63,8 @@ class RandomForestEvaluator:
     def tree_count_sensitivity(
         self, frame: pd.DataFrame, candidates: Optional[List[int]] = None
     ) -> Dict[str, float]:
-        """Refit at smaller tree counts to check where accuracy plateaus.
 
-        Args:
-            frame: Scaled, context-labelled data.
-            candidates: Tree counts to try; defaults to a spread below the
-                configured value.
 
-        Returns:
-            A mapping of tree count to validation RMSE.
-        """
         configured = int(self.config.twin.random_forest.get("n_estimators", 200))
         options = candidates or sorted(
             {max(10, configured // 4), max(20, configured // 2), configured}
@@ -145,15 +107,8 @@ class RandomForestEvaluator:
         return results
 
     def run(self, frame: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Run the extended random forest evaluation.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``scaled_features.csv``
-                is read from disk.
 
-        Returns:
-            The combined evaluation report.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:
@@ -176,7 +131,7 @@ class RandomForestEvaluator:
 
 
 def main() -> None:
-    """Run the random forest evaluator standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     evaluator = RandomForestEvaluator(config)

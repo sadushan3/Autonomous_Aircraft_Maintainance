@@ -1,34 +1,3 @@
-"""
-Digital Twin ensemble.
-
-Four twins are trained independently on the same healthy region and then fused
-into one expected-sensor prediction per row.  Two products come out of this:
-
-**The fused expectation.** Weighted by inverse validation RMSE, so a twin that
-models healthy behaviour more accurately contributes more.  This is what the
-residual is computed against.
-
-**The disagreement spread.** The per-sensor standard deviation across the four
-twin predictions.  This is not a by-product -- it is the component's primary
-uncertainty signal.  Where the twins agree, the expected value is well
-determined and a large residual really does mean the engine deviated.  Where
-they disagree, the expectation itself is in doubt, and the confidence estimator
-discounts the resulting anomaly accordingly.
-
-A twin that fails to train (missing optional dependency, degenerate data) is
-logged and excluded rather than aborting the stage; the ensemble proceeds with
-whatever trained successfully, and the weights renormalise.
-
-An optional startup-profile model improves the healthy sensor expectation using
-only the first 30 cycles of an engine. The context ensemble is retained in
-``reference_expected_sensor_*`` for anomaly and health monitoring: improved
-prediction of normal age-related movement must not silently weaken an already
-validated fault reference. ``twin_spread_*`` describes that reference ensemble.
-
-Output: ``twin_predictions.csv`` carrying ``unit``, ``cycle``,
-``expected_sensor_*``, ``twin_spread_*`` and ``twin_spread_mean``.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -65,11 +34,11 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     engine_wise_split,
 )
 
-#: Mean per-sensor twin disagreement, used directly by the uncertainty layer.
+
 TWIN_SPREAD_MEAN_COLUMN = "twin_spread_mean"
 STARTUP_PROFILE_ARTIFACT = "startup_profile_twin.pkl"
 
-#: Registry of available twin variants.
+
 TWIN_REGISTRY: Dict[str, type] = {
     "random_forest": RandomForestTwin,
     "xgboost": XGBoostTwin,
@@ -79,19 +48,15 @@ TWIN_REGISTRY: Dict[str, type] = {
 
 
 class EnsembleTwin:
-    """Trains, fuses and persists the family of Digital Twins."""
+
 
     def __init__(
         self,
         config: Optional[Config] = None,
         twins: Optional[List[BaseTwin]] = None,
     ) -> None:
-        """Initialise the ensemble.
 
-        Args:
-            config: Configuration supplying which twins are enabled.
-            twins: Optional explicit twin instances, injected for testing.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.twins: List[BaseTwin] = twins if twins is not None else self._build_twins()
@@ -102,7 +67,7 @@ class EnsembleTwin:
 
     @staticmethod
     def _profile_context(frame: pd.DataFrame, bundle: Dict[str, Any], age: float = 0) -> np.ndarray:
-        """Fixed context layout, independent of RUL and future trajectory length."""
+
         modes = frame["operating_mode"].to_numpy(int)
         one_hot = np.zeros((len(frame), int(bundle["n_modes"])))
         valid = (modes >= 0) & (modes < one_hot.shape[1])
@@ -117,11 +82,8 @@ class EnsembleTwin:
     @classmethod
     def _profile_features(cls, frame: pd.DataFrame, population: np.ndarray,
                           bundle: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray]:
-        """Frozen startup summaries; apply only after a complete commissioning prefix.
 
-        No observation after commissioning contributes to these summaries. Before
-        that point the caller retains the original past-only context prediction.
-        """
+
         limit = int(bundle["commissioning_cycles"])
         startup = frame["cycle"].between(1, limit)
         values = pd.DataFrame(frame[bundle["target_names"]].to_numpy(float) - population)
@@ -143,10 +105,26 @@ class EnsembleTwin:
         distinct = values.groupby("unit")["cycle"].nunique()
         complete = frame["unit"].map(distinct).fillna(0).eq(limit)
         ready = (complete & frame["cycle"].gt(limit)).to_numpy()
+        schema = bundle.get("feature_schema")
+        if schema is not None:
+            if schema == "causal_trend_history_v1":
+                from app.services.Anomaly_Health_Monitoring.digital_twin.trend_forecast import trend_features
+                return trend_features(frame, population, bundle, base_features=features, ready=ready)
+            if schema == "causal_fast_modes_v1":
+                from app.services.Anomaly_Health_Monitoring.digital_twin.fast_history import fast_mode_features
+                return fast_mode_features(frame, population, bundle, base_features=features, ready=ready)
+            if schema in ("causal_sensor_history_v1", "causal_multimode_history_v1"):
+                from app.services.Anomaly_Health_Monitoring.digital_twin.causal_forecast import prior_sensor_features
+                return prior_sensor_features(frame, population, bundle, base_features=features, ready=ready,
+                    multimode=schema == "causal_multimode_history_v1")
+            if schema != "commissioning_statistics_v1":
+                raise AnomalyHealthError("Unsupported commissioning feature schema")
+            from app.services.Anomaly_Health_Monitoring.digital_twin.profile_models import commissioning_statistics
+            return commissioning_statistics(frame, population, bundle, base_features=features, ready=ready)
         return features, ready
 
     def _profile_prediction(self, frame: pd.DataFrame, reference: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Safely enhance normal prediction, without modifying the fault reference."""
+
         ready = np.zeros(len(frame), dtype=bool)
         bundle = self.startup_profile
         if not self.config.twin.startup_profile_enabled or not bundle:
@@ -162,31 +140,60 @@ class EnsembleTwin:
             self.logger.warning("Startup-profile commissioning policy differs; retaining the context twin.")
             return reference, ready
         population = bundle["population"].predict(self._profile_context(frame, bundle))
+        if bundle.get("feature_schema") == "causal_trend_history_v1" and frame.unit.nunique() > 24:
+            from app.services.Anomaly_Health_Monitoring.digital_twin.trend_forecast import engine_batches
+            result = reference.copy()
+            for rows in engine_batches(frame):
+                batch = frame.iloc[rows].reset_index(drop=True)
+                features, batch_ready = self._profile_features(batch, population[rows], bundle)
+                batch_ready &= batch["subset_id"].isin(bundle["subsets"]).to_numpy()
+                batch_ready &= batch["operating_mode"].between(0, int(bundle["n_modes"]) - 1).to_numpy()
+                ready[rows] = batch_ready
+                if batch_ready.any():
+                    selected = rows[batch_ready]
+                    enhanced = population[selected] + self._predict_profile_correction(
+                        bundle["correction"], features, row_mask=batch_ready)
+                    if not np.isfinite(enhanced).all():
+                        raise AnomalyHealthError("Startup-profile twin produced non-finite predictions.")
+                    result[selected] = enhanced
+            return result, ready
         features, ready = self._profile_features(frame, population, bundle)
         ready &= frame["subset_id"].isin(bundle["subsets"]).to_numpy()
         ready &= frame["operating_mode"].between(0, int(bundle["n_modes"]) - 1).to_numpy()
         result = reference.copy()
         if ready.any():
-            enhanced = population[ready] + self._predict_profile_correction(bundle["correction"], features[ready])
+            enhanced = population[ready] + self._predict_profile_correction(bundle["correction"], features, row_mask=ready)
             if not np.isfinite(enhanced).all():
                 raise AnomalyHealthError("Startup-profile twin produced non-finite predictions.")
             result[ready] = enhanced
         return result, ready
 
     @staticmethod
-    def _predict_profile_correction(model: Any, features: np.ndarray) -> np.ndarray:
-        """Bound kernel inference memory independently of the trajectory size."""
-        return np.concatenate([model.predict(features[start:start + 1024])
-                               for start in range(0, len(features), 1024)], axis=0)
+    def _predict_profile_correction(model: Any, features: np.ndarray,
+                                    row_mask: Optional[np.ndarray] = None) -> np.ndarray:
+
+        if row_mask is None:
+            batches = (features[start:start + 1024] for start in range(0,len(features),1024))
+        else:
+            mask = np.asarray(row_mask,dtype=bool)
+            if mask.shape != (len(features),):
+                raise ValueError("Forecast row mask must match the feature matrix")
+            rows = np.flatnonzero(mask)
+            batches = (features[rows[start:start + 1024]] for start in range(0,len(rows),1024))
+        return np.concatenate([model.predict(batch) for batch in batches],axis=0)
 
     def _fit_startup_profile(self, frame: pd.DataFrame) -> None:
-        """Fit the validated recipe; activate only if engine-held-out R2 and RMSE improve."""
+
         from sklearn.linear_model import Ridge
         from sklearn.kernel_ridge import KernelRidge
         from sklearn.pipeline import make_pipeline
         from sklearn.preprocessing import StandardScaler
 
         self.startup_profile = None
+        from app.utils.Anomaly_Health_Monitoring.training_split import training_scope, record_training_scope, load_training_split
+        source_frame = frame
+        frame = training_scope(frame, self.config)
+        record_training_scope("startup_profile", frame, self.config)
         required = ["subset_id", "operating_mode", "RUL"] + self.target_names
         if not self.config.twin.startup_profile_enabled or any(c not in frame for c in required):
             return
@@ -220,7 +227,7 @@ class EnsembleTwin:
         xa = pd.DataFrame(x[fit]).groupby(keys, sort=True).mean().to_numpy()
         ya = pd.DataFrame((y - p)[fit]).groupby(keys, sort=True).mean().to_numpy()
         correction = make_pipeline(StandardScaler(), Ridge(alpha=100)).fit(xa, ya)
-        # Score both sides on the exact same rows and complete sensor targets.
+
         reference = self.predict(frame)
         base = reference[get_expected_columns(self.target_names)].to_numpy()
         candidate = p[score_mask] + self._predict_profile_correction(correction, x[score_mask])
@@ -231,8 +238,8 @@ class EnsembleTwin:
             return
         ridge_score = dict(after)
         recipe = "ridge_alpha100"
-        # Keep the validated linear model unless the nonlinear correction beats
-        # it on BOTH metrics on the exact same held-out engines and raw targets.
+
+
         try:
             nonlinear = make_pipeline(StandardScaler(), KernelRidge(alpha=1., kernel="rbf", gamma=.001)).fit(xa, ya)
             prediction = p[score_mask] + self._predict_profile_correction(nonlinear, x[score_mask])
@@ -243,11 +250,37 @@ class EnsembleTwin:
                 self.logger.info("Kernel correction did not improve both metrics; retaining validated ridge.")
         except Exception as exc:
             self.logger.warning("Optional kernel fit failed; retaining validated ridge: %s", exc)
-        # An experimentally confirmed recipe can survive a normal pipeline
-        # retrain. Recheck it on this retrain's held-out engines before use.
+
+
         extra = {}
         validated = read_json(self.config.paths.models / "startup_profile_recipe.json")
-        if validated:
+        if validated and validated.get("family") in ("full_fit_profile", "full_fit_sensor_mixture",
+                                                    "full_fit_causal_forecast", "full_fit_causal_sensor_mixture",
+                                                    "full_fit_forecast_target_mixture", "full_fit_context_sensor_mixture"):
+            try:
+                from app.services.Anomaly_Health_Monitoring.digital_twin.validated_profile import refit_validated_profile
+                result = refit_validated_profile(source_frame, self.config,
+                    dict(bundle, population=population), correction, validated)
+                accepted_recipe = validated if result["accepted"] else validated["baseline_recipe"]
+                profile_extra = {"validated_profile_recipe":accepted_recipe, "validation_role":"selection",
+                    "prediction_role":result.get("prediction_role","frozen_commissioning_expectation"),
+                    "prediction_objective":accepted_recipe.get("objective","healthy_sensor_forecasts"),
+                    "full_trajectory_validation_metrics":result.get("full_trajectory_metrics"),
+                    "reference_validation_model":"previous_startup_profile_recipe",
+                    "fit_unit_ids":result["fit_unit_ids"], "selection_unit_ids":result["selection_unit_ids"],
+                    "training_plan_id":load_training_split(self.config)["plan_id"],
+                    "ridge_validation_role":"inner_development"}
+                correction, after = result["model"], result["metrics"]
+                before = result["baseline_metrics"]
+                recipe = str(validated["name"] if result["accepted"] else validated["baseline_recipe"]["name"])
+                if result["feature_schema"]:
+                    bundle["feature_schema"] = result["feature_schema"]
+                extra = profile_extra
+                if not result["accepted"]:
+                    self.logger.info("Validated forecast did not pass its engine-held-out gates; retaining its previous recipe.")
+            except Exception as exc:
+                self.logger.warning("Full profile refit failed; retaining the validated baseline: %s", exc)
+        elif validated:
             try:
                 from app.services.Anomaly_Health_Monitoring.digital_twin.startup_correction import (
                     StartupCorrectionRegressor, BlendedStartupCorrection, fit_sensor_blend,
@@ -279,23 +312,17 @@ class EnsembleTwin:
         bundle.update(population=population, correction=correction,
                       validation_metrics=after, reference_validation_metrics=before,
                       ridge_validation_metrics=ridge_score, correction_recipe=recipe,
-                      validation_rows=int(score_mask.sum()), reference_preserved_for_monitoring=True, **extra)
+                      validation_rows=int(after.get("rows", score_mask.sum())), reference_preserved_for_monitoring=True, **extra)
         self.startup_profile = bundle
 
     def _persist_startup_profile(self) -> None:
-        # Persist None after a rejected/unsupported retrain, so an older model
-        # cannot silently remain active against a new training distribution.
+
+
         save_model(self.startup_profile, self.config.paths.model_path(STARTUP_PROFILE_ARTIFACT), config=self.config)
 
     def _build_twins(self) -> List[BaseTwin]:
-        """Instantiate every enabled twin variant.
 
-        Returns:
-            The list of twin instances.
 
-        Raises:
-            AnomalyHealthError: If no known twin is enabled.
-        """
         built: List[BaseTwin] = []
         for name in self.config.twin.enabled_twins:
             twin_class = TWIN_REGISTRY.get(str(name).lower().strip())
@@ -310,21 +337,10 @@ class EnsembleTwin:
         self.logger.info("Ensemble twins: %s", [t.name for t in built])
         return built
 
-    # ------------------------------------------------------------------ #
-    # Training
-    # ------------------------------------------------------------------ #
+
     def train(self, frame: pd.DataFrame) -> Dict[str, Dict[str, Any]]:
-        """Train every twin, tolerating individual failures.
 
-        Args:
-            frame: Scaled, context-labelled data.
 
-        Returns:
-            A mapping of twin name to its metrics.
-
-        Raises:
-            AnomalyHealthError: If no twin trained successfully.
-        """
         self.metrics = {}
         trained: List[BaseTwin] = []
 
@@ -336,7 +352,7 @@ class EnsembleTwin:
                 trained.append(twin)
                 if not self.target_names:
                     self.target_names = list(twin.target_names)
-            except Exception as exc:  # noqa: BLE001 - one twin must not kill the stage
+            except Exception as exc:
                 self.logger.error(
                     "Twin '%s' failed to train and is excluded from the ensemble: %s",
                     twin.name,
@@ -356,38 +372,7 @@ class EnsembleTwin:
         return self.metrics
 
     def compute_weights(self) -> Dict[str, float]:
-        """Derive fusion weights from validation accuracy.
 
-        Strategies:
-
-        ``uniform``
-            Equal weight to every twin.
-        ``inverse_rmse``
-            Influence proportional to ``1 / RMSE``.
-        ``r2``
-            Influence proportional to mean per-target R-squared, clipped at
-            zero so a twin that fails to beat the target mean contributes
-            nothing.
-
-        Why ``r2`` exists: pooled RMSE and mean R-squared rank these twins in
-        *opposite* order, because RMSE across 21 targets is dominated by the
-        high-variance sensors while R-squared weights every sensor equally. On
-        the 2026-08-24 run the TensorFlow twin had the best pooled RMSE
-        (0.5762) and by far the worst mean R-squared (0.0862), so
-        ``inverse_rmse`` handed it the *largest* share (0.2527) of the
-        ensemble. RMSE also barely separates the twins at all -- a 0.0092
-        spread against an R-squared spread of 0.1448 -- so inverse-RMSE
-        weighting is numerically indistinguishable from ``uniform`` (all four
-        weights land in 0.2487-0.2527) while being mildly anti-correlated with
-        per-target skill.
-
-        A twin with a degenerate (zero or non-finite) score is given no weight
-        rather than an infinite one; if every score is degenerate the method
-        falls back to uniform.
-
-        Returns:
-            Normalised weights summing to 1, keyed by twin name.
-        """
         strategy = str(self.config.twin.ensemble_weighting).lower().strip()
         names = [twin.name for twin in self.twins]
 
@@ -423,11 +408,8 @@ class EnsembleTwin:
         return weights
 
     def _persist_weights(self) -> Path:
-        """Save the fusion weights and per-twin metrics.
 
-        Returns:
-            The path written.
-        """
+
         payload = {
             "weighting_strategy": self.config.twin.ensemble_weighting,
             "weights": self.weights,
@@ -437,6 +419,9 @@ class EnsembleTwin:
             "startup_profile": {
                 "active": self.startup_profile is not None,
                 "validation_metrics": (self.startup_profile or {}).get("validation_metrics"),
+                "prediction_role": (self.startup_profile or {}).get("prediction_role", "frozen_commissioning_expectation"),
+                "prediction_objective": (self.startup_profile or {}).get("prediction_objective", "healthy_sensor_forecasts"),
+                "full_trajectory_validation_metrics": (self.startup_profile or {}).get("full_trajectory_validation_metrics"),
                 "monitoring_reference": "unchanged_context_ensemble",
             },
         }
@@ -445,14 +430,8 @@ class EnsembleTwin:
         )
 
     def load(self) -> "EnsembleTwin":
-        """Reload every twin and the persisted fusion weights.
 
-        Returns:
-            This instance, ready to predict.
 
-        Raises:
-            AnomalyHealthError: If no twin could be reloaded.
-        """
         payload = read_json(
             self.config.paths.model_path(self.config.paths.twin_weights_json),
             default=None,
@@ -464,7 +443,7 @@ class EnsembleTwin:
                 loaded.append(twin)
                 if not self.target_names:
                     self.target_names = list(twin.target_names)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self.logger.warning("Could not reload twin '%s': %s", twin.name, exc)
 
         if not loaded:
@@ -483,7 +462,7 @@ class EnsembleTwin:
         if not self.weights:
             self.weights = {twin.name: 1.0 / len(loaded) for twin in loaded}
 
-        # Renormalise in case some twins failed to reload.
+
         total = sum(self.weights.values())
         if total > 0:
             self.weights = {k: v / total for k, v in self.weights.items()}
@@ -502,22 +481,10 @@ class EnsembleTwin:
                 self.logger.warning("Could not load startup-profile twin; retaining context predictions: %s", exc)
         return self
 
-    # ------------------------------------------------------------------ #
-    # Fusion
-    # ------------------------------------------------------------------ #
+
     def predict(self, frame: pd.DataFrame) -> pd.DataFrame:
-        """Produce the fused expectation and the disagreement spread.
 
-        Args:
-            frame: Scaled, context-labelled data.
 
-        Returns:
-            A frame of identity keys, ``expected_sensor_*``, ``twin_spread_*``
-            and ``twin_spread_mean``.
-
-        Raises:
-            AnomalyHealthError: If no twin produced a prediction.
-        """
         if not self.twins:
             raise AnomalyHealthError("Ensemble has no trained twins.")
 
@@ -528,7 +495,7 @@ class EnsembleTwin:
         for twin in self.twins:
             try:
                 prediction = twin.predict(frame)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self.logger.error("Twin '%s' failed during inference: %s", twin.name, exc)
                 continue
             expected_columns = get_expected_columns(twin.target_names)
@@ -541,14 +508,14 @@ class EnsembleTwin:
         if not stacked:
             raise AnomalyHealthError("No twin produced predictions.")
 
-        # Guard against every surviving twin having zero weight.
+
         weight_array = np.asarray(used_weights, dtype=float)
         if weight_array.sum() <= 0:
             weight_array = np.ones_like(weight_array) / len(weight_array)
         else:
             weight_array = weight_array / weight_array.sum()
 
-        tensor = np.stack(stacked, axis=0)  # (n_twins, n_rows, n_sensors)
+        tensor = np.stack(stacked, axis=0)
         fused = np.tensordot(weight_array, tensor, axes=(0, 0))
         spread = (
             np.std(tensor, axis=0)
@@ -587,19 +554,10 @@ class EnsembleTwin:
         )
         return result
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self, frame: pd.DataFrame, path: Optional[Path] = None) -> Path:
-        """Write ``twin_predictions.csv`` atomically.
 
-        Args:
-            frame: Fused predictions.
-            path: Optional explicit destination.
 
-        Returns:
-            The path written.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.twin_predictions_csv
         )
@@ -607,14 +565,8 @@ class EnsembleTwin:
         return atomic_write_csv(frame, target, config=self.config)
 
     def load_saved(self, path: Optional[Path] = None) -> pd.DataFrame:
-        """Read back ``twin_predictions.csv``.
 
-        Args:
-            path: Optional explicit source.
 
-        Returns:
-            The loaded frame.
-        """
         target = path or self.config.paths.processed_path(
             self.config.paths.twin_predictions_csv
         )
@@ -627,16 +579,7 @@ class EnsembleTwin:
         frame: Optional[pd.DataFrame] = None,
         retrain: bool = True,
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """Execute the Digital Twin stage.
 
-        Args:
-            frame: Optional in-memory input; otherwise ``scaled_features.csv``
-                is read from disk.
-            retrain: Train fresh twins, or reload the saved ones.
-
-        Returns:
-            A ``(predictions, report)`` tuple.
-        """
         self.config.ensure_directories()
         source = frame
         if source is None:
@@ -674,6 +617,9 @@ class EnsembleTwin:
             "startup_profile": {
                 "active": self.startup_profile is not None,
                 "validation_metrics": (self.startup_profile or {}).get("validation_metrics"),
+                "prediction_role": (self.startup_profile or {}).get("prediction_role", "frozen_commissioning_expectation"),
+                "prediction_objective": (self.startup_profile or {}).get("prediction_objective", "healthy_sensor_forecasts"),
+                "full_trajectory_validation_metrics": (self.startup_profile or {}).get("full_trajectory_validation_metrics"),
                 "monitoring_reference": "unchanged_context_ensemble",
                 "spread_describes": "monitoring_reference_ensemble",
             },
@@ -689,7 +635,7 @@ class EnsembleTwin:
 
 
 def main() -> None:
-    """Train the full twin ensemble standalone."""
+
     config = get_config()
     logger = get_logger(__name__, config)
     ensemble = EnsembleTwin(config)

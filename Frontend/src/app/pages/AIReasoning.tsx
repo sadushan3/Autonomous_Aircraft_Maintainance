@@ -49,7 +49,7 @@ import type { AnomalyAlert, RootCauseRecord } from "../../lib/types";
 
 const PALETTE = ["#ef4444", "#f97316", "#f59e0b", "#a855f7", "#22d3ee", "#10b981", "#6366f1", "#ec4899"];
 
-/** top_sensors arrives as a real array or as a stringified Python list. */
+
 function sensorList(v: unknown): string[] {
   if (Array.isArray(v)) return v.map(String);
   if (typeof v === "string") {
@@ -76,20 +76,14 @@ export function AIReasoning() {
   const focus = explained.find((a) => String(a.engine_id) === focusId) ?? explained[0];
   const reasoning = useEngineReasoning(focusId);
 
-  /**
-   * The reasoning record for the cycle the focus alert was raised on.
-   *
-   * `/reasoning/{id}` returns the engine's history newest-first; matching the
-   * alert's own cycle keeps the chain, the narrative and the sensor ranking
-   * describing the same moment rather than three different ones.
-   */
+
   const record: RootCauseRecord | null = (() => {
     const records = reasoning.data?.records ?? [];
     if (!records.length) return null;
     return records.find((r) => r.cycle === focus?.cycle) ?? records[0];
   })();
 
-  /** Largest deviation in the focused alert, so the contribution bars scale to it. */
+
   const zMax = (() => {
     const zs = (record?.sensor_contributions ?? []).map((c) => Math.abs(c.residual_z ?? 0));
     const top = Math.max(...zs, 0);
@@ -102,13 +96,7 @@ export function AIReasoning() {
 
   const fleet = dash.data.fleet;
 
-  /**
-   * `fleet.top_root_causes` is capped at five server-side -- it is a "top
-   * causes" widget field, not the full set. Counting its keys reported five
-   * distinct causes when the reasoner actually distinguishes seven, and the
-   * chart silently dropped the two rarest. The reasoning-stage rollup carries
-   * all of them, so prefer it and fall back only when it is unavailable.
-   */
+
   const causes = evaluation.reasoning?.cause_distribution ?? fleet.top_root_causes ?? {};
   const causeTruncated = !evaluation.reasoning?.cause_distribution;
   const causeTotal = Object.values(causes).reduce((a, b) => a + Number(b), 0) || 1;
@@ -124,7 +112,7 @@ export function AIReasoning() {
   const rGate = evaluation.reasoningGate;
   const xGate = evaluation.explainGate;
 
-  // Signed local group attributions for the focused alert and sensor.
+
   const shapRanking = (() => {
     const raw = focus?.shap_top_features;
     const list = Array.isArray(raw) ? raw : [];
@@ -150,8 +138,7 @@ export function AIReasoning() {
   const graphEdges =
     (graph.data?.edges as Array<{ source: string; target: string; relation: string; weight: number }> | undefined) ?? [];
 
-  // The root cause is prose ("High-Pressure Turbine degradation"); match it to
-  // a graph node id so the propagation path can be highlighted.
+
   const CAUSE_TO_NODE: Array<[RegExp, string]> = [
     [/high-pressure turbine|hpt/i, "hpt"],
     [/low-pressure turbine|lpt/i, "lpt"],
@@ -320,7 +307,7 @@ export function AIReasoning() {
                   </div>
                 </GlassCard>
 
-                {/* The generated narrative — the actual explainability output. */}
+
                 <div className="rounded-lg border border-purple-500/25 bg-gradient-to-br from-purple-900/20 to-slate-900/20 p-5">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-purple-300">
                     <Sparkles className="h-4 w-4" /> Generated Explanation
@@ -328,7 +315,7 @@ export function AIReasoning() {
                   <p className="leading-relaxed text-slate-200">{focus.explanation_text}</p>
                 </div>
 
-                {/* ---- the actual reasoning: what else it considered, and why ---- */}
+
                 {record && record.candidate_causes.length > 0 && (
                   <div className="rounded-lg border border-slate-800/60 bg-slate-900/40 p-4">
                     <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-300">
@@ -428,7 +415,7 @@ export function AIReasoning() {
                   </div>
                 )}
 
-                {/* ---- when it started, how long, how fast ---------------------- */}
+
                 {record && (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {[
@@ -708,7 +695,6 @@ export function AIReasoning() {
       </Reveal>
 
 
-      {/* ---- Does the reasoning layer hold up? Its own acceptance gates ------ */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <Reveal index={7} className="xl:col-span-3">
           <MetricCard
@@ -783,7 +769,7 @@ export function AIReasoning() {
                   </p>
                 )}
 
-                {/* No field is silently blank -- the per-field misses are shown. */}
+
                 {xGate?.completeness?.missing_by_field && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {Object.entries(xGate.completeness.missing_by_field).map(([field, missing]) => (
@@ -843,7 +829,7 @@ export function AIReasoning() {
           </MetricCard>
         </Reveal>
 
-        {/* ---- how deviations evolve, fleet-wide -------------------------- */}
+
         <Reveal index={8} className="xl:col-span-2">
           <MetricCard
             title="How deviations evolve"

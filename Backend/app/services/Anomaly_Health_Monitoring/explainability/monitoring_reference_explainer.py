@@ -1,10 +1,3 @@
-"""Local grouped SHAP for the calibrated ensemble used by monitoring.
-
-Operating settings and their mode indicators form one group; raw and
-normalised age form another. Joint masking preserves those dependencies.
-The past-only commissioning offset is held fixed and reported separately.
-Attributions explain an expected sensor value, not a fault's physical cause.
-"""
 from __future__ import annotations
 
 from typing import Any, Dict, Tuple
@@ -16,7 +9,7 @@ from app.utils.Anomaly_Health_Monitoring.utils import AnomalyHealthError
 
 
 def representative_sample(frame: pd.DataFrame, limit: int, seed: int) -> pd.DataFrame:
-    """Round-robin across engines and modes instead of taking a file prefix."""
+
     if frame.empty or limit <= 0:
         return frame.iloc[:0].copy()
     groups = [c for c in ("subset_id", "operating_mode", "unit") if c in frame]
@@ -26,7 +19,7 @@ def representative_sample(frame: pd.DataFrame, limit: int, seed: int) -> pd.Data
 
 
 class MonitoringReferenceExplainer:
-    """Explain the full weighted context ensemble, rejecting stale references."""
+
 
     feature_names = ["operating_context", "cycle_position"]
 
@@ -65,8 +58,8 @@ class MonitoringReferenceExplainer:
         raw = self._raw_prediction(matrix)
         weights = np.array([self.ensemble.weights.get(t.name, 0.) for t in self.ensemble.twins])
         weights = weights / weights.sum() if weights.sum() > 0 else np.full(len(weights), 1. / len(weights))
-        # Calibration is recomputed from the full observed prefix, never inferred
-        # from a saved prediction merely to force an additivity check to pass.
+
+
         offsets = []
         for twin in self.ensemble.twins:
             p = np.asarray(twin._predict_estimator(twin.model, matrix), dtype=float)
@@ -97,8 +90,7 @@ class MonitoringReferenceExplainer:
                 "Refresh inference outputs before attaching SHAP."
             )
 
-        # A commissioning-prefix reference is available at runtime without RUL
-        # or eventual trajectory length. Take actual rows across engines/modes.
+
         healthy = scaled[scaled.cycle.between(1, max(int(self.config.twin.commissioning_cycles), 1))]
         background_frame = representative_sample(healthy, self.config.explainability.reference_background_rows,
                                                    self.config.data.random_state)
@@ -111,8 +103,8 @@ class MonitoringReferenceExplainer:
         coalition = np.zeros((4, len(events)))
         coalition[0] = self._raw_prediction(background).mean(axis=0)[targets]
         coalition[3] = raw[rows, targets]
-        # Evaluate all mixed coalitions in bounded batches; no independent
-        # masking of one-hot modes or the two representations of age occurs.
+
+
         for mask, columns in ((1, context_columns), (2, age_columns)):
             mixed = np.tile(background, (len(events), 1))
             for i, row in enumerate(rows):
@@ -120,8 +112,7 @@ class MonitoringReferenceExplainer:
             result = self._raw_prediction(mixed).reshape(len(events), len(background), -1).mean(axis=1)
             coalition[mask] = result[np.arange(len(events)), targets]
 
-        # The two binary inputs represent presence/absence of each whole group.
-        # ExactExplainer evaluates the already-computed coalition value function.
+
         def coalition_value(flags: np.ndarray) -> np.ndarray:
             indices = flags[:, 0].astype(int) + 2 * flags[:, 1].astype(int)
             return coalition[indices]
@@ -147,8 +138,8 @@ class MonitoringReferenceExplainer:
                 "shap_additivity_error": float(errors[i]), "shap_reference_error": float(fidelity[i]),
                 "shap_background_rows": len(background),
             }
-        # Global summaries stay separate, grouped by output sensor so different
-        # sensor scales and meanings are never averaged into a single ranking.
+
+
         global_by_sensor = {}
         for sensor in events.shap_sensor.unique():
             selected = (events.shap_sensor == sensor).to_numpy()

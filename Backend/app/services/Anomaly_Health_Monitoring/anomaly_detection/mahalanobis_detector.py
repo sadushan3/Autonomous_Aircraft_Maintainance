@@ -1,30 +1,3 @@
-"""
-Mahalanobis-distance anomaly detector.
-
-Fits a covariance matrix over the healthy-region residual features and scores
-every row by its Mahalanobis distance from the healthy mean:
-
-    D^2(x) = (x - mu)^T * Sigma^-1 * (x - mu)
-
-Two things make this more robust than a textbook implementation:
-
-**Ledoit-Wolf shrinkage.**  21 residual channels is a lot of dimensions
-relative to the number of independent healthy samples available for many
-engines, and the sample covariance matrix in that regime is poorly
-conditioned -- small eigenvalues get wildly overweighted by the inverse,
-producing distances that are dominated by estimation noise rather than genuine
-correlation structure.  Shrinkage blends the sample covariance toward a scaled
-identity matrix, which is exactly the regularisation this needs.
-
-**Distributional grounding, not an arbitrary cutoff.**  Under the working
-assumption that healthy residuals are approximately multivariate normal,
-``D^2`` follows a chi-squared distribution with degrees of freedom equal to the
-feature count.  The detector reports both that chi-squared-implied threshold
-and the empirical percentile threshold from the healthy region, and uses the
-empirical one for flagging -- more robust when the normality assumption is
-only approximate, which it always is for real sensor data.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -49,22 +22,18 @@ from app.utils.Anomaly_Health_Monitoring.utils import (
     save_model,
 )
 
-#: Column name this detector contributes to anomaly_scores.csv.
+
 SCORE_COLUMN = "mahalanobis_score"
 
 
 class MahalanobisDetector:
-    """Mahalanobis-distance detector with shrinkage-regularised covariance."""
+
 
     ARTIFACT_NAME = "mahalanobis_detector.pkl"
 
     def __init__(self, config: Optional[Config] = None) -> None:
-        """Initialise the detector.
 
-        Args:
-            config: Configuration supplying shrinkage settings and threshold
-                percentile.
-        """
+
         self.config = config or get_config()
         self.logger = get_logger(__name__, self.config)
         self.covariance_estimator: Optional[Any] = None
@@ -79,7 +48,7 @@ class MahalanobisDetector:
         self.score_normalization = str(self.config.anomaly.mahalanobis.get("score_normalization", "empirical"))
 
     def _feature_values(self, frame: pd.DataFrame) -> np.ndarray:
-        """Trailing means within each engine, aligned to the caller's row order."""
+
         ordered = frame.reset_index(drop=True).sort_values(["unit", "cycle"])
         values = ordered[self.feature_columns].astype(float)
         if ordered.duplicated(["unit", "cycle"]).any() or ordered[["unit", "cycle"]].isna().any().any():
@@ -89,13 +58,12 @@ class MahalanobisDetector:
         if self.temporal_method not in ("rolling", "ewm"):
             raise AnomalyHealthError("Unsupported Mahalanobis temporal method.")
         if self.temporal_window > 1:
-            # Restart the temporal window after a missing observation.
+
             gap = ordered.groupby("unit", sort=False)["cycle"].diff().ne(1)
             segment = gap.cumsum()
             if self.temporal_method == "rolling" and self.temporal_window <= 20 and not values.empty:
-                # Short window views avoid a Python/pandas callback for every
-                # sensor in every engine. Each block still starts at an engine
-                # boundary or cycle gap; no other history enters its means.
+
+
                 matrix = values.to_numpy()
                 smoothed = np.empty_like(matrix)
                 starts = np.flatnonzero(gap.to_numpy())
@@ -120,20 +88,14 @@ class MahalanobisDetector:
 
     def _normalize(self, distances: np.ndarray) -> np.ndarray:
         if self.score_normalization == "rational":
-            # Strictly increasing beyond the healthy tail; an empirical CDF
-            # otherwise gives all severe faults the identical score of 1.
+
+
             return distances / (distances + max(self._distance_p99, 1e-12))
         return empirical_percentile_normalize(self._healthy_distances_sorted, distances)
 
     def _healthy_mask(self, frame: pd.DataFrame) -> pd.Series:
-        """Select the same healthy region the digital twin trained on.
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            A boolean mask.
-        """
         settings = self.config.healthy_region
         if self.temporal_window > 1 and RUL_COLUMN in frame:
             return (frame[RUL_COLUMN].astype(float) >= settings.rul_threshold) & (
@@ -147,22 +109,13 @@ class MahalanobisDetector:
         cycle_ok = frame["cycle"].astype(float) <= (float(settings.cycle_fraction) * max_cycle)
         return rul_ok & cycle_ok
 
-    # ------------------------------------------------------------------ #
-    # Fitting
-    # ------------------------------------------------------------------ #
+
     def fit(self, frame: pd.DataFrame, feature_columns: List[str]) -> "MahalanobisDetector":
-        """Fit the covariance estimator on the healthy region.
 
-        Args:
-            frame: Residual feature frame.
-            feature_columns: Columns forming the multivariate feature space.
 
-        Returns:
-            This fitted instance.
-
-        Raises:
-            AnomalyHealthError: If no feature columns are available.
-        """
+        from app.utils.Anomaly_Health_Monitoring.training_split import training_scope, record_training_scope
+        frame = training_scope(frame, self.config)
+        record_training_scope("covariance_reference", frame, self.config)
         present = [c for c in feature_columns if c in frame.columns]
         if not present:
             raise AnomalyHealthError("No residual feature columns available for Mahalanobis.")
@@ -171,7 +124,7 @@ class MahalanobisDetector:
         healthy_mask = self._healthy_mask(frame).to_numpy()
         if not healthy_mask.any():
             raise AnomalyHealthError("No healthy post-commissioning rows available for covariance fitting.")
-        # Smooth before selecting labels so the trailing history is preserved.
+
         values = self._feature_values(frame)[healthy_mask]
         healthy = frame.loc[healthy_mask]
 
@@ -182,7 +135,7 @@ class MahalanobisDetector:
             self.covariance_estimator = LedoitWolf().fit(values)
         else:
             self.covariance_estimator = EmpiricalCovariance().fit(values)
-            # Manual regularisation for the non-shrinkage path.
+
             self.covariance_estimator.covariance_ += reg * np.eye(values.shape[1])
             self.covariance_estimator.precision_ = np.linalg.pinv(
                 self.covariance_estimator.covariance_
@@ -215,61 +168,30 @@ class MahalanobisDetector:
         )
         return self
 
-    # ------------------------------------------------------------------ #
-    # Scoring
-    # ------------------------------------------------------------------ #
+
     def raw_distance(self, frame: pd.DataFrame) -> np.ndarray:
-        """Compute the Mahalanobis distance for every row.
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            An array of distances.
-
-        Raises:
-            AnomalyHealthError: If called before fitting or loading.
-        """
         if self.covariance_estimator is None:
             raise AnomalyHealthError("MahalanobisDetector used before fit/load.")
         values = self._feature_values(frame)
         return self.covariance_estimator.mahalanobis(values)
 
     def score(self, frame: pd.DataFrame) -> np.ndarray:
-        """Normalise the Mahalanobis distance into [0, 1].
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            An array of normalised anomaly scores.
-        """
         distances = self.raw_distance(frame)
         return self._normalize(distances)
 
     def predict_flags(self, frame: pd.DataFrame) -> np.ndarray:
-        """Return boolean anomaly flags using the calibrated threshold.
 
-        Args:
-            frame: Residual feature frame.
 
-        Returns:
-            A boolean array.
-        """
         return self.score(frame) > self.threshold
 
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
+
     def save(self) -> Path:
-        """Persist the fitted covariance estimator and calibration.
 
-        Returns:
-            The artefact path written.
 
-        Raises:
-            AnomalyHealthError: If nothing has been fitted.
-        """
         if self.covariance_estimator is None:
             raise AnomalyHealthError("Nothing to save; fit the detector first.")
         bundle = {
@@ -287,11 +209,8 @@ class MahalanobisDetector:
         return save_model(bundle, self.config.paths.model_path(self.ARTIFACT_NAME), config=self.config)
 
     def load(self) -> "MahalanobisDetector":
-        """Reload a previously persisted detector.
 
-        Returns:
-            This instance, ready to score.
-        """
+
         bundle = load_model(self.config.paths.model_path(self.ARTIFACT_NAME))
         self.covariance_estimator = bundle["covariance_estimator"]
         self.mean_ = bundle["mean"]
@@ -302,7 +221,7 @@ class MahalanobisDetector:
         self._healthy_distances_sorted = np.asarray(
             bundle["healthy_distances_sorted"], dtype=float
         )
-        # Archived bundles retain their original feature and score semantics.
+
         self.temporal_window = int(bundle.get("temporal_window", 1))
         self.temporal_method = str(bundle.get("temporal_method", "rolling"))
         self.score_normalization = str(bundle.get("score_normalization", "empirical"))
@@ -310,7 +229,7 @@ class MahalanobisDetector:
 
 
 def main() -> None:
-    """Fit and score the Mahalanobis detector standalone."""
+
     from app.utils.Anomaly_Health_Monitoring.utils import read_csv
     from app.utils.Anomaly_Health_Monitoring.model_utils import get_identity_columns
 

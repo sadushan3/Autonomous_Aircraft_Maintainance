@@ -42,14 +42,7 @@ const TONE: Record<string, { border: string; bg: string; text: string }> = {
   red: { border: "border-red-500/40", bg: "bg-red-500/10", text: "text-red-300" },
 };
 
-/**
- * Operator verdict control for one raised alert.
- *
- * Submitting here drives the component's learning loop: the verdict is stored,
- * matched into alert memory, and the adaptive anomaly threshold is recomputed
- * from the full feedback history. A sustained false-alarm rate also nudges the
- * health-state boundaries.
- */
+
 export function FeedbackControl({
   engineId,
   cycle,
@@ -77,8 +70,8 @@ export function FeedbackControl({
         verdict,
         operator: "dashboard_operator",
         comment: comment.trim(),
-        // Only send a corrected cause when the operator actually typed one;
-        // an empty string would be recorded as a confirmed (blank) diagnosis.
+
+
         confirmed_root_cause: actualCause.trim() || null,
       },
       {

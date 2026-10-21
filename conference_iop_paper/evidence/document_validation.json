@@ -1,0 +1,28 @@
+{
+  "pages": 10,
+  "page_size": "A4, exact supplied-template dimensions",
+  "template_margins_preserved": true,
+  "single_spaced_body": true,
+  "header_and_footer_content": false,
+  "page_numbers": false,
+  "abstract_gap_mm": 10,
+  "native_editable_equations": 7,
+  "figures": 3,
+  "tables": 4,
+  "verified_references": 11,
+  "all_citations_resolved": true,
+  "all_reference_links_in_pdf": true,
+  "all_fonts_embedded": true,
+  "visible_content_within_margins_allowing_3pt_glyph_overhang": true,
+  "no_detected_encoding_corruption": true,
+  "source_hashes_match": 38,
+  "independently_reconstructed_labels": 104897,
+  "anomaly_and_health_results_reproduced": true,
+  "author_name_and_email_confirmed": true,
+  "remaining_information": [
+    "Author affiliation",
+    "Conference name and page limit",
+    "Venue-specific review and disclosure requirements"
+  ],
+  "evaluation_scope": "Retrospective C-MAPSS condition proxies; no new prospective or physical-fault experiment."
+}

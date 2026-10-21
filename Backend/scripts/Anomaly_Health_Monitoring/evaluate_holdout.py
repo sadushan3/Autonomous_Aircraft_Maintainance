@@ -1,70 +1,3 @@
-"""Deterministic, versioned held-out evaluation for the Anomaly & Health component.
-
-Rebuilds ``metrics/holdout_anomaly_evaluation.json``. The original producer of
-that file was not in the repository -- the component's strongest evidence
-(held-out AUC, false-alarm rate, detection lead time) existed as a JSON blob
-that nothing could regenerate, so it could neither be audited nor used to catch
-a regression. This script is that missing producer.
-
-Protocol
---------
-Scores are joined to ground truth and split by the ``split`` column the reader
-stamps on every row:
-
-* ``train`` rows are run-to-failure trajectories, so ``RUL`` reaches 0.
-* ``test`` rows are censored -- the engine had not failed when observation
-  stopped -- so most never enter the critical band at all. This is why the
-  train/test detection rates are not comparable and are never averaged here.
-
-Every figure is computed against ``RUL``, which the reader derives from cycle
-counts (plus ``RUL_FDxxx.txt`` for test units). It is therefore independent of
-the residuals every detector consumes -- unlike ``health_state``, which is
-derived from the same residuals and yields a meaningless AUC of exactly 1.0.
-
-Band definitions are explicit, recorded in the output, and overridable:
-
-* healthy  : ``RUL >= --healthy-rul``   (default 125)
-* critical : ``RUL <= --critical-rul``  (default 30)
-
-Metric definitions that are easy to get wrong
----------------------------------------------
-``detection_rate``
-    Engines flagged at least once *while inside the critical band*, divided by
-    all engines. On censored test data most engines never reach that band, so
-    this is bounded above by the fraction that do. ``engines_reaching_critical``
-    is reported alongside it so the number is interpretable rather than merely
-    low -- the original file reported 0.4597 with no such context.
-``lead_time``
-    ``RUL`` at each engine's first flagged cycle: how much life remained when
-    the system first raised its hand. Comparable across censored and
-    uncensored trajectories, unlike "cycles before the last observation".
-
-Determinism
------------
-No sampling, no shuffling, no model fitting. Groupby is sorted, engines are
-iterated in sorted order, and every emitted float is rounded to a fixed
-precision. Re-running against the same inputs produces a byte-identical
-``metrics`` block; only the ``provenance`` timestamp changes.
-
-Versioning
-----------
-``SCHEMA_VERSION`` covers the shape and meaning of the ``metrics`` block; bump
-the minor when adding a field, the major when changing an existing definition.
-The ``provenance`` block records SHA-256 of every input, the resolved band
-definitions, and library versions, so a stored result can always be traced to
-what produced it.
-
-Usage
------
-    python -m scripts.Anomaly_Health_Monitoring.evaluate_holdout
-    python -m scripts.Anomaly_Health_Monitoring.evaluate_holdout --healthy-rul 120
-    python -m scripts.Anomaly_Health_Monitoring.evaluate_holdout --check   # CI gate
-
-``--check`` re-evaluates and exits non-zero if any headline metric has moved
-by more than ``--tolerance`` from the stored file, which turns this into a
-regression gate rather than a report.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -83,10 +16,10 @@ _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-#: Shape/meaning of the ``metrics`` block. Bump on any definition change.
+
 SCHEMA_VERSION = "2.0.0"
 
-#: Fixed rounding so repeated runs are byte-identical.
+
 ROUND = 6
 
 DEFAULT_SCORES = _BACKEND_ROOT / "processed" / "dashboard_data.csv"
@@ -95,7 +28,7 @@ DEFAULT_OUT = _BACKEND_ROOT / "metrics" / "holdout_anomaly_evaluation.json"
 
 IDENTITY = ["unit", "cycle"]
 
-#: Headline metrics guarded by --check.
+
 GUARDED = (
     "auc_healthy_vs_critical",
     "false_alarm_rate_healthy",
@@ -106,7 +39,7 @@ GUARDED = (
 
 
 def sha256(path: Path) -> Optional[str]:
-    """Content hash of a file, or None if it is missing."""
+
     if not path.exists():
         return None
     digest = hashlib.sha256()
@@ -117,7 +50,7 @@ def sha256(path: Path) -> Optional[str]:
 
 
 def r(value: Any) -> Any:
-    """Round floats to a fixed precision; pass everything else through."""
+
     if value is None or isinstance(value, bool):
         return value
     if isinstance(value, (int, np.integer)):
@@ -128,11 +61,8 @@ def r(value: Any) -> Any:
 
 
 def load_frames(scores_path: Path, labels_path: Path) -> pd.DataFrame:
-    """Join scored rows to ground-truth labels on the identity keys.
 
-    Raises:
-        SystemExit: If a required column or file is missing, naming which.
-    """
+
     for path in (scores_path, labels_path):
         if not path.exists():
             raise SystemExit(f"missing input: {path}")
@@ -148,8 +78,7 @@ def load_frames(scores_path: Path, labels_path: Path) -> pd.DataFrame:
         if col not in scores.columns:
             raise SystemExit(f"{scores_path.name} lacks required column: {col}")
 
-    # Labels are authoritative. Carrying RUL/split in a new scored CSV must
-    # not create suffixes or allow stale metadata to override ground truth.
+
     join_keys = IDENTITY + [c for c in ("split", "subset_id") if c in scores and c in labels]
     merged = scores.drop(columns=[c for c in label_cols if c not in join_keys and c in scores]).merge(
         labels, on=join_keys, how="left", validate="one_to_one", indicator=True)
@@ -167,7 +96,7 @@ def load_frames(scores_path: Path, labels_path: Path) -> pd.DataFrame:
 
 
 def cohens_d(a: np.ndarray, b: np.ndarray) -> Optional[float]:
-    """Standardised mean difference with a pooled standard deviation."""
+
     if len(a) < 2 or len(b) < 2:
         return None
     va, vb = a.var(ddof=1), b.var(ddof=1)
@@ -178,7 +107,7 @@ def cohens_d(a: np.ndarray, b: np.ndarray) -> Optional[float]:
 
 
 def split_metrics(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> Dict[str, Any]:
-    """Compute the full metric block for one split."""
+
     from scipy.stats import spearmanr
     from sklearn.metrics import roc_auc_score
 
@@ -207,7 +136,7 @@ def split_metrics(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> D
     out["healthy_rows"] = int(healthy.sum())
     out["critical_rows"] = int(critical.sum())
 
-    # AUC over the two labelled bands only; rows between them are unlabelled.
+
     both = healthy | critical
     if healthy.any() and critical.any():
         out["auc_healthy_vs_critical"] = r(
@@ -226,7 +155,7 @@ def split_metrics(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> D
     out["flag_rate_critical"] = r(float(flag[critical].mean()) if critical.any() else None)
     out["overall_flag_rate"] = r(float(flag.mean()))
 
-    # Per-engine detection and lead time, in sorted engine order.
+
     reaching = 0
     detected = 0
     leads: List[float] = []
@@ -260,11 +189,16 @@ def split_metrics(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> D
     if "severity" in frame.columns:
         means = frame.groupby("severity", sort=True)["RUL"].mean().to_dict()
         out["severity_mean_rul"] = {str(k): r(float(v)) for k, v in means.items()}
+        out["severity_row_counts"] = {str(k): int(v) for k, v in frame.groupby("severity", sort=True).size().items()}
+        out["severity_summary_note"] = (
+            "Mean true RUL on ready held-out cycles using the active model's frozen severity bands. "
+            "This describes association with remaining life; it is not a calibrated RUL prediction."
+        )
     return out
 
 
 def per_subset(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> Dict[str, Any]:
-    """Headline metrics broken out per FD subset, in sorted order."""
+
     out: Dict[str, Any] = {}
     if "subset_id" not in frame.columns:
         return out
@@ -281,7 +215,7 @@ def per_subset(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> Dict
 
 
 def build(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> Dict[str, Any]:
-    """Assemble the full metrics block from the joined frame."""
+
     metrics: Dict[str, Any] = {}
     for split in ("train", "test"):
         part = frame[frame["split"] == split]
@@ -301,7 +235,7 @@ def build(frame: pd.DataFrame, healthy_rul: int, critical_rul: int) -> Dict[str,
 
 
 def compare(stored: Dict[str, Any], fresh: Dict[str, Any], tol: float) -> List[str]:
-    """Return human-readable drift lines for guarded metrics."""
+
     drifts: List[str] = []
     for split in ("train", "test", "all"):
         a, b = stored.get(split), fresh.get(split)
@@ -334,6 +268,8 @@ def main() -> int:
     payload = {
         "schema_version": SCHEMA_VERSION,
         "provenance": {
+            "evaluation_status": "retrospective_or_unspecified; untouched external validation has not been established",
+            "benchmark_results_must_not_drive_model_promotion": True,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "generated_by": "scripts/Anomaly_Health_Monitoring/evaluate_holdout.py",
             "deterministic": True,

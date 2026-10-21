@@ -1,17 +1,3 @@
-"""
-Schemas for the root-cause reasoning layer.
-
-The reasoning layer answers eight questions about every fault-type anomaly:
-why it occurred, what sequence of events caused it, which sensors contributed,
-whether it is operational or fault-related, whether something similar has been
-seen before, how it evolved, what the most likely root cause is, and what
-maintenance action to recommend.
-
-Causal language is deliberately soft.  Every record carries
-``hard_causal_claim=False``: the sensor dependency graph encodes thermodynamic
-coupling between engine subsystems, not proven causation.
-"""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -28,7 +14,7 @@ from app.schemas.Anomaly_Health_Monitoring.common_schema import (
 
 
 class SensorContribution(StrictModel):
-    """How much one sensor contributed to an anomaly."""
+
 
     sensor: str = Field(..., description="Sensor column name, e.g. 'sensor_4'.")
     residual: float = Field(default=0.0, description="Actual minus expected value.")
@@ -50,7 +36,7 @@ class SensorContribution(StrictModel):
 
 
 class CandidateCause(StrictModel):
-    """One hypothesised root cause with its supporting evidence."""
+
 
     cause: str = Field(..., description="Root-cause description.")
     likelihood: float = Field(
@@ -68,7 +54,7 @@ class CandidateCause(StrictModel):
 
 
 class RootCauseRecord(StrictModel):
-    """Complete reasoning output for one engine at one cycle."""
+
 
     engine_id: int = Field(...)
     cycle: int = Field(..., ge=1)
@@ -121,7 +107,7 @@ class RootCauseRecord(StrictModel):
 
 
 class ReasoningRequest(StrictModel):
-    """Parameters for the reasoning stage."""
+
 
     top_k_sensors: Optional[int] = Field(
         default=None, ge=1, le=21, description="How many sensors to attribute."
@@ -137,7 +123,7 @@ class ReasoningRequest(StrictModel):
 
 
 class ReasoningResponse(BaseResponse):
-    """Result of the reasoning stage."""
+
 
     rows: int = Field(default=0, ge=0)
     reasoned_rows: int = Field(
@@ -158,7 +144,7 @@ class ReasoningResponse(BaseResponse):
 
 
 class DependencyEdge(StrictModel):
-    """One directed edge of the sensor dependency graph."""
+
 
     source: str = Field(..., description="Upstream sensor or subsystem.")
     target: str = Field(..., description="Downstream sensor or subsystem.")
@@ -169,14 +155,14 @@ class DependencyEdge(StrictModel):
 
 
 class EngineRootCauseResponse(BaseResponse):
-    """Root-cause history for a single engine, read from ``root_cause_analysis.csv``."""
+
 
     engine_id: int = Field(...)
     records: List[RootCauseRecord] = Field(default_factory=list)
 
 
 class DependencyGraphResponse(BaseResponse):
-    """The sensor dependency graph, for inspection and dashboard rendering."""
+
 
     nodes: List[str] = Field(default_factory=list)
     edges: List[DependencyEdge] = Field(default_factory=list)
