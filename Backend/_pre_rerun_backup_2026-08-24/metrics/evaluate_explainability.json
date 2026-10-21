@@ -1,0 +1,20 @@
+{
+  "rows_explained": 1632,
+  "completeness": {
+    "completeness_fraction": 1.0,
+    "missing_by_field": {
+      "why": 0,
+      "which_sensors": 0,
+      "what_pattern": 0,
+      "how_severe": 0
+    }
+  },
+  "consistency": {
+    "consistency_fraction": 1.0,
+    "rows_checked": 1632
+  },
+  "shap_computed": true,
+  "acceptance": {
+    "mostly_complete": true
+  }
+}

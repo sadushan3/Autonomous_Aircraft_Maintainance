@@ -1,0 +1,19 @@
+{
+  "total_feedback_records": 0,
+  "accepted_count": 0,
+  "false_alarm_count": 0,
+  "missed_count": 0,
+  "memories_ingested_this_run": 1632,
+  "memory_summary": {
+    "total_memories": 5000,
+    "false_alarm_patterns": 0,
+    "confirmed_fault_patterns": 0
+  },
+  "threshold_state": {
+    "scale": 1.0,
+    "fusion_threshold": 0.5,
+    "feedback_applied": 0,
+    "last_updated": null
+  },
+  "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\feedback_updates.csv"
+}

@@ -1,0 +1,70 @@
+{
+    "status": "success",
+    "champion": {
+        "champion_model_name": "ppo",
+        "champion_model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\ppo.joblib",
+        "val_macro_f1": 0.2913,
+        "val_accuracy": 0.6565,
+        "val_log_loss": null,
+        "episode_metrics": {
+            "episodes_evaluated": 32,
+            "mean_episode_return": -11655.0,
+            "std_episode_return": 3686.037,
+            "catastrophic_failure_rate": 0.8438,
+            "successful_maintenance_rate": 0.0938
+        },
+        "selection_metric": "ppo_mandated_by_directive",
+        "all_candidates": [
+            {
+                "name": "random_forest",
+                "val_macro_f1": 0.9996,
+                "val_accuracy": 0.9998,
+                "episode_metrics": null,
+                "role": "baseline_for_comparison"
+            },
+            {
+                "name": "xgboost",
+                "val_macro_f1": 0.9992,
+                "val_accuracy": 0.9995,
+                "episode_metrics": null,
+                "role": "baseline_for_comparison"
+            },
+            {
+                "name": "lightgbm",
+                "val_macro_f1": 0.9984,
+                "val_accuracy": 0.9994,
+                "episode_metrics": null,
+                "role": "baseline_for_comparison"
+            },
+            {
+                "name": "logistic_regression",
+                "val_macro_f1": 0.3414,
+                "val_accuracy": 0.4186,
+                "episode_metrics": null,
+                "role": "baseline_for_comparison"
+            },
+            {
+                "name": "ppo",
+                "val_macro_f1": 0.2913,
+                "val_accuracy": 0.6565,
+                "episode_metrics": {
+                    "episodes_evaluated": 32,
+                    "mean_episode_return": -11655.0,
+                    "std_episode_return": 3686.037,
+                    "catastrophic_failure_rate": 0.8438,
+                    "successful_maintenance_rate": 0.0938
+                },
+                "role": "champion"
+            },
+            {
+                "name": "dqn",
+                "val_macro_f1": 0.205,
+                "val_accuracy": 0.2173,
+                "episode_metrics": null,
+                "role": "baseline_for_comparison"
+            }
+        ]
+    },
+    "total_models_trained": 6,
+    "duration_seconds": 1951.5172
+}

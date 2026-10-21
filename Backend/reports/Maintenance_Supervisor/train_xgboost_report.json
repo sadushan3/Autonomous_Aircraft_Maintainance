@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "model_name": "xgboost",
+    "model_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Anomaly_Health_Monitering_System\\Anomaly_Health_Monitering_System\\Backend\\artifacts\\Maintenance_Supervisor\\models\\xgboost.joblib",
+    "train_samples": 28480,
+    "val_samples": 6462,
+    "features_count": 329,
+    "val_accuracy": 0.9995,
+    "val_macro_f1": 0.9992,
+    "val_log_loss": 4.2078,
+    "duration_seconds": 54.0134
+}

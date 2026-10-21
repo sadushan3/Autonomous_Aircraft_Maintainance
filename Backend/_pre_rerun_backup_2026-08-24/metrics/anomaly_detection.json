@@ -1,0 +1,35 @@
+{
+  "severity_distribution": {
+    "none": 17013,
+    "high": 1553,
+    "critical": 1345,
+    "medium": 429,
+    "low": 291
+  },
+  "rows": 20631,
+  "engines": 100,
+  "detector_summary": {
+    "isolation_forest": {
+      "threshold": 0.9900002092181518
+    },
+    "mahalanobis": {
+      "threshold": 0.9900002092181518
+    },
+    "lstm_autoencoder": {
+      "threshold": 0.9900002092181518
+    },
+    "residual_rule": {
+      "threshold": 0.9900002092181518
+    }
+  },
+  "fusion_threshold": 0.9686558570621587,
+  "total_flagged": 3618,
+  "fault_anomalies": 3618,
+  "operational_anomalies": 0,
+  "anomaly_type_distribution": {
+    "none": 17013,
+    "fault": 3618
+  },
+  "scores_output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\anomaly_scores.csv",
+  "fusion_output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\anomaly_fusion.csv"
+}

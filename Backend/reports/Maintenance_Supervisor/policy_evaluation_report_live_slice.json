@@ -1,0 +1,51 @@
+{
+    "status": "success",
+    "champion_model_name": "ppo",
+    "note": "The 41 held-out engines from the real merged live-regime corpus (supervisor_integrated_input.csv). failure_prevention_rate=1.0 here is TRIVIAL for every policy, including the naive reactive baseline: 0 of these 259 engines ever reach predicted_rul <= 2.0 (genuine run-to-failure), so there was never a failure to prevent. This slice is informative for cost/downtime efficiency under normal, non-critical operation, but is not a safety comparison -- see policy_evaluation_report.json (the offline run-to-failure slice) for that.",
+    "test_engines_evaluated": 41,
+    "maintenance_cost_reduction_pct_vs_reactive": 87.19,
+    "system_downtime_reduction_pct_vs_reactive": 100.0,
+    "failure_prevention_rate": 1.0,
+    "maintenance_cost_reduction_pct_vs_rule_cascade": 97.84,
+    "system_downtime_reduction_pct_vs_rule_cascade": 100.0,
+    "policies": {
+        "champion": {
+            "engines_evaluated": 41,
+            "failure_prevention_rate": 1.0,
+            "catastrophic_failures": 0,
+            "mean_maintenance_cost_usd": 30.0,
+            "total_maintenance_cost_usd": 1230.0,
+            "mean_downtime_hours": 0.0,
+            "total_downtime_hours": 0.0,
+            "terminal_event_distribution": {
+                "censored_trajectory_end": 41
+            }
+        },
+        "reactive_tbo_baseline": {
+            "engines_evaluated": 41,
+            "failure_prevention_rate": 1.0,
+            "catastrophic_failures": 0,
+            "mean_maintenance_cost_usd": 234.15,
+            "total_maintenance_cost_usd": 9600.0,
+            "mean_downtime_hours": 4.683,
+            "total_downtime_hours": 192.0,
+            "terminal_event_distribution": {
+                "censored_trajectory_end": 33,
+                "emergency_shutdown_executed": 8
+            }
+        },
+        "rule_cascade_baseline": {
+            "engines_evaluated": 41,
+            "failure_prevention_rate": 1.0,
+            "catastrophic_failures": 0,
+            "mean_maintenance_cost_usd": 1391.46,
+            "total_maintenance_cost_usd": 57050.0,
+            "mean_downtime_hours": 1.171,
+            "total_downtime_hours": 48.0,
+            "terminal_event_distribution": {
+                "censored_trajectory_end": 37,
+                "successful_scheduled_maintenance": 4
+            }
+        }
+    }
+}

@@ -1,0 +1,76 @@
+{
+  "train": {
+    "rows": 160359,
+    "engines": 709,
+    "auc_healthy_vs_critical": 0.9924649705953356,
+    "cohens_d": 1.7985149673498917,
+    "spearman_score_vs_rul": -0.7679856657265687,
+    "threshold_used": 0.9686558570621587,
+    "false_alarm_rate_healthy": 0.02388703149744853,
+    "flag_rate_critical": 0.8765639929023158,
+    "overall_flag_rate": 0.25404249215822,
+    "detection_rate": 1.0,
+    "lead_time_median": 56.0,
+    "lead_time_p25": 34.0,
+    "lead_time_p75": 81.0,
+    "type_split": {
+      "fault": 30996,
+      "operational": 9742
+    },
+    "severity_mean_rul": {
+      "critical": 26.145499181669393,
+      "high": 42.764796990817565,
+      "low": 51.736032388663965,
+      "medium": 55.77968227424749,
+      "none": 63.5254567850544
+    }
+  },
+  "test": {
+    "rows": 104897,
+    "engines": 707,
+    "auc_healthy_vs_critical": 0.9794156451607584,
+    "cohens_d": 1.3358855531007952,
+    "spearman_score_vs_rul": -0.4287306499449806,
+    "threshold_used": 0.9686558570621587,
+    "false_alarm_rate_healthy": 0.04405523342698308,
+    "flag_rate_critical": 0.8003108003108003,
+    "overall_flag_rate": 0.12961285832769287,
+    "detection_rate": 0.4596888260254597,
+    "lead_time_median": 83.0,
+    "lead_time_p25": 54.0,
+    "lead_time_p75": 121.0,
+    "type_split": {
+      "fault": 8376,
+      "operational": 5220
+    },
+    "severity_mean_rul": {
+      "critical": 55.2614730878187,
+      "high": 80.49968963376784,
+      "low": 106.95027624309392,
+      "medium": 94.91211840888067,
+      "none": 122.88544061302682
+    }
+  },
+  "test_per_subset": {
+    "FD001": {
+      "auc": 0.9996554483617126,
+      "false_alarm": 0.0,
+      "detection": 0.33
+    },
+    "FD002": {
+      "auc": 0.9926934464677488,
+      "false_alarm": 0.016304347826086956,
+      "detection": 0.7065637065637066
+    },
+    "FD003": {
+      "auc": 0.9929163985606795,
+      "false_alarm": 0.03007518796992481,
+      "detection": 0.5
+    },
+    "FD004": {
+      "auc": 0.9648177244191151,
+      "false_alarm": 0.08024194958218245,
+      "detection": 0.7782258064516129
+    }
+  }
+}

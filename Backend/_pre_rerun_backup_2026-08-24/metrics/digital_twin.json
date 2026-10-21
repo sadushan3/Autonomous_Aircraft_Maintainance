@@ -1,0 +1,71 @@
+{
+  "rows": 20631,
+  "engines": 100,
+  "twins": [
+    "random_forest",
+    "xgboost",
+    "lightgbm",
+    "tensorflow"
+  ],
+  "weights": {
+    "random_forest": 0.2495927315254941,
+    "xgboost": 0.2487060926429158,
+    "lightgbm": 0.24900474320101904,
+    "tensorflow": 0.2526964326305711
+  },
+  "per_twin_metrics": {
+    "random_forest": {
+      "rmse": 0.5833339009887084,
+      "mae": 0.36728860768777816,
+      "r2": 0.23100864566876098,
+      "name": "random_forest",
+      "train_rows": 35684,
+      "val_rows": 9165,
+      "n_features": 11,
+      "n_targets": 21,
+      "n_modes": 6,
+      "fit_seconds": 6.059
+    },
+    "xgboost": {
+      "rmse": 0.585413490244631,
+      "mae": 0.36760119700794264,
+      "r2": 0.2183587334363696,
+      "name": "xgboost",
+      "train_rows": 35684,
+      "val_rows": 9165,
+      "n_features": 11,
+      "n_targets": 21,
+      "n_modes": 6,
+      "fit_seconds": 13.894
+    },
+    "lightgbm": {
+      "rmse": 0.5847113587778356,
+      "mae": 0.36777488579843526,
+      "r2": 0.1824497644827093,
+      "name": "lightgbm",
+      "train_rows": 35684,
+      "val_rows": 9165,
+      "n_features": 11,
+      "n_targets": 21,
+      "n_modes": 6,
+      "fit_seconds": 10.653
+    },
+    "tensorflow": {
+      "rmse": 0.5761692012172068,
+      "mae": 0.3641162741855078,
+      "r2": 0.08619999690333784,
+      "name": "tensorflow",
+      "train_rows": 35684,
+      "val_rows": 9165,
+      "n_features": 11,
+      "n_targets": 21,
+      "n_modes": 6,
+      "fit_seconds": 90.439,
+      "epochs_trained": 90
+    }
+  },
+  "weighted_mean_rmse": 0.582384,
+  "mean_twin_spread": 0.13157587843497373,
+  "n_sensors_modelled": 21,
+  "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\twin_predictions.csv"
+}

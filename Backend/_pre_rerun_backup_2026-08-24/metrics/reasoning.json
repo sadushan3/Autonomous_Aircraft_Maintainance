@@ -1,0 +1,28 @@
+{
+  "rows_input": 20631,
+  "rows_reasoned": 3618,
+  "engines": 100,
+  "cause_distribution": {
+    "High-Pressure Turbine degradation": 2328,
+    "Low-Pressure Compressor efficiency degradation": 512,
+    "Bleed air system anomaly": 396,
+    "High-Pressure Compressor efficiency degradation": 257,
+    "Low-Pressure Turbine degradation": 93,
+    "Combustor fuel-air mixture drift": 32
+  },
+  "subsystem_distribution": {
+    "hpt": 2328,
+    "lpc": 512,
+    "bleed": 396,
+    "hpc": 257,
+    "lpt": 93,
+    "burner": 32
+  },
+  "evolution_distribution": {
+    "stable": 1903,
+    "gradual": 1709,
+    "abrupt": 6
+  },
+  "memory_matches": 1889,
+  "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\root_cause_analysis.csv"
+}

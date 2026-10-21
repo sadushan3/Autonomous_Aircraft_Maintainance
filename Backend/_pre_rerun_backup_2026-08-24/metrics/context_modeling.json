@@ -1,0 +1,57 @@
+{
+  "rows": 20631,
+  "engines": 100,
+  "algorithm": "kmeans",
+  "n_modes": 1,
+  "expected_modes": 1,
+  "matches_expectation": true,
+  "mode_distribution": {
+    "1": 20631
+  },
+  "mean_mode_confidence": 0.9983362565498033,
+  "transition_rows": 0,
+  "model_summary": {
+    "algorithm": "kmeans",
+    "n_modes": 6,
+    "silhouette_score": 0.9976720224645255,
+    "columns": [
+      "op_setting_1",
+      "op_setting_2",
+      "op_setting_3"
+    ],
+    "centroids_in_original_units": [
+      [
+        20.002985696857028,
+        0.7005097891128715,
+        100.00000000000006
+      ],
+      [
+        0.0004033911834966375,
+        0.00013923011830607734,
+        99.99999999999869
+      ],
+      [
+        25.003045814129862,
+        0.6205029403185363,
+        59.999999999999936
+      ],
+      [
+        42.002981828579316,
+        0.8404902956364799,
+        100.00000000000006
+      ],
+      [
+        10.002981345265592,
+        0.250499480369513,
+        100.00000000000006
+      ],
+      [
+        35.003038391766964,
+        0.8405037037036915,
+        100.00000000000006
+      ]
+    ]
+  },
+  "silhouette_score": 0.9976720224645255,
+  "output_path": "D:\\Anomaly_Health_Monitering_System\\Backend\\processed\\context_clusters.csv"
+}

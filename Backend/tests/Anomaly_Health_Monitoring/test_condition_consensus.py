@@ -74,6 +74,7 @@ class ConditionConsensusContracts(unittest.TestCase):
         self.model.save()
         self.cfg.anomaly.condition_consensus["margin"] = .01
         loaded = ConditionConsensusDetector(self.cfg).load()
+        self.assertEqual(loaded.margin, self.model.margin)
         self.assertEqual(loaded.margin, 1.)
         np.testing.assert_array_equal(loaded.score(self.frame), expected)
 

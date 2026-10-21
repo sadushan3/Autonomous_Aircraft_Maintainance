@@ -1,0 +1,100 @@
+{
+    "status": "success",
+    "cost_evaluation": {
+        "status": "success",
+        "test_records_evaluated": 40463,
+        "cost_savings_vs_tbo_usd": 1211430000.0,
+        "cost_reduction_percentage": 87.4,
+        "evaluations": {
+            "champion_supervisor_agent": {
+                "total_cost_usd": 174656000.0,
+                "mean_cost_per_cycle_usd": 4316.44,
+                "missed_critical_events": 205,
+                "false_critical_alarms": 0,
+                "timely_maintenance_events": 6013,
+                "inspections_performed": 0
+            },
+            "time_between_overhaul_baseline": {
+                "total_cost_usd": 1386086000.0,
+                "mean_cost_per_cycle_usd": 34255.64,
+                "missed_critical_events": 2685,
+                "false_critical_alarms": 34,
+                "timely_maintenance_events": 3533,
+                "inspections_performed": 0
+            },
+            "majority_vote_baseline": {
+                "total_cost_usd": 3109000000.0,
+                "mean_cost_per_cycle_usd": 76835.63,
+                "missed_critical_events": 6218,
+                "false_critical_alarms": 0,
+                "timely_maintenance_events": 0,
+                "inspections_performed": 0
+            }
+        },
+        "cost_matrix_usd": {
+            "catastrophic_failure_fn": 500000.0,
+            "premature_overhaul_fp": 35000.0,
+            "preventive_maintenance_tp": 12000.0,
+            "routine_inspection": 1500.0
+        },
+        "duration_seconds": 9.6959
+    },
+    "conformal_prediction": {
+        "status": "success",
+        "target_coverage": 0.95,
+        "empirical_test_coverage": 0.962,
+        "calibrated_q_alpha_cycles": 5.2,
+        "total_test_samples": 5521,
+        "manifest_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\artifacts\\Maintenance_Supervisor\\conformal_rul_bounds.json",
+        "duration_seconds": 1.7609
+    },
+    "counterfactual_scenario": {
+        "feasible": true,
+        "current_decision": "schedule_maintenance",
+        "target_decision": "schedule_inspection",
+        "original_rul": 24.0,
+        "original_risk_30": 0.89,
+        "binding_constraints": [
+            {
+                "name": "RUL above schedule maintenance band",
+                "variable": "predicted_rul",
+                "expression": "predicted_rul > 30",
+                "current_value": 24.0,
+                "threshold": 30.0,
+                "required_value": 30.0,
+                "shortfall": 6.0,
+                "pressure_pct_required": 1.818
+            },
+            {
+                "name": "High 30-cycle risk",
+                "variable": "risk_30",
+                "expression": "risk_30 < 0.72",
+                "current_value": 0.89,
+                "threshold": 0.72,
+                "required_value": 0.72,
+                "shortfall": 0.17,
+                "pressure_pct_required": 2.0
+            }
+        ],
+        "required_rul_gain": 6.0,
+        "required_risk_30_drop": 0.17,
+        "hpc_pressure_reduction_pct": 2.0,
+        "cruise_thrust_reduction_pct": 1.42,
+        "projected_rul": 30.6,
+        "projected_risk_30": 0.72,
+        "focus_component": null,
+        "actionable_statement": "Reducing HPC cruise pressure by 2.0% (thrust derate -1.4%) clears the binding constraint: predicted RUL rises from 24.0 to 30.6 cycles and 30-cycle failure risk falls from 89.0% to 72.0%, which reschedules schedule maintenance to schedule inspection.",
+        "lever_is_assumption": true,
+        "assumptions": {
+            "rul_cycles_per_pct_pressure": 3.3,
+            "risk_10_per_pct_pressure": 0.045,
+            "risk_30_per_pct_pressure": 0.085,
+            "risk_50_per_pct_pressure": 0.11,
+            "thrust_pct_per_pressure_pct": 0.71,
+            "max_pressure_reduction_pct": 12.0
+        },
+        "blocked_reason": null
+    },
+    "final_report_path": "C:\\Users\\yogar\\OneDrive\\Desktop\\RP\\Autonomous Predictive Maintenance\\Backend\\artifacts\\Maintenance_Supervisor\\FINAL_SUPERVISOR_RESEARCH_REPORT.md",
+    "duration_seconds": 11.6612
+}
